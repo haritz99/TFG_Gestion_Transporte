@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462903431070",
+    "project_id": "gestion-transporte-dev",
+    "storage_bucket": "gestion-transporte-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462903431070:android:009e4435bd170e861c508f",
+        "android_client_info": {
+          "package_name": "com.example.myapp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyRodeQOSMvBu3dhKzpqw6Dn4JEuwLewM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

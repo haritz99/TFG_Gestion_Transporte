@@ -1,0 +1,54 @@
+app:
+  android:
+    flavorDimensions: "default"
+
+flavors:
+  dev:
+    app:
+      name: "Gestion Transporte Dev"
+      package_name: "com.example.myapp.dev"
+    android:
+      applicationId: "com.example.myapp.dev"
+    env:
+      FLAVOR: "dev"
+    ios:
+      bundleId: "com.example.myapp.dev"
+    macos:
+      bundleId: "com.example.myapp.dev"
+
+  staging:
+    app:
+      name: "Gestion Transporte Staging"
+      package_name: "com.example.myapp.staging"
+    android:
+      applicationId: "com.example.myapp.staging"
+    env:
+      FLAVOR: "staging"
+    ios:
+      bundleId: "com.example.myapp.staging"
+    macos:
+      bundleId: "com.example.myapp.staging"
+
+  prod:
+    app:
+      name: "Gestion Transporte"
+      package_name: "com.example.myapp"
+    android:
+      applicationId: "com.example.myapp"
+    env:
+      FLAVOR: "prod"
+    ios:
+      bundleId: "com.example.myapp"
+    macos:
+      bundleId: "com.example.myapp"
+
+flavorizr:
+  android:
+    generate: false
+  ios:
+    generate: true
+  macos:
+    generate: true
+
+  create_main_files: true
+  generate_files: true

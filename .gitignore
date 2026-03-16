@@ -1,0 +1,29 @@
+# IDE/editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python cache/virtualenv (backend)
+backend/.venv/
+backend/venv/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+
+# Local environment files (backend)
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Firebase Admin / service account secrets (backend)
+backend/firebase_credentials.json
+backend/*firebase*credentials*.json
+backend/service-account*.json
+backend/*serviceAccount*.json
+backend/**/*.pem
+backend/**/*.p12
+backend/**/*.pfx
+backend/**/*.key
+

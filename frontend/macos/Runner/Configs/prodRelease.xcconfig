@@ -1,0 +1,6 @@
+#include "../../Flutter/prodRelease.xcconfig"
+#include "Warnings.xcconfig"
+
+ASSET_PREFIX=prod
+BUNDLE_NAME=Gestion Transporte
+BUNDLE_DISPLAY_NAME=Gestion Transporte
