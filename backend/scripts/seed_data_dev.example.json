@@ -1,0 +1,100 @@
+{
+  "users": {
+    "U_ENC_001": {
+      "nombre": "Laura",
+      "apellidos": "Gomez Ruiz",
+      "email": "laura@empresa.com",
+      "tfn": "+34600111222",
+      "rol": "encargado",
+      "activo": true
+    },
+    "U_COND_001": {
+      "nombre": "Iker",
+      "apellidos": "Lopez Martin",
+      "email": "iker@empresa.com",
+      "tfn": "+34600333444",
+      "rol": "transportista",
+      "vehiculoId": "V_001",
+      "permisosConduccion": ["B", "C", "C+E"],
+      "disponible": true,
+      "activo": true
+    }
+  },
+  "vehiculos": {
+    "V_001": {
+      "matricula": "1234ABC",
+      "tipo": "interno",
+      "capacidad": 18000,
+      "conductorId": "U_COND_001",
+      "marca": "MAN",
+      "modelo": "TGX",
+      "largo": 8.5,
+      "ancho": 2.5,
+      "alto": 3.4,
+      "disponible": true
+    }
+  },
+  "cargas": {
+    "C_001": {
+      "descripcion": "Palets de bebida",
+      "origen": "Madrid",
+      "destino": "Bilbao",
+      "conductorId": "U_COND_001",
+      "vehiculoId": "V_001",
+      "estado": "pendiente",
+      "fechaCreacion": "2026-03-16T10:00:00Z",
+      "pesoKg": 12000,
+      "dimensiones": "12 palets EUR"
+    }
+  },
+  "rutas": {
+    "R_001": {
+      "cargaId": "C_001",
+      "conductorId": "U_COND_001",
+      "origen": "Madrid",
+      "destino": "Bilbao",
+      "distanciaKm": 398.2,
+      "fechaInicio": "2026-03-16T12:00:00Z",
+      "fechaFin": null
+    }
+  },
+  "incidencias": {
+    "I_001": {
+      "descripcion": "Retraso por trafico",
+      "conductorId": "U_COND_001",
+      "cargaId": "C_001",
+      "fecha": "2026-03-16T13:30:00Z",
+      "estado": "abierta"
+    }
+  },
+  "tareas": {
+    "T_001": {
+      "titulo": "Revisar documentacion carga C_001",
+      "encargadoId": "U_ENC_001",
+      "conductorId": "U_COND_001",
+      "cargaId": "C_001",
+      "fechaIni": "2026-03-16T09:30:00Z",
+      "fechaFin": null,
+      "estado": "asignada"
+    }
+  },
+  "cartasDePorte": {
+    "CP_001": {
+      "cargaId": "C_001",
+      "transportistaId": "U_COND_001",
+      "matVehi": "1234ABC",
+      "matRemol": "5678DEF",
+      "expedidor": "Empresa A",
+      "cargador": "Almacen A",
+      "destinatario": "Cliente B",
+      "mercancia": "Bebida embotellada",
+      "cantidad": 12000,
+      "cargoRec": "Pagado",
+      "nombreRec": "Cliente B",
+      "observaciones": "Entregar en muelle 3",
+      "fechaCarga": "2026-03-16T11:00:00Z",
+      "fechaEntrega": null
+    }
+  }
+}
+
