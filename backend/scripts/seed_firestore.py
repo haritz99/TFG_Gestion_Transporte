@@ -25,31 +25,102 @@ COLLECTION_ORDER = [
 ]
 
 REQUIRED_FIELDS = {
-    "users": ["nombre", "email", "rol"],
-    "vehiculos": ["matricula", "tipo", "capacidad"],
-    "cargas": ["descripcion", "origen", "destino", "conductorId", "vehiculoId", "estado"],
-    "rutas": ["cargaId", "conductorId", "origen", "destino", "fechaInicio"],
-    "incidencias": ["descripcion", "conductorId", "fecha"],
+    "users": ["nombre", "apellidos", "email", "tfn", "rol"],
+    "vehiculos": ["matricula", "marca", "modelo", "capacidad", "largo", "ancho", "alto", "interno", "disponible"],
+    "cargas": ["peso", "largo", "ancho", "alto"],
+    "rutas": ["origen", "destino"],
+    "incidencias": ["descripcion", "fecha"],
     "tareas": ["fechaIni"],
-    "cartasDePorte": ["cargaId", "transportistaId", "fechaCarga"],
+    "cartasDePorte": [
+        "transportistaId",
+        "matVehi",
+        "matRemol",
+        "mercancia",
+        "cantidad",
+        "expedidor",
+        "cargador",
+        "destinatario",
+        "fechaCarga",
+    ],
 }
 
-ROLE_ALIASES = {
-    "transportista": "conductor",
+ALLOWED_FIELDS = {
+    "users": {
+        "nombre",
+        "apellidos",
+        "email",
+        "tfn",
+        "rol",
+        "permisosCond",
+        "disponible",
+    },
+    "vehiculos": {
+        "matricula",
+        "marca",
+        "modelo",
+        "capacidad",
+        "largo",
+        "ancho",
+        "alto",
+        "disponible",
+        "interno",
+        "transportistaId",
+    },
+    "cargas": {
+        "peso",
+        "largo",
+        "ancho",
+        "alto",
+        "tareaId",
+        "rutaId",
+    },
+    "rutas": {
+        "origen",
+        "destino",
+        "cargaId",
+    },
+    "incidencias": {
+        "descripcion",
+        "fecha",
+        "transportistaId",
+        "tareaId",
+    },
+    "tareas": {
+        "fechaIni",
+        "fechaFin",
+        "encargadoId",
+        "transportistaId",
+    },
+    "cartasDePorte": {
+        "transportistaId",
+        "matVehi",
+        "matRemol",
+        "mercancia",
+        "cantidad",
+        "expedidor",
+        "cargador",
+        "destinatario",
+        "cargoRec",
+        "nombreRec",
+        "observaciones",
+        "fechaCarga",
+        "fechaEntrega",
+        "encargadoId",
+        "cargaId",
+    },
 }
 
-VALID_ROLES = {"encargado", "conductor"}
+VALID_ROLES = {"encargado", "transportista"}
 
 # (field_name, target_collection, required)
 REFERENCE_FIELDS = {
-    "vehiculos": [("conductorId", "users", False)],
-    "cargas": [("conductorId", "users", True), ("vehiculoId", "vehiculos", True)],
-    "rutas": [("cargaId", "cargas", True), ("conductorId", "users", True)],
-    "incidencias": [("conductorId", "users", True), ("cargaId", "cargas", False)],
+    "vehiculos": [("transportistaId", "users", False)],
+    "cargas": [("tareaId", "tareas", False), ("rutaId", "rutas", False)],
+    "rutas": [("cargaId", "cargas", False)],
+    "incidencias": [("transportistaId", "users", True), ("tareaId", "tareas", False)],
     "tareas": [
         ("encargadoId", "users", False),
-        ("conductorId", "users", False),
-        ("cargaId", "cargas", False),
+        ("transportistaId", "users", False),
     ],
     "cartasDePorte": [("cargaId", "cargas", True), ("transportistaId", "users", True)],
 }
@@ -139,12 +210,28 @@ def normalize_roles(data: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
     users = data.get("users", {})
     for doc_id, doc in users.items():
         raw_role = str(doc.get("rol", "")).strip().lower()
-        if raw_role in ROLE_ALIASES:
-            doc["rol"] = ROLE_ALIASES[raw_role]
-        elif raw_role:
+        if raw_role:
             doc["rol"] = raw_role
         else:
             print("[WARN] users/{} sin rol definido".format(doc_id))
+
+
+def validate_allowed_fields(data: Dict[str, Dict[str, Dict[str, Any]]]) -> List[str]:
+    errors: List[str] = []
+
+    for collection, docs in data.items():
+        allowed = ALLOWED_FIELDS.get(collection)
+        if allowed is None:
+            continue
+
+        for doc_id, doc in docs.items():
+            for field_name in doc.keys():
+                if field_name not in allowed:
+                    errors.append(
+                        "Campo no permitido '{}': {}/{}".format(field_name, collection, doc_id)
+                    )
+
+    return errors
 
 
 def validate_required_fields(data: Dict[str, Dict[str, Dict[str, Any]]]) -> List[str]:
@@ -169,6 +256,15 @@ def validate_required_fields(data: Dict[str, Dict[str, Dict[str, Any]]]) -> List
                     ", ".join(sorted(VALID_ROLES)),
                 )
             )
+
+        if role == "transportista":
+            for field in ("permisosCond", "disponible"):
+                if field not in doc or doc[field] in (None, ""):
+                    errors.append(
+                        "Falta campo requerido '{}' para users/{} (rol transportista)".format(
+                            field, doc_id
+                        )
+                    )
 
     return errors
 
@@ -367,6 +463,13 @@ def main() -> int:
         data = load_seed_file(args.file)
         data = filter_collections(data, requested_collections)
         normalize_roles(data)
+
+        allowed_field_errors = validate_allowed_fields(data)
+        if allowed_field_errors:
+            print("\n[ERROR] Hay campos no definidos en el MER:")
+            for err in allowed_field_errors:
+                print(" - {}".format(err))
+            return 1
 
         required_errors = validate_required_fields(data)
         if required_errors:

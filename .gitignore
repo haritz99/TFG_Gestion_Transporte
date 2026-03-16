@@ -18,6 +18,7 @@ backend/.env.*
 !backend/.env.example
 
 # Firebase Admin / service account secrets (backend)
+backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
 backend/firebase_credentials.json
 backend/*firebase*credentials*.json
 backend/service-account*.json
@@ -26,4 +27,3 @@ backend/**/*.pem
 backend/**/*.p12
 backend/**/*.pfx
 backend/**/*.key
-
