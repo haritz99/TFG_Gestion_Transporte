@@ -47,29 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAH15NLrKqfWciojeDnVwqfNuwdMUI9W_o',
-    appId: '1:772545103506:web:805d6c1f3317d2141b884b',
-    messagingSenderId: '772545103506',
-    projectId: 'gestion-transporte-stg',
-    authDomain: 'gestion-transporte-stg.firebaseapp.com',
-    storageBucket: 'gestion-transporte-stg.firebasestorage.app',
-    measurementId: 'G-KX01KSQLLX',
+    apiKey: 'YOUR_WEB_API_KEY',
+    appId: 'YOUR_WEB_APP_ID',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    projectId: 'YOUR_PROJECT_ID',
+    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
+    measurementId: 'YOUR_MEASUREMENT_ID',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDjwvyrdndKOrNbRHACpidGECDPgo0LVd8',
-    appId: '1:772545103506:android:b13e275166e822c91b884b',
-    messagingSenderId: '772545103506',
-    projectId: 'gestion-transporte-stg',
-    storageBucket: 'gestion-transporte-stg.firebasestorage.app',
+    apiKey: 'YOUR_ANDROID_API_KEY',
+    appId: 'YOUR_ANDROID_APP_ID',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCtypFddjXmk1NKAFi-AOGSyWnKAXOwbTc',
-    appId: '1:772545103506:ios:f5dd929e6a019aa11b884b',
-    messagingSenderId: '772545103506',
-    projectId: 'gestion-transporte-stg',
-    storageBucket: 'gestion-transporte-stg.firebasestorage.app',
+    apiKey: 'YOUR_IOS_API_KEY',
+    appId: 'YOUR_IOS_APP_ID',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT_ID.firebasestorage.app',
     iosBundleId: 'com.example.myapp.staging',
   );
 }
