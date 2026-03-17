@@ -47,7 +47,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAH15NLrKqfWciojeDnVwqfNuwdMUI9W_o',
+    apiKey: 'AIzaSyCNZaYZLh1MiLdSKQwqWHePpLlrAVFM7fw',
     appId: '1:772545103506:web:805d6c1f3317d2141b884b',
     messagingSenderId: '772545103506',
     projectId: 'gestion-transporte-stg',
@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDjwvyrdndKOrNbRHACpidGECDPgo0LVd8',
+    apiKey: 'AIzaSyBqu5UzxVXOyjRkXLSxrgx8pJt27anVFNE',
     appId: '1:772545103506:android:b13e275166e822c91b884b',
     messagingSenderId: '772545103506',
     projectId: 'gestion-transporte-stg',
@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCtypFddjXmk1NKAFi-AOGSyWnKAXOwbTc',
+    apiKey: 'AIzaSyDZtjT1-lSzEpbbXJp7BttpzCbM9IeF3lo',
     appId: '1:772545103506:ios:f5dd929e6a019aa11b884b',
     messagingSenderId: '772545103506',
     projectId: 'gestion-transporte-stg',
