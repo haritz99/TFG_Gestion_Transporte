@@ -2,7 +2,7 @@ class UserModel {
   final String uid;
   final String nombre;
   final String email;
-  final String rol; // 'encargado' o 'conductor'
+  final List<String> rol;
   final String? vehiculoId;
 
   UserModel({
@@ -14,11 +14,16 @@ class UserModel {
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
+    final rawRol = map['rol'];
+    final normalizedRol = rawRol is List
+        ? rawRol.whereType<String>().toList()
+        : (rawRol is String && rawRol.isNotEmpty ? [rawRol] : <String>[]);
+
     return UserModel(
       uid: uid,
       nombre: map['nombre'] ?? '',
       email: map['email'] ?? '',
-      rol: map['rol'] ?? '',
+      rol: normalizedRol,
       vehiculoId: map['vehiculoId'],
     );
   }
