@@ -209,9 +209,23 @@ def filter_collections(
 def normalize_roles(data: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
     users = data.get("users", {})
     for doc_id, doc in users.items():
-        raw_role = str(doc.get("rol", "")).strip().lower()
-        if raw_role:
-            doc["rol"] = raw_role
+        raw_roles = doc.get("rol", [])
+
+        if isinstance(raw_roles, str):
+            parsed = [raw_roles]
+        elif isinstance(raw_roles, list):
+            parsed = raw_roles
+        else:
+            parsed = []
+
+        normalized_roles: List[str] = []
+        for role in parsed:
+            role_value = str(role).strip().lower()
+            if role_value and role_value not in normalized_roles:
+                normalized_roles.append(role_value)
+
+        if normalized_roles:
+            doc["rol"] = normalized_roles
         else:
             print("[WARN] users/{} sin rol definido".format(doc_id))
 
@@ -247,17 +261,28 @@ def validate_required_fields(data: Dict[str, Dict[str, Dict[str, Any]]]) -> List
                     )
 
     for doc_id, doc in data.get("users", {}).items():
-        role = doc.get("rol")
-        if role not in VALID_ROLES:
+        roles = doc.get("rol")
+        if not isinstance(roles, list) or not roles:
             errors.append(
-                "Rol invalido en users/{}: '{}' (validos: {})".format(
+                "Rol invalido en users/{}: '{}' (debe ser lista no vacia; validos: {})".format(
                     doc_id,
-                    role,
+                    roles,
+                    ", ".join(sorted(VALID_ROLES)),
+                )
+            )
+            continue
+
+        invalid_roles = [role for role in roles if role not in VALID_ROLES]
+        if invalid_roles:
+            errors.append(
+                "Rol invalido en users/{}: {} (validos: {})".format(
+                    doc_id,
+                    invalid_roles,
                     ", ".join(sorted(VALID_ROLES)),
                 )
             )
 
-        if role == "transportista":
+        if "transportista" in roles:
             for field in ("permisosCond", "disponible"):
                 if field not in doc or doc[field] in (None, ""):
                     errors.append(

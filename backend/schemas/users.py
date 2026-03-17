@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema
 
@@ -12,13 +12,19 @@ class UserSchema(FirestoreSchema):
     apellidos: str = Field(..., min_length=1)
     email: str = Field(..., min_length=3)
     tfn: str = Field(..., min_length=3)
-    rol: Literal["encargado", "transportista"]
+    rol: list[Literal["encargado", "transportista"]] = Field(..., min_length=1)
     permisosCond: Optional[list[str]] = None
     disponible: Optional[bool] = None
 
+    @field_validator("rol")
+    @classmethod
+    def normalize_roles(cls, value: list[Literal["encargado", "transportista"]]):
+        # Evita duplicados
+        return list(dict.fromkeys(value))
+
     @model_validator(mode="after")
     def validate_transportista_fields(self):
-        if self.rol == "transportista":
+        if "transportista" in self.rol:
             if not self.permisosCond:
                 raise ValueError("'permisosCond' es obligatorio para transportista")
             if self.disponible is None:

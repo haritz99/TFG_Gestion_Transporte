@@ -32,3 +32,5 @@ backend/**/*.key
 frontend/lib/firebase_options_dev.dart
 frontend/lib/firebase_options_staging.dart
 frontend/lib/firebase_options_prod.dart
+
+features.md

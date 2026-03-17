@@ -5,14 +5,14 @@
       "apellidos": "Gomez Ruiz",
       "email": "laura@empresa.com",
       "tfn": "+34600111222",
-      "rol": "encargado"
+      "rol": ["encargado"]
     },
     "U_TRA_001": {
       "nombre": "Iker",
       "apellidos": "Lopez Martin",
       "email": "iker@empresa.com",
       "tfn": "+34600333444",
-      "rol": "transportista",
+      "rol": ["transportista"],
       "permisosCond": ["C+E"],
       "disponible": true
     }
