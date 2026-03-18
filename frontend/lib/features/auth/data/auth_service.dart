@@ -10,13 +10,61 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    return _auth.currentUser?.getIdToken(forceRefresh);
+  }
+
   Future<UserModel?> getUserData(String uid) async {
-    final doc = await _firestore.collection('usuarios').doc(uid).get();
+    final doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
       return UserModel.fromMap(doc.data()!, uid);
     }
     return null;
   }
+
+  Future<UserCredential> register(
+    String email,
+    String password,
+    UserModel userData,
+  ) async {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-created',
+        message: 'No se pudo crear el usuario en Firebase Auth.',
+      );
+    }
+
+    final profileData = {
+      'uid': user.uid,
+      'nombre': userData.nombre,
+      'apellido': userData.apellido,
+      'email': user.email ?? email,
+      'telefono': userData.telefono,
+      'rol': userData.rol,
+      'permisosCond': userData.permisosCond,
+      'vehiculoId': userData.vehiculoId,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await _firestore.collection('users').doc(user.uid).set(profileData);
+      return credential;
+    } catch (e) {
+      // Evita dejar una cuenta de Auth sin perfil si falla Firestore.
+      await user.delete();
+      rethrow;
+    }
+  }
+
+
+  
 
   Future<UserCredential> signIn(String email, String password) async {
     return await _auth.signInWithEmailAndPassword(

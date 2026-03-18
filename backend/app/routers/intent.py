@@ -1,8 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas.intent import IntentRequest, IntentResponse
-from app.services.groq_service import detect_intent
+from fastapi import APIRouter, Depends, HTTPException
 
-router = APIRouter(prefix="/intent", tags=["intent"])
+from ..dependencies.auth import get_current_user
+from ..schemas.intent import IntentRequest, IntentResponse
+from ..services.groq_service import detect_intent
+
+router = APIRouter(
+    prefix="/intent",
+    tags=["intent"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post("/", response_model=IntentResponse)

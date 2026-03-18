@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/auth/providers/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
-import 'package:gestion_transporte/features/auth/ui/login_screen.dart';
+import 'package:gestion_transporte/pages/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,11 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _processVoiceCommand(String text) async {
-    final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+    final authProvider = context.read<AuthProvider>();
+    final idToken = await authProvider.getValidIdToken();
+    if (idToken == null) {
+      setState(() {
+        _response = 'Sesion no valida. Inicia sesion de nuevo.';
+      });
+      return;
+    }
 
     try {
-      final result = await _apiService.detectIntent(text, user.uid);
+      final result = await _apiService.detectIntent(text, idToken);
       setState(() {
         _response = result['response'] ?? 'Sin respuesta';
       });

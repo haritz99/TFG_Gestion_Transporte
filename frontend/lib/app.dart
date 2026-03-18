@@ -1,18 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'features/auth/providers/auth_provider.dart';
+import 'pages/login_screen.dart';
+import 'features/home/ui/home_screen.dart';
 import 'flavors.dart';
-import 'pages/my_home_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: F.title,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: _flavorBanner(child: MyHomePage(), show: kDebugMode),
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MaterialApp(
+        title: F.title,
+        theme: ThemeData(primarySwatch: Colors.orange),
+        home: Consumer<AuthProvider>(
+          builder: (_, auth, __) {
+            final screen = auth.isAuthenticated
+                ? const HomeScreen()
+                : const LoginScreen();
+            return _flavorBanner(child: screen, show: kDebugMode);
+          },
+        ),
+      ),
     );
   }
 

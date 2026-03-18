@@ -1,15 +1,19 @@
 class UserModel {
-  final String uid;
   final String nombre;
+  final String apellido;
   final String email;
+  final String telefono;
   final List<String> rol;
+  final List<String> permisosCond;
   final String? vehiculoId;
 
   UserModel({
-    required this.uid,
     required this.nombre,
+    required this.apellido,
     required this.email,
+    required this.telefono,
     required this.rol,
+    required this.permisosCond,
     this.vehiculoId,
   });
 
@@ -20,10 +24,12 @@ class UserModel {
         : (rawRol is String && rawRol.isNotEmpty ? [rawRol] : <String>[]);
 
     return UserModel(
-      uid: uid,
       nombre: map['nombre'] ?? '',
+      apellido: map['apellido'] ?? '',
       email: map['email'] ?? '',
+      telefono: map['telefono'] ?? '',
       rol: normalizedRol,
+      permisosCond: List<String>.from(map['permisosCond'] ?? []),
       vehiculoId: map['vehiculoId'],
     );
   }
@@ -31,8 +37,11 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return {
       'nombre': nombre,
+      'apellido': apellido,
       'email': email,
+      'telefono': telefono,
       'rol': rol,
+      'permisosCond': permisosCond,
       'vehiculoId': vehiculoId,
     };
   }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import '../features/auth/providers/auth_provider.dart';
 import 'package:gestion_transporte/features/home/ui/home_screen.dart';
+import 'register_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -102,9 +103,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: FilledButton(
                     onPressed: authProvider.isLoading ? null : _login,
                     child: authProvider.isLoading
-                        ? const CircularProgressIndicator()
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('Iniciar Sesión'),
                   ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: authProvider.isLoading
+                      ? null
+                      : () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                  child: const Text('Crear cuenta'),
                 ),
               ],
             ),
