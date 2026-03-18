@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:gestion_transporte/features/auth/providers/auth_provider.dart';
+import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/features/home/ui/home_screen.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -19,6 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _telefonoController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  bool _isTransportista = false;
 
   @override
   void dispose() {
@@ -36,24 +37,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final authProvider = context.read<AuthProvider>();
     try {
-
-      final userData = {
-          'nombre': _nombreController.text.trim(),
-          'apellido': _apellidoController.text.trim(),
-          'email': _emailController.text.trim(),
-          'telefono': _telefonoController.text.trim(),
-          'rol': <String>['transportista'],
-          'permisosCond': <String>[],
-          'vehiculoId': null,
-        };
+      final roles = ['encargado'];
+      if (_isTransportista) {
+        roles.add('transportista');
+      }
 
       await authProvider.register(
-        nombre: userData['nombre'] as String,
-        apellido: userData['apellido'] as String,
+        nombre: _nombreController.text.trim(),
+        apellido: _apellidoController.text.trim(),
         email: _emailController.text.trim(),
-        telefono: userData['telefono'] as String,
-        rol: userData['rol'] as List<String>,
-        permisosCond: userData['permisosCond'] as List<String>,
+        telefono: _telefonoController.text.trim(),
+        rol: roles,
+        permisosCond: [],
         password: _passwordController.text.trim(),
       );
       if (mounted && authProvider.isAuthenticated) {
@@ -183,6 +178,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     return null;
                   },
                 ),
+                CheckboxListTile(
+                  title: const Text('También soy transportista'),
+                  value: _isTransportista,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _isTransportista = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -205,4 +211,3 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
-

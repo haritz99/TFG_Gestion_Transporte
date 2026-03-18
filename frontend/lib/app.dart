@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/auth_provider.dart';
 import 'pages/login_screen.dart';
 import 'features/home/ui/home_screen.dart';
 import 'flavors.dart';

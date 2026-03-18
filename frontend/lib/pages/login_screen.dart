@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../features/auth/providers/auth_provider.dart';
+import '../features/auth/auth_provider.dart';
 import 'package:gestion_transporte/features/home/ui/home_screen.dart';
 import 'register_page.dart';
 

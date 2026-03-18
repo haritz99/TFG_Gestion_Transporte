@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
-import '../data/auth_service.dart';
+import 'auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -54,7 +54,9 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+
       final userData = UserModel(
+        uid: '', // Ahora es vacio porque aun no se ha creado en firebase auth
         nombre: nombre,
         apellido: apellido,
         email: email,
@@ -64,13 +66,11 @@ class AuthProvider extends ChangeNotifier {
         vehiculoId: null,
       );
 
-      final credential = await _authService.register(
+      await _authService.register(
         email,
         password,
         userData,
       );
-      _user = await _authService.getUserData(credential.user!.uid);
-      _idToken = await credential.user?.getIdToken();
     } finally {
       _isLoading = false;
       notifyListeners();

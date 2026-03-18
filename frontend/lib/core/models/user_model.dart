@@ -1,4 +1,5 @@
 class UserModel {
+  final String uid;
   final String nombre;
   final String apellido;
   final String email;
@@ -8,6 +9,7 @@ class UserModel {
   final String? vehiculoId;
 
   UserModel({
+    required this.uid,
     required this.nombre,
     required this.apellido,
     required this.email,
@@ -24,6 +26,7 @@ class UserModel {
         : (rawRol is String && rawRol.isNotEmpty ? [rawRol] : <String>[]);
 
     return UserModel(
+      uid: uid,
       nombre: map['nombre'] ?? '',
       apellido: map['apellido'] ?? '',
       email: map['email'] ?? '',
@@ -36,6 +39,7 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'uid': uid,
       'nombre': nombre,
       'apellido': apellido,
       'email': email,

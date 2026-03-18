@@ -41,7 +41,7 @@ class AuthService {
     }
 
     final profileData = {
-      'uid': user.uid,
+      'uid': user.uid,  // Se le asigna el uid de firebase auth
       'nombre': userData.nombre,
       'apellido': userData.apellido,
       'email': user.email ?? email,

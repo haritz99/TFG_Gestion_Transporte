@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:gestion_transporte/features/auth/providers/auth_provider.dart';
+import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
 import 'package:gestion_transporte/pages/login_screen.dart';
