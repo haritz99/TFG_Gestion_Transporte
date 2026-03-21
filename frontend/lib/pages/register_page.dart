@@ -81,6 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 TextFormField(
                   controller: _nombreController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
                     labelText: 'Nombre',
                     border: OutlineInputBorder(),
@@ -90,12 +91,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Introduce tu nombre';
                     }
+                    if (value.trim().length < 3) {
+                      return 'El nombre debe tener al menos 3 caracteres';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _apellidoController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
                     labelText: 'Apellido',
                     border: OutlineInputBorder(),
@@ -105,12 +110,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Introduce tu apellido';
                     }
+                    if (value.trim().length < 3) {
+                      return 'El apellido debe tener al menos 3 caracteres';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
@@ -121,12 +130,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Introduce tu email';
                     }
+                    final emailRegex =
+                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Introduce un email válido';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _telefonoController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
                     labelText: 'Telefono',
                     border: OutlineInputBorder(),
@@ -137,31 +152,46 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Introduce tu telefono';
                     }
+                    final phoneRegex = RegExp(r'^[0-9]{9}$');
+                    if (!phoneRegex.hasMatch(value.trim())) {
+                      return 'El teléfono debe tener 9 dígitos numéricos';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
-                    labelText: 'Contrasena',
+                    labelText: 'Contraseña',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
                   ),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Introduce una contrasena';
+                      return 'Introduce una contraseña';
                     }
-                    if (value.length < 6) {
-                      return 'Minimo 6 caracteres';
+                    if (value.length < 8) {
+                      return 'Mínimo 8 caracteres';
                     }
+                    if (!value.contains(RegExp(r'[A-Z]'))) {
+                      return 'Debe contener al menos una mayúscula';
+                    }
+                    if (!value.contains(RegExp(r'[0-9]'))) {
+                      return 'Debe contener al menos un número';
+                    }
+              //      if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+              //        return 'Debe contener un carácter especial (!@#\$%^&*)';
+              //     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPasswordController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(
                     labelText: 'Confirmar contrasena',
                     border: OutlineInputBorder(),

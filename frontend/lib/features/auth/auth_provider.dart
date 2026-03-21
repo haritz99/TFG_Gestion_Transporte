@@ -33,10 +33,15 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final credential = await _authService.signIn(email, password);
-      _user = await _authService.getUserData(credential.user!.uid);
-      _idToken = await credential.user?.getIdToken();
-    } finally {
+      await _authService.signIn(email, password);
+      // _user = await _authService.getUserData(credential.user!.uid);
+      // _idToken = await credential.user?.getIdToken();
+
+    } catch (e) {
+      rethrow;
+    }
+
+    finally {
       _isLoading = false;
       notifyListeners();
     }
