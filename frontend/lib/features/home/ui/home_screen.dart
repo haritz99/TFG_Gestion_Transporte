@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
-import 'package:gestion_transporte/pages/login_screen.dart';
+import 'package:gestion_transporte/pages/login_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -3,11 +3,13 @@ from ..schemas.users import UserSchema
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
 from firebase_admin import auth as firebase_auth
+import secrets
+import string
 
-router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_encargado)])
+router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
 
 
-@router.get("/trans")
+@router.get("/")
 async def get_all_trans():
 
     users_ref = db.collection("users")
@@ -23,7 +25,7 @@ async def get_all_trans():
     return transportistas
 
 
-@router.get("/trans/{uid}")
+@router.get("/{uid}")
 async def get_trans(uid: str):
     doc_ref = db.collection("users").document(uid)
     doc = doc_ref.get()
@@ -36,23 +38,52 @@ async def get_trans(uid: str):
     return user_data
 
 
-@router.post("/trans")
+def generate_temp_password(length=12):
+    characters = string.ascii_letters + string.digits + "!@#$%^&*"
+    password = ''.join(secrets.choice(characters) for i in range(length))
+    return password
+
+@router.post("/")
 async def create_trans(user_data: UserSchema):
     try:
+        temp_password = generate_temp_password()
+        
         new_auth_user = firebase_auth.create_user(
             email=user_data.email,
-            password="password_temporal_o_generada"     # falta logica de cambiar password
+            password=temp_password,
         )
         uid = new_auth_user.uid
 
-        doc_ref = db.collection("users").document(uid)
-        doc_ref.set(user_data.model_dump())
-        return {"message": "Transportista creado con éxito", "id": doc_ref.id}
+        firebase_auth.set_custom_user_claims(uid, {"rol": ["transportista"]})
 
+        # Generar link de correo
+        try:
+            reset_link = firebase_auth.generate_password_reset_link(user_data.email)
+        except Exception:
+            reset_link = None
+        
+        # Guardar en Firestore usando el mismo UID
+        user_dict = user_data.model_dump()
+        # Asegurarse de que el rol sea correcto, aunque venga en el schema
+        if "transportista" not in user_dict.get("rol", []):
+             user_dict["rol"] = ["transportista"]
+             
+        doc_ref = db.collection("users").document(uid)
+        doc_ref.set(user_dict)
+        
+        return {
+            "message": "Transportista creado con éxito",
+            "uid": uid,
+            "temp_password": temp_password,
+            "password_reset_link": reset_link
+        }
+
+    except firebase_auth.EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="El email ya está registrado en el sistema")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.put("/trans/{uid}")
+@router.put("/{uid}")
 async def update_trans(uid: str, user_data: UserSchema):
     doc_ref = db.collection("users").document(uid)
     
@@ -62,7 +93,7 @@ async def update_trans(uid: str, user_data: UserSchema):
     doc_ref.update(user_data.model_dump(exclude_unset=True))
     return {"message": "Transportista actualizado con éxito"}
 
-@router.delete("/trans/{uid}")
+@router.delete("/{uid}")
 async def delete_trans(uid: str):
 
     doc_ref = db.collection("users").document(uid)

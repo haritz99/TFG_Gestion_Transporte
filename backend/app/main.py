@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.routers import auth
-from backend.app.routers import users
+from backend.app.routers import trans
 from backend.app.routers import intent
 import os
 
@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-app.include_router(users.router)
+app.include_router(trans.router)
 app.include_router(intent.router)
 
 

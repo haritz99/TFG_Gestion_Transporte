@@ -39,6 +39,8 @@ dependencies:
   cloud_firestore: ^5.6.7
   firebase_messaging: ^15.2.4
 
+  # Correo
+  url_launcher: ^6.2.5
   # Voz
   speech_to_text: ^7.0.0
 
