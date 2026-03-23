@@ -48,3 +48,14 @@ async def get_current_user(
             detail="Invalid token",
         )
 
+
+async def get_current_encargado(
+    current_user: dict[str, Any] = Depends(get_current_user)
+) -> dict[str, Any]:
+    roles = current_user.get("rol", [])
+    if "encargado" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos de encargado para realizar esta acción"
+        )
+    return current_user
