@@ -28,7 +28,7 @@ class TransportistaProvider extends ChangeNotifier {
     required String email,
     required String telefono,
     List<String> rol = const ['transportista'],
-    List<String> permisosCond = const [],
+    required List<String> permisosCond,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -95,10 +95,10 @@ class TransportistaProvider extends ChangeNotifier {
       scheme: 'mailto',
       path: _lastCreatedEmail,
       queryParameters: {
-        'subject': 'Credenciales de acceso - Gestion Transporte',
+        'subject': 'Credenciales de acceso',
         'body':
             'Hola,\n\n'
-            'Tu cuenta de transportista ya ha sido creada.\n\n'
+            'Tu cuenta de transportista ha sido creada.\n\n'
             'Contrasena temporal: $tempPassword\n\n'
             'Para establecer tu contrasena definitiva, abre este enlace:\n$resetLink\n\n'
             'Un saludo.',

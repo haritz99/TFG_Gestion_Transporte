@@ -14,7 +14,6 @@ class UserSchema(FirestoreSchema):
     tfn: str = Field(..., min_length=3)
     rol: list[Literal["encargado", "transportista"]] = Field(..., min_length=1)
     permisosCond: Optional[list[str]] = None
-    disponible: Optional[bool] = None
 
     @field_validator("rol")
     @classmethod
@@ -27,7 +26,5 @@ class UserSchema(FirestoreSchema):
         if "transportista" in self.rol:
             if not self.permisosCond:
                 raise ValueError("'permisosCond' es obligatorio para transportista")
-            if self.disponible is None:
-                raise ValueError("'disponible' es obligatorio para transportista")
         return self
 

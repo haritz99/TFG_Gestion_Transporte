@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:gestion_transporte/features/auth/auth_provider.dart';
-import 'package:gestion_transporte/features/home/ui/home_screen.dart';
+import '../core/routing/role_navigation.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -51,11 +51,8 @@ class _RegisterPageState extends State<RegisterPage> {
         permisosCond: [],
         password: _passwordController.text.trim(),
       );
-      if (mounted && authProvider.isAuthenticated) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (_) => false,
-        );
+      if (mounted) {
+        navigateToHomeByRole(context, authProvider);
       }
     } catch (e) {
       if (mounted) {
