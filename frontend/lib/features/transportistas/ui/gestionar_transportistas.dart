@@ -3,16 +3,45 @@ import 'package:provider/provider.dart';
 
 import '../../auth/auth_service.dart';
 import '../providers/transportista_provider.dart';
+import 'lista_transportistas.dart';
 
 class GestionarTransportistas extends StatelessWidget {
   const GestionarTransportistas({super.key});
 
   @override
   Widget build(BuildContext context) {
-	return ChangeNotifierProvider(
-	  create: (_) => TransportistaProvider(authService: AuthService()),
-	  child: const _GestionarTransportistasView(),
-	);
+    return ChangeNotifierProvider(
+      create: (_) => TransportistaProvider(authService: AuthService()),
+      child: const _GestionarTransportistasTabsView(),
+    );
+  }
+}
+
+class _GestionarTransportistasTabsView extends StatelessWidget {
+  const _GestionarTransportistasTabsView();
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Gestionar transportistas'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.local_shipping), text: 'Listado'),
+							Tab(icon: Icon(Icons.person_add_alt_1), text: 'Alta'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            ListaTransportistasView(),
+						_GestionarTransportistasView(),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -64,48 +93,46 @@ class _GestionarTransportistasViewState
   }
 
   Future<void> _onSubmit() async {
-	if (!_formKey.currentState!.validate()) return;
+		if (!_formKey.currentState!.validate()) return;
 
-	final provider = context.read<TransportistaProvider>();
-	final ok = await provider.createTransportista(
-	  nombre: _nombreCtrl.text.trim(),
-	  apellido: _apellidoCtrl.text.trim(),
-	  email: _emailCtrl.text.trim(),
-	  telefono: _telefonoCtrl.text.trim(),
-	  permisosCond: _permisosList,
-	);
+		final provider = context.read<TransportistaProvider>();
+		final ok = await provider.createTransportista(
+			nombre: _nombreCtrl.text.trim(),
+			apellido: _apellidoCtrl.text.trim(),
+			email: _emailCtrl.text.trim(),
+			telefono: _telefonoCtrl.text.trim(),
+			permisosCond: _permisosList,
+		);
 
-	if (!mounted) return;
+		if (!mounted) return;
 
-	if (ok) {
-	  ScaffoldMessenger.of(context).showSnackBar(
-		const SnackBar(content: Text('Transportista creado correctamente.')),
-	  );
-	  _formKey.currentState?.reset();
-	  _nombreCtrl.clear();
-	  _apellidoCtrl.clear();
-	  _emailCtrl.clear();
-	  _telefonoCtrl.clear();
-	  setState(() {
-	    _permisosList.clear();
-        _selectedPermiso = null;
-	  });
-	}
+		if (ok) {
+			ScaffoldMessenger.of(context).showSnackBar(
+			const SnackBar(content: Text('Transportista creado correctamente.')),
+			);
+			_formKey.currentState?.reset();
+			_nombreCtrl.clear();
+			_apellidoCtrl.clear();
+			_emailCtrl.clear();
+			_telefonoCtrl.clear();
+			setState(() {
+				_permisosList.clear();
+					_selectedPermiso = null;
+			});
+		}
   }
 
   @override
   Widget build(BuildContext context) {
 	final provider = context.watch<TransportistaProvider>();
 
-	return Scaffold(
-	  appBar: AppBar(title: const Text('Gestionar transportistas')),
-	  body: SingleChildScrollView(
-		padding: const EdgeInsets.all(16),
-		child: Form(
-		  key: _formKey,
-		  child: Column(
-			crossAxisAlignment: CrossAxisAlignment.stretch,
-			children: [
+	return SingleChildScrollView(
+	  padding: const EdgeInsets.all(16),
+	  child: Form(
+		key: _formKey,
+		child: Column(
+		  crossAxisAlignment: CrossAxisAlignment.stretch,
+		  children: [
 			  TextFormField(
 				controller: _nombreCtrl,
 				decoration: const InputDecoration(
@@ -285,7 +312,6 @@ class _GestionarTransportistasViewState
 			],
 		  ),
 		),
-	  ),
 	);
   }
 }

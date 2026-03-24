@@ -13,6 +13,7 @@ class TransportistaProvider extends ChangeNotifier {
   String? _errorMessage;
   Map<String, dynamic>? _createResponse;
   String? _lastCreatedEmail;
+  List<UserModel> _transportistas = [];
 
   TransportistaProvider({
     required AuthService authService,
@@ -21,6 +22,32 @@ class TransportistaProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get createResponse => _createResponse;
+  List<UserModel> get transportistas => _transportistas;
+
+
+  Future<List<UserModel>> fetchTransportistas() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _authService.getIdToken(forceRefresh: false) ??
+          await _authService.getIdToken(forceRefresh: true);
+
+      if (token == null) {
+        throw Exception("No se pudo obtener un token valido. Inicia sesion de nuevo.");
+      }
+
+      _transportistas = await _service.fetchTransportistas(token: token);
+      return _transportistas;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<bool> createTransportista({
     required String nombre,
@@ -36,11 +63,11 @@ class TransportistaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-
-      final token = await _authService.getIdToken(forceRefresh: false);
+      final token = await _authService.getIdToken(forceRefresh: false) ??
+          await _authService.getIdToken(forceRefresh: true);
 
       if (token == null) {
-        throw Exception("No se pudo obtener un token válido. Inicia sesión de nuevo.");
+        throw Exception("No se pudo obtener un token valido. Inicia sesion de nuevo.");
       }
 
       final userData = UserModel.fromMap({
