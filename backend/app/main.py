@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.routers import auth
-from backend.app.routers import trans
-from backend.app.routers import intent
+from .routers import auth
+from .routers import trans
+from .routers import intent
 import os
 
 

@@ -1,10 +1,10 @@
 import os
 from groq import Groq
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
-
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+backend_dir = Path(__file__).resolve().parents[2]
+load_dotenv(backend_dir / ".env")
 
 SYSTEM_PROMPT = """Eres un asistente para una aplicación de gestión de transporte profesional.
 Tu trabajo es clasificar la intención del usuario a partir de su mensaje de voz transcrito.
@@ -20,6 +20,11 @@ Ejemplo de respuesta:
 
 
 def detect_intent(text: str) -> dict:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY no está configurada.")
+
+    client = Groq(api_key=api_key)
     chat_completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
