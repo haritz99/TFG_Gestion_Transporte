@@ -31,8 +31,13 @@ class _GestionarTransportistasViewState
   final _apellidoCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
-  final _permisosCondCtrl = TextEditingController();
   final List<String> _permisosList = [];
+  
+  String? _selectedPermiso;
+  static const List<String> _validPermisos = [
+    'AM', 'A1', 'A2', 'A', 'B1', 'B', 'C1', 'C', 'D1', 'D',
+    'BE', 'C1E', 'CE', 'D1E', 'DE', 'L', 'T',
+  ];
 
   @override
   void dispose() {
@@ -40,16 +45,14 @@ class _GestionarTransportistasViewState
 	_apellidoCtrl.dispose();
 	_emailCtrl.dispose();
 	_telefonoCtrl.dispose();
-	_permisosCondCtrl.dispose();
 	super.dispose();
   }
 
   void _addPermiso() {
-    final t = _permisosCondCtrl.text.trim().toUpperCase();
-    if (t.isNotEmpty && !_permisosList.contains(t)) {
+    if (_selectedPermiso != null && !_permisosList.contains(_selectedPermiso)) {
       setState(() {
-        _permisosList.add(t);
-        _permisosCondCtrl.clear();
+        _permisosList.add(_selectedPermiso!);
+        _selectedPermiso = null;
       });
     }
   }
@@ -83,9 +86,9 @@ class _GestionarTransportistasViewState
 	  _apellidoCtrl.clear();
 	  _emailCtrl.clear();
 	  _telefonoCtrl.clear();
-	  _permisosCondCtrl.clear();
 	  setState(() {
 	    _permisosList.clear();
+        _selectedPermiso = null;
 	  });
 	}
   }
@@ -158,42 +161,85 @@ class _GestionarTransportistasViewState
 				  if (v == null || v.trim().isEmpty) {
 					return 'Introduce el telefono';
 				  }
+					final regex = RegExp(r'^[0-9]{9}$');
+					if (!regex.hasMatch(v)) return 'Telefono no valido';
 				  return null;
 				},
 			  ),
 			  const SizedBox(height: 12),
-			  Row(
-			    children: [
-			      Expanded(
-			        child: TextFormField(
-			          controller: _permisosCondCtrl,
-			          decoration: const InputDecoration(
-			            labelText: 'Permiso (B, C, CE...)',
-			            border: OutlineInputBorder(),
-			          ),
-			          onFieldSubmitted: (_) => _addPermiso(),
-			        ),
-			      ),
-			      const SizedBox(width: 8),
-			      IconButton.filled(
-			        onPressed: _addPermiso,
-			        icon: const Icon(Icons.add),
-			      ),
-			    ],
+			  FormField<List<String>>(
+				validator: (_) {
+				  if (_permisosList.isEmpty) {
+					return 'Debes añadir al menos un permiso de conducir';
+				  }
+				  return null;
+				},
+				builder: (FormFieldState<List<String>> state) {
+				  return Column(
+					crossAxisAlignment: CrossAxisAlignment.start,
+					children: [
+					  Row(
+						children: [
+						  Expanded(
+							child: DropdownButtonFormField<String>(
+							  initialValue: _selectedPermiso,
+							  decoration: const InputDecoration(
+								labelText: 'Permiso (Seleccionar)',
+								border: OutlineInputBorder(),
+							  ),
+							  items: _validPermisos
+								  .map((p) => DropdownMenuItem(
+										value: p,
+										child: Text(p),
+									  ))
+								  .toList(),
+							  onChanged: (v) =>
+								  setState(() => _selectedPermiso = v),
+							),
+						  ),
+						  const SizedBox(width: 8),
+						  IconButton.filled(
+							onPressed: _selectedPermiso == null
+								? null
+								: () {
+									_addPermiso();
+									state.didChange(_permisosList);
+								  },
+							icon: const Icon(Icons.add),
+						  ),
+						],
+					  ),
+					  if (_permisosList.isNotEmpty)
+						Padding(
+						  padding: const EdgeInsets.symmetric(vertical: 8),
+						  child: Wrap(
+							spacing: 8,
+							children: _permisosList
+								.map((p) => Chip(
+									  label: Text(p),
+									  onDeleted: () {
+										_removePermiso(p);
+										state.didChange(_permisosList);
+									  },
+									))
+								.toList(),
+						  ),
+						),
+					  if (state.hasError)
+						Padding(
+						  padding: const EdgeInsets.only(top: 6, left: 12),
+						  child: Text(
+							state.errorText!,
+							style: TextStyle(
+							  color: Theme.of(context).colorScheme.error,
+							  fontSize: 12,
+							),
+						  ),
+						),
+					],
+				  );
+				},
 			  ),
-			  if (_permisosList.isNotEmpty)
-			    Padding(
-			      padding: const EdgeInsets.symmetric(vertical: 8),
-			      child: Wrap(
-			        spacing: 8,
-			        children: _permisosList
-			            .map((p) => Chip(
-			                  label: Text(p),
-			                  onDeleted: () => _removePermiso(p),
-			                ))
-			            .toList(),
-			      ),
-			    ),
 			  const SizedBox(height: 16),
 			  if (provider.errorMessage != null)
 				Padding(
