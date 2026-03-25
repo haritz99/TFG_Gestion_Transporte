@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
+import 'package:gestion_transporte/core/token_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../auth/auth_service.dart';
@@ -7,7 +8,7 @@ import '../data/transportista_service.dart';
 
 class TransportistaProvider extends ChangeNotifier {
   final TransportistaService _service = TransportistaService();
-  final AuthService _authService;
+  final AuthTokenProvider _tokenProvider;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -17,7 +18,7 @@ class TransportistaProvider extends ChangeNotifier {
 
   TransportistaProvider({
     required AuthService authService,
-  })  : _authService = authService;
+  }) : _tokenProvider = AuthTokenProvider(authService);
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -31,12 +32,7 @@ class TransportistaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _authService.getIdToken(forceRefresh: false) ??
-          await _authService.getIdToken(forceRefresh: true);
-
-      if (token == null) {
-        throw Exception("No se pudo obtener un token valido. Inicia sesion de nuevo.");
-      }
+      final token = await _tokenProvider.getRequiredToken();
 
       _transportistas = await _service.fetchTransportistas(token: token);
       return _transportistas;
@@ -63,12 +59,7 @@ class TransportistaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _authService.getIdToken(forceRefresh: false) ??
-          await _authService.getIdToken(forceRefresh: true);
-
-      if (token == null) {
-        throw Exception("No se pudo obtener un token valido. Inicia sesion de nuevo.");
-      }
+      final token = await _tokenProvider.getRequiredToken();
 
       final userData = UserModel.fromMap({
         'nombre': nombre,
@@ -111,12 +102,7 @@ class TransportistaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _authService.getIdToken(forceRefresh: false) ??
-          await _authService.getIdToken(forceRefresh: true);
-
-      if (token == null) {
-        throw Exception('No se pudo obtener un token valido. Inicia sesion de nuevo.');
-      }
+      final token = await _tokenProvider.getRequiredToken();
 
       final userData = UserModel(
         uid: uid,
@@ -156,12 +142,7 @@ class TransportistaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _authService.getIdToken(forceRefresh: false) ??
-          await _authService.getIdToken(forceRefresh: true);
-
-      if (token == null) {
-        throw Exception('No se pudo obtener un token valido. Inicia sesion de nuevo.');
-      }
+      final token = await _tokenProvider.getRequiredToken();
 
       await _service.deleteTransportista(uid: uid, token: token);
       _transportistas.removeWhere((t) => t.uid == uid);
