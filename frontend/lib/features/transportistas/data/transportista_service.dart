@@ -9,7 +9,6 @@ class TransportistaService {
   Future<Map<String, dynamic>> createTransportista({
     required UserModel userData,
     required String token,
-    bool? disponible,
   }) async {
     final uri = Uri.parse('$_baseUrl/trans/');
 
@@ -20,7 +19,6 @@ class TransportistaService {
       'telefono': userData.telefono,
       'rol': userData.rol,
       'permisosCond': userData.permisosCond,
-      if (disponible != null) 'disponible': disponible,
     };
 
     final response = await http.post(

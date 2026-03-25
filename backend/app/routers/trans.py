@@ -45,6 +45,7 @@ def generate_temp_password(length=12):
 
 @router.post("/")
 async def create_trans(user_data: UserSchema):
+    new_auth_user = None
     try:
         temp_password = generate_temp_password()
         
@@ -80,8 +81,13 @@ async def create_trans(user_data: UserSchema):
 
     except firebase_auth.EmailAlreadyExistsError:
         raise HTTPException(status_code=400, detail="El email ya está registrado en el sistema")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        if new_auth_user is not None:
+            try:
+                firebase_auth.delete_user(new_auth_user.uid)
+            except Exception:
+                pass
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.put("/{uid}")
 async def update_trans(uid: str, user_data: UserSchema):
@@ -131,6 +137,6 @@ async def delete_trans(uid: str):
         return {"message": "Transportista eliminado con éxito"}
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
