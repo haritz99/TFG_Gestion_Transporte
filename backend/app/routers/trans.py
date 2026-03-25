@@ -86,11 +86,42 @@ async def create_trans(user_data: UserSchema):
 @router.put("/{uid}")
 async def update_trans(uid: str, user_data: UserSchema):
     doc_ref = db.collection("users").document(uid)
-    
-    if not doc_ref.get().exists:
+
+    doc = doc_ref.get()
+    if not doc.exists:
         raise HTTPException(status_code=404, detail="Transportista no encontrado")
-        
-    doc_ref.update(user_data.model_dump(exclude_unset=True))
+
+    # Validar que el usuario tenga rol "transportista", igual que en delete_trans
+    doc_data = doc.to_dict() or {}
+    rol = doc_data.get("rol", [])
+    if isinstance(rol, str):
+        rol = [rol]
+    if "transportista" not in rol:
+        raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
+
+    update_data = user_data.model_dump(exclude_unset=True)
+
+    # Mantener sincronizado el email entre Firestore y Firebase Auth
+    new_email = update_data.get("email")
+    old_email = doc_data.get("email")
+    if new_email is not None and new_email != old_email:
+        try:
+            firebase_auth.update_user(uid, email=new_email)
+        except firebase_auth.EmailAlreadyExistsError:
+            # No actualizar Firestore si el email no se puede actualizar en Auth
+            raise HTTPException(
+                status_code=400,
+                detail="El email proporcionado ya está en uso en otra cuenta"
+            )
+        except firebase_auth.UserNotFoundError:
+            raise HTTPException(
+                status_code=400,
+                detail="No se encontró la cuenta de autenticación asociada al transportista"
+            )
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    doc_ref.update(update_data)
     return {"message": "Transportista actualizado con éxito"}
 
 @router.delete("/{uid}")
