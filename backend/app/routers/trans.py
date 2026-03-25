@@ -95,7 +95,42 @@ async def update_trans(uid: str, user_data: UserSchema):
 
 @router.delete("/{uid}")
 async def delete_trans(uid: str):
+    try:
+        doc_ref = db.collection("users").document(uid)
 
-    doc_ref = db.collection("users").document(uid)
-    doc_ref.delete()
-    return {"message": "Transportista eliminado con éxito"}
+        doc = doc_ref.get()
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+
+        doc_data = doc.to_dict() or {}
+        rol = doc_data.get("rol", [])
+        if isinstance(rol, str):
+            rol = [rol]
+        if "transportista" not in rol:
+            raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
+
+        # TODO: Cuando exista CRUD de tareas, bloquear borrado si existe
+        # alguna tarea (carga o mantenimiento) con tareas.transportistaId == uid.
+
+        vehiculo_id = doc_data.get("vehiculoId")
+        if vehiculo_id is not None:
+            # Se limpia la referencia local antes de la baja definitiva.
+            doc_ref.update({"vehiculoId": None})
+
+        # También se elimina la cuenta en Firebase Auth.
+        try:
+            firebase_auth.delete_user(uid)
+        except firebase_auth.UserNotFoundError:
+            pass
+
+        doc_ref.delete()
+
+        if vehiculo_id is not None:
+            return {"message": "Transportista eliminado con éxito y vehículo liberado"}
+
+        return {"message": "Transportista eliminado con éxito"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

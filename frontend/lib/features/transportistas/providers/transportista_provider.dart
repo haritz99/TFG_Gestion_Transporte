@@ -96,6 +96,85 @@ class TransportistaProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateTransportista({
+    required String uid,
+    required String nombre,
+    required String apellido,
+    required String email,
+    required String telefono,
+    required List<String> rol,
+    required List<String> permisosCond,
+    String? vehiculoId,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _authService.getIdToken(forceRefresh: false) ??
+          await _authService.getIdToken(forceRefresh: true);
+
+      if (token == null) {
+        throw Exception('No se pudo obtener un token valido. Inicia sesion de nuevo.');
+      }
+
+      final userData = UserModel(
+        uid: uid,
+        nombre: nombre,
+        apellido: apellido,
+        email: email,
+        telefono: telefono,
+        rol: rol,
+        permisosCond: permisosCond,
+        vehiculoId: vehiculoId,
+      );
+
+      await _service.updateTransportista(
+        uid: uid,
+        userData: userData,
+        token: token,
+      );
+
+      final index = _transportistas.indexWhere((t) => t.uid == uid);
+      if (index != -1) {
+        _transportistas[index] = userData;
+      }
+
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteTransportista(String uid) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _authService.getIdToken(forceRefresh: false) ??
+          await _authService.getIdToken(forceRefresh: true);
+
+      if (token == null) {
+        throw Exception('No se pudo obtener un token valido. Inicia sesion de nuevo.');
+      }
+
+      await _service.deleteTransportista(uid: uid, token: token);
+      _transportistas.removeWhere((t) => t.uid == uid);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void clearCreateResponse() {
     _createResponse = null;
     _lastCreatedEmail = null;

@@ -11,7 +11,7 @@ class UserSchema(FirestoreSchema):
     nombre: str = Field(..., min_length=1)
     apellido: str = Field(..., min_length=1)
     email: str = Field(..., min_length=3)
-    tfn: str = Field(..., min_length=3)
+    telefono: str = Field(..., min_length=3)
     rol: list[Literal["encargado", "transportista"]] = Field(..., min_length=1)
     permisosCond: Optional[list[str]] = None
     vehiculoId: Optional[str] = None

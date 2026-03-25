@@ -4,3 +4,4 @@ groq
 firebase-admin
 pydantic
 python-dotenv
+pytest
