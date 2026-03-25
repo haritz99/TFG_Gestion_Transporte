@@ -2,9 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/routing/role_navigation.dart';
 import 'features/auth/auth_provider.dart';
-import 'pages/login_screen.dart';
-import 'features/home/ui/home_screen.dart';
 import 'flavors.dart';
 
 class App extends StatelessWidget {
@@ -19,15 +18,14 @@ class App extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.orange),
         home: Consumer<AuthProvider>(
           builder: (_, auth, __) {
-            final screen = auth.isAuthenticated
-                ? const HomeScreen()
-                : const LoginScreen();
+            final screen = resolveAppHome(auth);
             return _flavorBanner(child: screen, show: kDebugMode);
           },
         ),
       ),
     );
   }
+
 
   Widget _flavorBanner({required Widget child, bool show = true}) => show
       ? Banner(

@@ -3,16 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
-import 'package:gestion_transporte/pages/login_screen.dart';
+import 'package:gestion_transporte/pages/login_page.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class TransportistaHomeScreen extends StatefulWidget {
+  const TransportistaHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<TransportistaHomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<TransportistaHomeScreen> {
   final VoiceService _voiceService = VoiceService();
   final ApiService _apiService = ApiService();
   String _lastCommand = '';

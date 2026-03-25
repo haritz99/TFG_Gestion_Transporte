@@ -1,15 +1,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.routers import auth
-from backend.app.routers import users
-from backend.app.routers import intent
+from .routers import auth
+from .routers import trans
+from .routers import intent
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
+# Cargar variables de entorno desde backend/.env independientemente del working directory
+BASE_DIR = Path(__file__).resolve().parents[1]  # backend/
+load_dotenv(BASE_DIR / ".env")
 
 app = FastAPI(title="Gestión Transporte API")
 
 # Middleware para CORS
-origins = [os.getenv("FRONTEND_URL", "")]
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5500")
+
+origins = [
+    frontend_url,
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -19,7 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-app.include_router(users.router)
+app.include_router(trans.router)
 app.include_router(intent.router)
 
 
