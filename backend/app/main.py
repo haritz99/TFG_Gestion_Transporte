@@ -5,8 +5,11 @@ from .routers import trans
 from .routers import intent
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Cargar variables de entorno desde backend/.env independientemente del working directory
+BASE_DIR = Path(__file__).resolve().parents[1]  # backend/
+load_dotenv(BASE_DIR / ".env")
 
 app = FastAPI(title="Gestión Transporte API")
 
