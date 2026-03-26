@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import '../../../core/models/user_model.dart';
 
 class TransportistaService {
+  final http.Client _client;
+  TransportistaService({http.Client? client}) : _client = client ?? http.Client();
+
   static const String _baseUrl = 'http://127.0.0.1:8000';
 
   Future<Map<String, dynamic>> createTransportista({
@@ -21,7 +24,7 @@ class TransportistaService {
       'permisosCond': userData.permisosCond,
     };
 
-    final response = await http.post(
+    final response = await _client.post(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +44,7 @@ class TransportistaService {
   Future<List<UserModel>> fetchTransportistas({required String token}) async {
     final uri = Uri.parse('$_baseUrl/trans/');
 
-    final response = await http.get(
+    final response = await _client.get(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -78,7 +81,7 @@ class TransportistaService {
       'vehiculoId': userData.vehiculoId,
     };
 
-    final response = await http.put(
+    final response = await _client.put(
       uri,
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +104,7 @@ class TransportistaService {
   }) async {
     final uri = Uri.parse('$_baseUrl/trans/$uid');
 
-    final response = await http.delete(
+    final response = await _client.delete(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
