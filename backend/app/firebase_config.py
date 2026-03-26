@@ -29,8 +29,25 @@ def _resolve_credentials_path() -> str:
 
 _cred_path = _resolve_credentials_path()
 
-if not firebase_admin._apps:
+
+def ensure_firebase_initialized() -> None:
+    if firebase_admin._apps:
+        return
+
     cred = credentials.Certificate(_cred_path)
     firebase_admin.initialize_app(cred)
 
-db = firestore.client()
+
+def get_db():
+    ensure_firebase_initialized()
+    return firestore.client()
+
+
+class _LazyFirestoreClient:
+    def __getattr__(self, item):
+        return getattr(get_db(), item)
+
+
+# Mantiene compatibilidad con imports existentes (`from ..firebase_config import db`)
+# sin inicializar Firebase en tiempo de import.
+db = _LazyFirestoreClient()

@@ -5,3 +5,5 @@ firebase-admin
 pydantic
 python-dotenv
 pytest
+pytest-cov
+httpx

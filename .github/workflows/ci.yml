@@ -1,0 +1,56 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  frontend-tests:
+    name: Flutter Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./frontend
+          
+      - name: Generate Mocks
+        run: dart run build_runner build --delete-conflicting-outputs
+        working-directory: ./frontend
+
+      - name: Run Tests
+        run: flutter test --coverage
+        working-directory: ./frontend
+
+  backend-tests:
+    name: FastAPI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip' # caching pip dependencies
+          
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+        
+      - name: Create Firebase Config Mock
+        run: |
+          echo "{}" > backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
+          
+      - name: Run Tests with pytest
+        run: pytest backend/app/tests/ --cov=backend/app
+        env:
+          FIREBASE_CREDENTIALS: backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
+
