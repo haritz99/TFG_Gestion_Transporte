@@ -56,4 +56,25 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
+
+  Future<void> insertaVehiculo(VehiculoModel vehiculoData) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      await _service.insertaVehiculo(
+        token: token,
+        vehiculoData: vehiculoData
+      );
+
+  } catch (e) {
+      _errorMessage = "Error al insertar vehiculo";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
 }

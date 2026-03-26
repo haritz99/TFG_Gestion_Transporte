@@ -5,12 +5,15 @@ import 'package:http/http.dart' as http;
 import '../../../core/models/vehiculo_model.dart';
 
 class VehiculoService {
+  final http.Client _client;
+  VehiculoService({http.Client? client}) : _client = client ?? http.Client();
+
   static const String _baseUrl = 'http://127.0.0.1:8000';
 
   Future<List<VehiculoModel>> fetchVehiculos({required String token}) async {
     final uri = Uri.parse('$_baseUrl/vehi/');
 
-    final response = await http.get(
+    final response = await _client.get(
       uri,
       headers: {
       'Authorization': 'Bearer $token',
@@ -37,7 +40,7 @@ class VehiculoService {
     }) async {
     final uri = Uri.parse('$_baseUrl/vehi/assign');
 
-    final response = await http.patch(
+    final response = await _client.patch(
       uri,
       headers: {
       'Content-Type': 'application/json',
@@ -54,5 +57,29 @@ class VehiculoService {
       throw Exception(errorData['detail'] ?? 'Error al asignar vehiculo');
     }
   }
-}
 
+  Future<VehiculoModel> insertaVehiculo({
+    required String token,
+    required VehiculoModel vehiculoData,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/vehi/');
+
+    final response = await _client.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(vehiculoData.toMap()),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final String id = (data['matricula'] ?? '').toString();
+      return VehiculoModel.fromMap(data, id);
+    } else {
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+      throw Exception(errorData['detail'] ?? 'Error al insertar vehículo');
+    }
+  }
+}
