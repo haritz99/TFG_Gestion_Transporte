@@ -7,7 +7,7 @@ import '../../auth/auth_service.dart';
 import '../data/transportista_service.dart';
 
 class TransportistaProvider extends ChangeNotifier {
-  final TransportistaService _service = TransportistaService();
+  final TransportistaService _service;
   final AuthTokenProvider _tokenProvider;
 
   bool _isLoading = false;
@@ -18,7 +18,9 @@ class TransportistaProvider extends ChangeNotifier {
 
   TransportistaProvider({
     required AuthService authService,
-  }) : _tokenProvider = AuthTokenProvider(authService);
+    TransportistaService? service,
+  })  : _service = service ?? TransportistaService(),
+        _tokenProvider = AuthTokenProvider(authService);
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;

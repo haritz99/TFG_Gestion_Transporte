@@ -6,7 +6,7 @@ import '../../auth/auth_service.dart';
 import '../data/vehiculo_service.dart';
 
 class VehiculoProvider extends ChangeNotifier {
-  final VehiculoService _service = VehiculoService();
+  final VehiculoService _service;
   final AuthTokenProvider _tokenProvider;
 
   bool _isLoading = false;
@@ -14,7 +14,9 @@ class VehiculoProvider extends ChangeNotifier {
 
   VehiculoProvider({
     required AuthService authService,
-  }) : _tokenProvider = AuthTokenProvider(authService);
+    VehiculoService? service,
+  })  : _service = service ?? VehiculoService(),
+        _tokenProvider = AuthTokenProvider(authService);
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -56,7 +58,6 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
-
   Future<void> insertaVehiculo(VehiculoModel vehiculoData) async {
     _isLoading = true;
     _errorMessage = null;
@@ -66,10 +67,9 @@ class VehiculoProvider extends ChangeNotifier {
       final token = await _tokenProvider.getRequiredToken();
       await _service.insertaVehiculo(
         token: token,
-        vehiculoData: vehiculoData
+        vehiculoData: vehiculoData,
       );
-
-  } catch (e) {
+    } catch (e) {
       _errorMessage = "Error al insertar vehiculo";
     } finally {
       _isLoading = false;

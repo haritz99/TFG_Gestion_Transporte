@@ -89,7 +89,49 @@ void main() {
       expect(result, isA<List<UserModel>>());
       expect(result.length, 1);
       expect(result.first.uid, tUid);
-      expect(result.first.permisosCond?.contains('C+E'), true);
+      expect(result.first.permisosCond.contains('C+E'), true);
+    });
+
+    test('fetchTransportistas devuelve lista vacia cuando backend responde []', () async {
+      when(mockHttpClient.get(
+        Uri.parse(baseUrl),
+        headers: {'Authorization': 'Bearer $tToken'},
+      )).thenAnswer((_) async => http.Response('[]', 200));
+
+      final result = await transportistaService.fetchTransportistas(token: tToken);
+
+      expect(result, isEmpty);
+    });
+
+    test('fetchTransportistas lanza excepcion con detail cuando falla', () async {
+      when(mockHttpClient.get(
+        any,
+        headers: anyNamed('headers'),
+      )).thenAnswer((_) async => http.Response('{"detail": "Token invalido"}', 401));
+
+      expect(
+        () => transportistaService.fetchTransportistas(token: tToken),
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('Token invalido'))),
+      );
+    });
+
+    test('createTransportista usa mensaje por defecto si no llega detail', () async {
+      when(mockHttpClient.post(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+      )).thenAnswer((_) async => http.Response('{"error": "bad"}', 400));
+
+      expect(
+        () => transportistaService.createTransportista(token: tToken, userData: tUserModel),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Error al crear transportista'),
+          ),
+        ),
+      );
     });
 
     test('updateTransportista retorna map si status es 200', () async {
@@ -108,6 +150,29 @@ void main() {
       expect(result['mensaje'], 'Actualizado');
     });
 
+    test('updateTransportista lanza excepcion con detail cuando falla', () async {
+      when(mockHttpClient.put(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+      )).thenAnswer((_) async => http.Response('{"detail": "Transportista no encontrado"}', 404));
+
+      expect(
+        () => transportistaService.updateTransportista(
+          uid: tUid,
+          userData: tUserModel,
+          token: tToken,
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Transportista no encontrado'),
+          ),
+        ),
+      );
+    });
+
     test('deleteTransportista retorna map si status es 200', () async {
       when(mockHttpClient.delete(
         Uri.parse('$baseUrl$tUid'),
@@ -120,6 +185,27 @@ void main() {
       );
 
       expect(result['mensaje'], 'Eliminado');
+    });
+
+    test('deleteTransportista lanza excepcion y usa mensaje por defecto si no hay detail', () async {
+      when(mockHttpClient.delete(
+        any,
+        headers: anyNamed('headers'),
+      )).thenAnswer((_) async => http.Response('{"error": "forbidden"}', 403));
+
+      expect(
+        () => transportistaService.deleteTransportista(
+          uid: tUid,
+          token: tToken,
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Error al eliminar transportista'),
+          ),
+        ),
+      );
     });
   });
 }
