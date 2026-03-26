@@ -5,9 +5,9 @@ from typing import Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from firebase_admin import auth as firebase_auth, firestore
+from firebase_admin import auth as firebase_auth
 
-from .. import firebase_config  # noqa: F401  # Initialize Firebase app once.
+from ..firebase_config import ensure_firebase_initialized, get_db
 
 bearer_scheme = HTTPBearer(auto_error=False)
 check_revoked = os.getenv("FIREBASE_CHECK_REVOKED", "false").lower() == "true"
@@ -31,6 +31,7 @@ async def get_current_user(
         )
 
     try:
+        ensure_firebase_initialized()
         return firebase_auth.verify_id_token(token, check_revoked=check_revoked)
     except firebase_auth.ExpiredIdTokenError:
         raise HTTPException(
@@ -54,7 +55,7 @@ async def get_current_encargado(
 ) -> dict[str, Any]:
     uid = current_user.get("uid")
 
-    db = firestore.client()
+    db = get_db()
     user_ref = db.collection("users").document(uid)
     user_doc = user_ref.get()
 

@@ -49,7 +49,7 @@ jobs:
         run: |
           echo "{}" > backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
           
-      - name: Run Tests with ytest
+      - name: Run Tests with pytest
         run: pytest backend/app/tests/ --cov=backend/app
         env:
           FIREBASE_CREDENTIALS: backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
