@@ -1,34 +1,58 @@
 class VehiculoModel {
   final String id;
   final String matricula;
-  final String tipo; // 'interno' o 'externo'
+  final String marca;
+  final String modelo;
   final double capacidad;
-  final String? conductorId;
+  final double largo;
+  final double ancho;
+  final double alto;
+  final bool disponible;
+  final bool interno;
+  final String? transportistaId;
 
   VehiculoModel({
     required this.id,
     required this.matricula,
-    required this.tipo,
+    required this.marca,
+    required this.modelo,
     required this.capacidad,
-    this.conductorId,
+    required this.largo,
+    required this.ancho,
+    required this.alto,
+    required this.disponible,
+    required this.interno,
+    this.transportistaId,
   });
 
   factory VehiculoModel.fromMap(Map<String, dynamic> map, String id) {
     return VehiculoModel(
       id: id,
       matricula: map['matricula'] ?? '',
-      tipo: map['tipo'] ?? '',
+      marca: map['marca'] ?? '',
+      modelo: map['modelo'] ?? '',
       capacidad: (map['capacidad'] ?? 0).toDouble(),
-      conductorId: map['conductorId'],
+      largo: (map['largo'] ?? 0).toDouble(),
+      ancho: (map['ancho'] ?? 0).toDouble(),
+      alto: (map['alto'] ?? 0).toDouble(),
+      disponible: map['disponible'] ?? false,
+      interno: map['interno'] ?? false,
+      transportistaId: map['transportistaId'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'matricula': matricula,
-      'tipo': tipo,
+      'marca': marca,
+      'modelo': modelo,
       'capacidad': capacidad,
-      'conductorId': conductorId,
+      'largo': largo,
+      'ancho': ancho,
+      'alto': alto,
+      'disponible': disponible,
+      'interno': interno,
+      'transportistaId': transportistaId,
     };
   }
 }
