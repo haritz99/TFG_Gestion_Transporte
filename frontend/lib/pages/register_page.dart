@@ -19,6 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _telefonoController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _nombreEmpresaController = TextEditingController();
   bool _isTransportista = false;
 
   @override
@@ -29,6 +30,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _telefonoController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nombreEmpresaController.dispose();
     super.dispose();
   }
 
@@ -50,6 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
         rol: roles,
         permisosCond: [],
         password: _passwordController.text.trim(),
+        nombreEmpresa: _nombreEmpresaController.text.trim(),
       );
       if (mounted) {
         navigateToHomeByRole(context, authProvider);
@@ -109,6 +112,25 @@ class _RegisterPageState extends State<RegisterPage> {
                     }
                     if (value.trim().length < 3) {
                       return 'El apellido debe tener al menos 3 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _nombreEmpresaController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  decoration: const InputDecoration(
+                    labelText: 'Empresa',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.apartment),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Introduce el nombre de la empresa';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'El nombre de empresa debe tener al menos 2 caracteres';
                     }
                     return null;
                   },

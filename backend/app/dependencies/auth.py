@@ -7,10 +7,18 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth as firebase_auth
 
-from ..firebase_config import ensure_firebase_initialized, get_db
+from ..firebase_config import ensure_firebase_initialized
 
 bearer_scheme = HTTPBearer(auto_error=False)
 check_revoked = os.getenv("FIREBASE_CHECK_REVOKED", "false").lower() == "true"
+
+
+def normalize_roles(raw_roles: Any) -> list[str]:
+    if isinstance(raw_roles, list):
+        return [role for role in raw_roles if isinstance(role, str)]
+    if isinstance(raw_roles, str) and raw_roles:
+        return [raw_roles]
+    return []
 
 
 async def get_current_user(
@@ -54,32 +62,26 @@ async def get_current_encargado(
     current_user: dict[str, Any] = Depends(get_current_user)
 ) -> dict[str, Any]:
     uid = current_user.get("uid")
-
-    db = get_db()
-    user_ref = db.collection("users").document(uid)
-    user_doc = user_ref.get()
-
-    if not user_doc.exists:
+    if not isinstance(uid, str) or not uid:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado en la base de datos"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token sin uid válido",
         )
 
-    user_data = user_doc.to_dict()
-    rol = user_data.get("rol")
-
-    # Verificación del rol (funciona si es String o si es Lista)
-    if isinstance(rol, list):
-        is_encargado = "encargado" in rol
-    else:
-        is_encargado = (rol == "encargado")
-
-    if not is_encargado:
+    roles = normalize_roles(current_user.get("rol"))
+    company_id = current_user.get("companyId")
+    if "encargado" not in roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos de encargado para realizar esta acción"
+            detail="No tienes permisos de encargado para realizar esta acción",
         )
 
-    # Opcional: Adjuntar los datos de firestore por si se necesitan en el endpoint
-    current_user["rol"] = rol
+    if not isinstance(company_id, str) or not company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El token no contiene un companyId válido",
+        )
+
+    current_user["rol"] = roles
+    current_user["companyId"] = company_id
     return current_user

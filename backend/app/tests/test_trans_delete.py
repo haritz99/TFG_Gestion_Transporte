@@ -71,7 +71,11 @@ class FakeDB:
 def _build_client(monkeypatch, users: dict[str, dict], *, auth_user_exists: bool = True):
     app = FastAPI()
     app.include_router(trans.router)
-    app.dependency_overrides[get_current_encargado] = lambda: {"uid": "encargado-test"}
+    app.dependency_overrides[get_current_encargado] = lambda: {
+        "uid": "encargado-test",
+        "companyId": "comp-test",
+        "rol": ["encargado"],
+    }
 
     fake_db = FakeDB(users=users)
     fake_auth = FakeFirebaseAuth(user_exists=auth_user_exists)
@@ -95,6 +99,7 @@ def test_delete_user_without_transportista_role_returns_400(monkeypatch):
     users = {
         "u1": {
             "rol": ["encargado"],
+            "companyId": "comp-test",
             "vehiculoId": None,
         }
     }
@@ -110,6 +115,7 @@ def test_delete_transportista_with_vehicle_returns_vehicle_released_message(monk
     users = {
         "u2": {
             "rol": ["transportista"],
+            "companyId": "comp-test",
             "vehiculoId": "veh-123",
         }
     }
@@ -127,6 +133,7 @@ def test_delete_transportista_without_vehicle_returns_success_message(monkeypatc
     users = {
         "u3": {
             "rol": ["transportista"],
+            "companyId": "comp-test",
             "vehiculoId": None,
         }
     }
@@ -144,6 +151,7 @@ def test_delete_transportista_when_auth_user_missing_still_deletes_firestore(mon
     users = {
         "u4": {
             "rol": ["transportista"],
+            "companyId": "comp-test",
             "vehiculoId": None,
         }
     }

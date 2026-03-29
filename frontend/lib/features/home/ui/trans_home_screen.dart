@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/core/token_provider.dart';
+import 'package:gestion_transporte/features/auth/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
@@ -15,6 +17,7 @@ class TransportistaHomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<TransportistaHomeScreen> {
   final VoiceService _voiceService = VoiceService();
   final ApiService _apiService = ApiService();
+  final _authService = AuthService();
   String _lastCommand = '';
   String _response = '';
   bool _isListening = false;
@@ -38,14 +41,8 @@ class _HomeScreenState extends State<TransportistaHomeScreen> {
   }
 
   Future<void> _processVoiceCommand(String text) async {
-    final authProvider = context.read<AuthProvider>();
-    final idToken = await authProvider.getValidIdToken();
-    if (idToken == null) {
-      setState(() {
-        _response = 'Sesion no valida. Inicia sesion de nuevo.';
-      });
-      return;
-    }
+    final tokenProvider = AuthTokenProvider(_authService);
+    final idToken = await tokenProvider.getRequiredToken();
 
     try {
       final result = await _apiService.detectIntent(text, idToken);

@@ -9,6 +9,7 @@ class VehiculoModel {
   final double alto;
   final bool disponible;
   final bool interno;
+  final String? companyId;
   final String? transportistaId;
 
   VehiculoModel({
@@ -22,6 +23,7 @@ class VehiculoModel {
     required this.alto,
     required this.disponible,
     required this.interno,
+    this.companyId,
     this.transportistaId,
   });
 
@@ -37,6 +39,7 @@ class VehiculoModel {
       alto: (map['alto'] ?? 0).toDouble(),
       disponible: map['disponible'] ?? false,
       interno: map['interno'] ?? false,
+      companyId: map['companyId'],
       transportistaId: map['transportistaId'],
     );
   }
@@ -52,6 +55,7 @@ class VehiculoModel {
       'alto': alto,
       'disponible': disponible,
       'interno': interno,
+      'companyId': companyId,
       'transportistaId': transportistaId,
     };
   }

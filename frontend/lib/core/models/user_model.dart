@@ -6,6 +6,7 @@ class UserModel {
   final String telefono;
   final List<String> rol;
   final List<String> permisosCond;
+  final String companyId;
   final String? vehiculoId;
 
   UserModel({
@@ -16,6 +17,7 @@ class UserModel {
     required this.telefono,
     required this.rol,
     required this.permisosCond,
+    required this.companyId,
     this.vehiculoId,
   });
 
@@ -33,6 +35,7 @@ class UserModel {
       telefono: map['telefono'] ?? '',
       rol: normalizedRol,
       permisosCond: List<String>.from(map['permisosCond'] ?? []),
+      companyId: map['companyId'] ?? '',
       vehiculoId: map['vehiculoId'],
     );
   }
@@ -46,6 +49,7 @@ class UserModel {
       'telefono': telefono,
       'rol': rol,
       'permisosCond': permisosCond,
+      'companyId': companyId,
       'vehiculoId': vehiculoId,
     };
   }

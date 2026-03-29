@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'auth_service.dart';
+import 'register_company.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final RegisterCompanyService _registerCompanyService = RegisterCompanyService();
   UserModel? _user;
   bool _isLoading = false;
   String? _idToken;
@@ -33,9 +35,9 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _authService.signIn(email, password);
-      // _user = await _authService.getUserData(credential.user!.uid);
-      // _idToken = await credential.user?.getIdToken();
+      UserCredential credential = await _authService.signIn(email, password);
+      _user = await _authService.getUserData(credential.user!.uid);
+      _idToken = await credential.user?.getIdToken();
 
     } catch (e) {
       rethrow;
@@ -55,10 +57,14 @@ class AuthProvider extends ChangeNotifier {
     required List<String> rol,
     required List<String> permisosCond,
     required String password,
+    required String nombreEmpresa,
   }) async {
     _isLoading = true;
     notifyListeners();
     try {
+      final companyId = await _registerCompanyService.registerCompany(
+        nombreEmpresa,
+      );
 
       final userData = UserModel(
         uid: '', // Ahora es vacio porque aun no se ha creado en firebase auth
@@ -68,6 +74,7 @@ class AuthProvider extends ChangeNotifier {
         telefono: telefono,
         rol: rol,
         permisosCond: permisosCond,
+        companyId: companyId,
         vehiculoId: null,
       );
 
@@ -82,11 +89,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> getValidIdToken({bool forceRefresh = false}) async {
-    _idToken = await _authService.getIdToken(forceRefresh: forceRefresh);
-    notifyListeners();
-    return _idToken;
-  }
 
   Future<void> signOut() async {
     await _authService.signOut();

@@ -25,6 +25,7 @@ void main() {
     telefono: '+34600111222',
     rol: ['transportista'],
     permisosCond: ['C', 'C+E'],
+    companyId: 'empresa_123',
   );
 
   setUp(() {

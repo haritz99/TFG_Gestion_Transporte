@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Any
 from ..schemas.users import UserSchema
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
@@ -8,32 +9,51 @@ import string
 
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
 
-
 @router.get("/")
-async def get_all_trans():
+async def get_all_trans(current_user: dict[str, Any] = Depends(get_current_encargado)):
 
     users_ref = db.collection("users")
+    company_id = current_user.get("companyId")
+    query = (
+        users_ref
+        .where("companyId", "==", company_id)
+        .where("rol", "array_contains", "transportista")
+        .stream()
+    )
 
-    query = users_ref.where("rol", "array_contains", "transportista").stream()
-    
     transportistas = []
+    current_uid = current_user.get("uid")
+
     for doc in query:
+        if doc.id == current_uid:
+            continue
+            
         user_data = doc.to_dict()
         user_data["uid"] = doc.id
         transportistas.append(user_data)
-        
+
     return transportistas
 
 
 @router.get("/{uid}")
-async def get_trans(uid: str):
+async def get_trans(uid: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
     doc_ref = db.collection("users").document(uid)
     doc = doc_ref.get()
-    
+
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Transportista no encontrado")
-        
-    user_data = doc.to_dict()
+
+    company_id = current_user.get("companyId")
+    user_data = doc.to_dict() or {}
+    if user_data.get("companyId") != company_id:
+        raise HTTPException(status_code=404, detail="Transportista no encontrado")
+
+    rol = user_data.get("rol", [])
+    if isinstance(rol, str):
+        rol = [rol]
+    if "transportista" not in rol:
+        raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
+
     user_data["uid"] = doc.id
     return user_data
 
@@ -44,34 +64,39 @@ def generate_temp_password(length=12):
     return password
 
 @router.post("/")
-async def create_trans(user_data: UserSchema):
+async def create_trans(
+    user_data: UserSchema,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+):
     new_auth_user = None
     try:
+        company_id = current_user.get("companyId")
         temp_password = generate_temp_password()
-        
+
         new_auth_user = firebase_auth.create_user(
             email=user_data.email,
             password=temp_password,
         )
         uid = new_auth_user.uid
 
-        firebase_auth.set_custom_user_claims(uid, {"rol": ["transportista"]})
+        firebase_auth.set_custom_user_claims(uid, {"rol": ["transportista"], "companyId": company_id})
 
         # Generar link de correo
         try:
             reset_link = firebase_auth.generate_password_reset_link(user_data.email)
         except Exception:
             reset_link = None
-        
+
         # Guardar en Firestore usando el mismo UID
         user_dict = user_data.model_dump()
         # Asegurarse de que el rol sea correcto, aunque venga en el schema
         if "transportista" not in user_dict.get("rol", []):
              user_dict["rol"] = ["transportista"]
-             
+        user_dict["companyId"] = company_id
+
         doc_ref = db.collection("users").document(uid)
         doc_ref.set(user_dict)
-        
+
         return {
             "message": "Transportista creado con éxito",
             "uid": uid,
@@ -90,7 +115,11 @@ async def create_trans(user_data: UserSchema):
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.put("/{uid}")
-async def update_trans(uid: str, user_data: UserSchema):
+async def update_trans(
+    uid: str,
+    user_data: UserSchema,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+):
     doc_ref = db.collection("users").document(uid)
 
     doc = doc_ref.get()
@@ -99,6 +128,10 @@ async def update_trans(uid: str, user_data: UserSchema):
 
     # Validar que el usuario tenga rol "transportista", igual que en delete_trans
     doc_data = doc.to_dict() or {}
+    company_id = current_user.get("companyId")
+    if doc_data.get("companyId") != company_id:
+        raise HTTPException(status_code=404, detail="Transportista no encontrado")
+
     rol = doc_data.get("rol", [])
     if isinstance(rol, str):
         rol = [rol]
@@ -106,6 +139,8 @@ async def update_trans(uid: str, user_data: UserSchema):
         raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
 
     update_data = user_data.model_dump(exclude_unset=True)
+    update_data.pop("companyId", None)
+    update_data.pop("rol", None)
 
     # Mantener sincronizado el email entre Firestore y Firebase Auth
     new_email = update_data.get("email")
@@ -131,7 +166,7 @@ async def update_trans(uid: str, user_data: UserSchema):
     return {"message": "Transportista actualizado con éxito"}
 
 @router.delete("/{uid}")
-async def delete_trans(uid: str):
+async def delete_trans(uid: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
     try:
         doc_ref = db.collection("users").document(uid)
 
@@ -140,6 +175,10 @@ async def delete_trans(uid: str):
             raise HTTPException(status_code=404, detail="Transportista no encontrado")
 
         doc_data = doc.to_dict() or {}
+        company_id = current_user.get("companyId")
+        if doc_data.get("companyId") != company_id:
+            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+
         rol = doc_data.get("rol", [])
         if isinstance(rol, str):
             rol = [rol]
@@ -151,8 +190,11 @@ async def delete_trans(uid: str):
 
         vehiculo_id = doc_data.get("vehiculoId")
         if vehiculo_id is not None:
-            # Se limpia la referencia local antes de la baja definitiva.
-            doc_ref.update({"vehiculoId": None})
+            # Se libera la referencia inversa del vehículo asignado.
+            vehiculo_ref = db.collection("vehiculo").document(vehiculo_id)
+            vehiculo_doc = vehiculo_ref.get()
+            if vehiculo_doc.exists:
+                vehiculo_ref.update({"transportistaId": None})
 
         # También se elimina la cuenta en Firebase Auth.
         try:
@@ -170,4 +212,3 @@ async def delete_trans(uid: str):
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-

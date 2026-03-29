@@ -15,7 +15,7 @@ Widget resolveAppHome(AuthProvider auth) {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 
-  if (user.rol.contains('transportista')) {
+  if (!user.rol.contains('encargado')) {
     return const TransportistaHomeScreen();
   }
 

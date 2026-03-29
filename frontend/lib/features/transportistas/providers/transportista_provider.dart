@@ -105,6 +105,8 @@ class TransportistaProvider extends ChangeNotifier {
 
     try {
       final token = await _tokenProvider.getRequiredToken();
+      final index = _transportistas.indexWhere((t) => t.uid == uid);
+      final companyId = index != -1 ? _transportistas[index].companyId : '';
 
       final userData = UserModel(
         uid: uid,
@@ -114,6 +116,7 @@ class TransportistaProvider extends ChangeNotifier {
         telefono: telefono,
         rol: rol,
         permisosCond: permisosCond,
+        companyId: companyId,
         vehiculoId: vehiculoId,
       );
 
@@ -123,7 +126,6 @@ class TransportistaProvider extends ChangeNotifier {
         token: token,
       );
 
-      final index = _transportistas.indexWhere((t) => t.uid == uid);
       if (index != -1) {
         _transportistas[index] = userData;
       }

@@ -33,6 +33,7 @@ void main() {
       rol: ['transportista'],
       telefono: '+34600123456',
       permisosCond: ['C', 'C+E'],
+      companyId: 'empresa_123',
     );
 
     test('createTransportista retorna map con datos si status es 201', () async {
