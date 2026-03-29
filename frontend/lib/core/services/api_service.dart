@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class ApiService {
-  static const String _baseUrl = 'http://10.0.2.2:8000'; // localhost desde emulador Android
+import '../config/api_config.dart';
 
+class ApiService {
   Future<Map<String, dynamic>> detectIntent(String text, String idToken) async {
-    final uri = Uri.parse('$_baseUrl/intent');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/intent');
     final response = await http.post(
       uri,
       headers: {

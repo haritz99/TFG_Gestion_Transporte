@@ -1,19 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../../core/config/api_config.dart';
 import '../../../core/models/user_model.dart';
 
 class TransportistaService {
   final http.Client _client;
   TransportistaService({http.Client? client}) : _client = client ?? http.Client();
 
-  static const String _baseUrl = 'http://127.0.0.1:8000';
-
   Future<Map<String, dynamic>> createTransportista({
     required UserModel userData,
     required String token,
   }) async {
-    final uri = Uri.parse('$_baseUrl/trans/');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/');
 
     final payload = {
       'nombre': userData.nombre,
@@ -42,7 +41,7 @@ class TransportistaService {
   }
 
   Future<List<UserModel>> fetchTransportistas({required String token}) async {
-    final uri = Uri.parse('$_baseUrl/trans/');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/');
 
     final response = await _client.get(
       uri,
@@ -69,7 +68,7 @@ class TransportistaService {
     required UserModel userData,
     required String token,
   }) async {
-    final uri = Uri.parse('$_baseUrl/trans/$uid');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/$uid');
 
     final payload = {
       'nombre': userData.nombre,
@@ -102,7 +101,7 @@ class TransportistaService {
     required String uid,
     required String token,
   }) async {
-    final uri = Uri.parse('$_baseUrl/trans/$uid');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/$uid');
 
     final response = await _client.delete(
       uri,
