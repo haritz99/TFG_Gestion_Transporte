@@ -2,16 +2,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/config/api_config.dart';
 import '../../../core/models/vehiculo_model.dart';
 
 class VehiculoService {
   final http.Client _client;
   VehiculoService({http.Client? client}) : _client = client ?? http.Client();
 
-  static const String _baseUrl = 'http://127.0.0.1:8000';
-
   Future<List<VehiculoModel>> fetchVehiculos({required String token}) async {
-    final uri = Uri.parse('$_baseUrl/vehi/');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/vehi/');
 
     final response = await _client.get(
       uri,
@@ -38,7 +37,7 @@ class VehiculoService {
     required String matricula,
     required String transportistaId,
     }) async {
-    final uri = Uri.parse('$_baseUrl/vehi/assign');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/vehi/assign');
 
     final response = await _client.patch(
       uri,
@@ -62,7 +61,7 @@ class VehiculoService {
     required String token,
     required VehiculoModel vehiculoData,
   }) async {
-    final uri = Uri.parse('$_baseUrl/vehi/');
+    final uri = Uri.parse('${ApiConfig.baseUrl}/vehi/');
 
     final response = await _client.post(
       uri,

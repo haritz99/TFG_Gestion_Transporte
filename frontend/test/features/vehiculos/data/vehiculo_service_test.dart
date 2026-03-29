@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:gestion_transporte/core/config/api_config.dart';
 import 'package:gestion_transporte/core/models/vehiculo_model.dart';
 import 'package:gestion_transporte/features/vehiculos/data/vehiculo_service.dart';
 
@@ -21,7 +22,7 @@ void main() {
 
   group('VehiculoService', () {
     const String tToken = 'test_token';
-    const baseUrl = 'http://127.0.0.1:8000/vehi/';
+    final baseUrl = '${ApiConfig.baseUrl}/vehi/';
 
     final tVehiculoModel = VehiculoModel(
         id: '1234ABC',
@@ -78,7 +79,7 @@ void main() {
 
     test('asignaVehiculo completa correctamente si status es 200', () async {
       when(mockHttpClient.patch(
-        Uri.parse('http://127.0.0.1:8000/vehi/assign'),
+        Uri.parse('${ApiConfig.baseUrl}/vehi/assign'),
         headers: anyNamed('headers'),
         body: anyNamed('body'),
       )).thenAnswer((_) async => http.Response('{"mensaje": "Asignado"}', 200));
@@ -112,7 +113,7 @@ void main() {
 
     test('insertaVehiculo retorna VehiculoModel si status es 201', () async {
       when(mockHttpClient.post(
-        Uri.parse('http://127.0.0.1:8000/vehi/'),
+        Uri.parse('${ApiConfig.baseUrl}/vehi/'),
         headers: anyNamed('headers'),
         body: anyNamed('body'),
       )).thenAnswer((_) async => http.Response(

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:gestion_transporte/core/config/api_config.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:gestion_transporte/features/transportistas/data/transportista_service.dart';
 
@@ -21,7 +22,7 @@ void main() {
 
   group('TransportistaService', () {
     const String tToken = 'test_token';
-    const String baseUrl = 'http://127.0.0.1:8000/trans/';
+    final String baseUrl = '${ApiConfig.baseUrl}/trans/';
     const String tUid = 'transp_001';
 
     final tUserModel = UserModel(
