@@ -1,4 +1,3 @@
-
 import pytest
 from unittest.mock import MagicMock
 from fastapi import FastAPI
@@ -77,23 +76,22 @@ def test_delete_cliente_forbidden(mock_db):
     response = client.delete("/clientes/foreign")
     assert response.status_code == 403
 
-def test_delete_cliente_with_active_pedidos(mock_db):
+def test_delete_cliente_with_active_pedidos(mock_db, monkeypatch):
     mock_doc = MagicMock()
     mock_doc.exists = True
     mock_doc.to_dict.return_value = {"companyId": "comp-test"}
-    
     mock_db.collection.return_value.document.return_value.get.return_value = mock_doc
     
-    pedido_activo = MagicMock(id="p1")
-    pedido_activo.to_dict.return_value = {"estado": EstadoPedido.EN_PROGRESO.value}
-    
-    mock_db.collection.return_value.where.return_value.where.return_value.stream.return_value = [pedido_activo]
+    # En vez de mockear la cadena inmensa de Firestore de forma frágil, 
+    # mockeamos directamente la función fetch_pedidos pura que importa `clientes.py`
+    mock_fetch = MagicMock(return_value=[{"id": "p1", "estado": EstadoPedido.EN_PROGRESO.value}])
+    monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch)
     
     response = client.delete("/clientes/c1")
     assert response.status_code == 400
     assert "EN_PROGRESO" in response.json()["detail"]
 
-def test_delete_cliente_success_cascade(mock_db):
+def test_delete_cliente_success_cascade(mock_db, monkeypatch):
     # Cliente existe y es de la compañía
     mock_cliente_doc = MagicMock()
     mock_cliente_doc.exists = True
@@ -103,6 +101,10 @@ def test_delete_cliente_success_cascade(mock_db):
     mock_cliente_ref = MagicMock()
     mock_cliente_ref.get.return_value = mock_cliente_doc
     
+    # Mockear `fetch_pedidos` para que finja devolver un pedido completado 
+    mock_fetch = MagicMock(return_value=[{"id": "p1", "estado": EstadoPedido.COMPLETADO.value}])
+    monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch)
+
     # Configurar qué devuelve document() según su argumento
     # db.collection("clientes").document(...)
     def mock_document_side_effect(doc_id=None):
@@ -110,25 +112,25 @@ def test_delete_cliente_success_cascade(mock_db):
         
     mock_db.collection.return_value.document.side_effect = mock_document_side_effect
     
-    # Simular pedidos del cliente 
-    # Todos COMPLETADO o CANCELADO (para pasar la validación)
-    pedido_completado = MagicMock(id="p1")
-    pedido_completado.to_dict.return_value = {"estado": EstadoPedido.COMPLETADO.value}
-    
     def collection_side_effect(name):
         collection_mock = MagicMock()
         if name == "clientes":
             collection_mock.document.return_value = mock_cliente_ref
-        elif name == "pedidos":
-            # Para la validación:
-            collection_mock.where.return_value.where.return_value.stream.return_value = [pedido_completado]
-            # Para el borrado: db.collection("pedidos").document(pedido_id).delete()
-            pedido_doc_ref = MagicMock()
-            collection_mock.document.return_value = pedido_doc_ref
         elif name == "cargas":
             carga_mock = MagicMock()
             carga_mock.reference = MagicMock()
-            collection_mock.where.return_value.where.return_value.stream.return_value = [carga_mock]
+            
+            where_1_mock = MagicMock()
+            where_2_mock = MagicMock()
+            where_2_mock.stream.return_value = [carga_mock]
+            
+            where_1_mock.where.return_value = where_2_mock
+            collection_mock.where.return_value = where_1_mock
+            
+        elif name == "pedidos":
+            # Para el borrado: db.collection("pedidos").document(pedido_id).delete()
+            pedido_doc_ref = MagicMock()
+            collection_mock.document.return_value = pedido_doc_ref
             
         return collection_mock
         
@@ -139,4 +141,3 @@ def test_delete_cliente_success_cascade(mock_db):
     
     # Verificar que se llamó delete() del cliente
     mock_cliente_ref.delete.assert_called_once()
-
