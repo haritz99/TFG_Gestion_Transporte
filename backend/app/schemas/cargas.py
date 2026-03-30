@@ -26,7 +26,7 @@ class CargaSchema(FirestoreSchema):
     largo: Optional[float] = Field(..., gt=0)
     ancho: Optional[float] = Field(..., gt=0)
     alto: Optional[float] = Field(..., gt=0)
-    estado: EstadoCarga = Field(..., default=EstadoCarga.PENDIENTE)
+    estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
     transportistaId: Optional[str] = None

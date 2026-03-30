@@ -2,10 +2,8 @@ from typing import List
 from pydantic import Field
 
 from .base import FirestoreSchema
-from .pedido import PedidoSchema
 
-
-class ClienteScheema(FirestoreSchema):
+class ClienteSchema(FirestoreSchema):
     nombreComercial: str = Field(..., min_length=1)
-    pedidos: List[PedidoSchema] = Field(..., min_length=1)
+    pedidos: List[str] = Field(default_factory=list)
     companyId: str = Field(..., min_length=1)
