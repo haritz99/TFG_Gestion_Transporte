@@ -3,46 +3,16 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional, List, Dict
 
-from fastapi import APIRouter, Depends, Query ,HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
 from ..schemas.pedido import PedidoSchema
+from ..services.pedidos_service import fetch_pedidos
+from ..services.cargas_service import fetch_cargas
 
 router = APIRouter(prefix="/pedidos", tags=["pedidos"], dependencies=[Depends(get_current_encargado)])
 
-def fetch_pedidos(
-        company_id: str, 
-        cliente_id: Optional[str] = None, 
-        estado: Optional[str] = None,
-        fecha_inicio: Optional[datetime.date] = None,
-        fecha_fin: Optional[datetime.date] = None) -> List[Dict[str, Any]]:
-    
-    pedidos_query = db.collection("pedidos").where("companyId", "==", company_id)
-    
-    if cliente_id:
-        pedidos_query = pedidos_query.where("clienteId", "==", cliente_id)
-    if estado:
-        pedidos_query = pedidos_query.where("estado", "==", estado)
-        
-    if fecha_inicio:
-        # Convertir a datetime al inicio del día
-        dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min)
-        pedidos_query = pedidos_query.where("fechaCarga", ">=", dt_inicio)
-        
-    if fecha_fin:
-        # Convertir a datetime al final del día
-        dt_fin = datetime.datetime.combine(fecha_fin, datetime.time.max)
-        pedidos_query = pedidos_query.where("fechaCarga", "<=", dt_fin)
-        
-    pedidos = []
-    for doc in pedidos_query.stream():
-        pedido_data = doc.to_dict()
-        pedido_data["id"] = doc.id
-        pedidos.append(pedido_data)
-        
-    return pedidos
-
-@router.get("/")
+@router.get("/", response_model=list[PedidoSchema])
 def get_pedidos(
     cliente_id: Optional[str] = Query(None, description="Filtrar por ID de cliente"),
     estado: Optional[str] = Query(None, description="Filtrar por estado del pedido"),
@@ -58,32 +28,31 @@ def get_pedidos(
         fecha_fin=fecha_fin
     )
 
-@router.get("/{pedido_id}")
-def get_pedido_by_id(pedido_id: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
+@router.get("/{pedido_id}", response_model=PedidoSchema)
+def get_pedido_by_id(pedido_id: str,
+                     current_user: dict[str, Any] = Depends(get_current_encargado)) -> PedidoSchema:
+    company_id = current_user.get('companyId')
     pedido_ref = db.collection("pedidos").document(pedido_id)
     pedido_doc = pedido_ref.get()
 
     if not pedido_doc.exists:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
-    pedido_data = pedido_doc.to_dict()
-    if pedido_data.get("companyId") != current_user.get("companyId"):
-        raise HTTPException(status_code=403, detail="No autorizado para ver este pedido")
-
-    return pedido_data
+    return PedidoSchema.from_firestore(pedido_doc, company_id)
 
 
-@router.post("/")
+@router.post("/", status_code=201, response_model=PedidoSchema)
 def insert_pedido(pedido: PedidoSchema, current_user: dict[str, Any] = Depends(get_current_encargado)):
 
     pedido.companyId = current_user.get("companyId")
-    nuevo_pedido_dict = pedido.model_dump()
-
+    
     doc_ref = db.collection("pedidos").document()
-    nuevo_pedido_dict["id"] = doc_ref.id
+    pedido.id = doc_ref.id
+
+    nuevo_pedido_dict = pedido.model_dump()
     doc_ref.set(nuevo_pedido_dict)
 
-    return nuevo_pedido_dict
+    return pedido
 
 
 @router.delete("/{pedido_id}", status_code=204)
@@ -107,12 +76,11 @@ def delete_pedido(pedido_id: str, current_user: dict[str, Any] = Depends(get_cur
         )
 
     # Borrado en cascada: eliminar todas las cargas asociadas a este pedido
-    # TODO: refactor y popup en el frontend
-    cargas_ref = db.collection("cargas")
-    cargas_query = cargas_ref.where("pedidoId", "==", pedido_id).where("companyId", "==", company_id).stream()
+    # TODO: popup de confirmacion en el frontend
+    cargas_asociadas = fetch_cargas(company_id=company_id, pedido_id=pedido_id)
     
-    for carga_doc in cargas_query:
-        carga_doc.reference.delete()
+    for carga in cargas_asociadas:
+        db.collection("cargas").document(carga.id).delete()
 
     pedido_ref.delete()
     return None

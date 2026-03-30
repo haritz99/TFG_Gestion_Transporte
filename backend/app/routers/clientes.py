@@ -4,7 +4,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from .pedidos import fetch_pedidos
+from ..services.pedidos_service import fetch_pedidos
+from ..services.cargas_service import fetch_cargas
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
 from ..schemas.cliente import ClienteSchema
@@ -12,33 +13,32 @@ from ..schemas.pedido import EstadoPedido
 
 router = APIRouter(prefix="/clientes", tags=["clientes"], dependencies=[Depends(get_current_encargado)])
 
-@router.get("/")
+@router.get("/", response_model=list[ClienteSchema])
 def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):
+    company_id = current_user.get("companyId")
     clientes_ref = db.collection("clientes")
     query = (
         clientes_ref
-        .where("companyId", "==", current_user.get("companyId"))
+        .where("companyId", "==", company_id)
         .stream()
     )
 
     clientes = []
     for doc in query:
-        cliente_data = doc.to_dict()
-        clientes.append(cliente_data)
+        clientes.append(ClienteSchema.from_firestore(doc, company_id))
 
     return clientes
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ClienteSchema)
 def create_cliente(cliente: ClienteSchema, current_user: dict[str, Any] = Depends(get_current_encargado)):
     cliente.companyId = current_user.get("companyId")
-    
-    nuevo_cliente_dict = cliente.model_dump()
-
     doc_ref = db.collection("clientes").document()
-    nuevo_cliente_dict["id"] = doc_ref.id
+    cliente.id = doc_ref.id
+
+    nuevo_cliente_dict = cliente.model_dump()
     doc_ref.set(nuevo_cliente_dict)
-    
-    return nuevo_cliente_dict
+
+    return cliente
 
 @router.delete("/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
@@ -57,11 +57,11 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
     todos_los_pedidos_del_cliente_ids = []
     
     for p in pedidos_del_cliente:
-        pedido_id = p.get('id')
+        pedido_id = p.id
         if pedido_id:
             todos_los_pedidos_del_cliente_ids.append(pedido_id)
             
-        if p.get('estado') in [EstadoPedido.PLANIFICADO.value, EstadoPedido.EN_PROGRESO.value]:
+        if p.estado in [EstadoPedido.PLANIFICADO.value, EstadoPedido.EN_PROGRESO.value]:
             raise HTTPException(
                 status_code=400,
                 detail="No se puede eliminar el cliente. Existen pedidos en estado PLANIFICADO o EN_PROGRESO."
@@ -72,10 +72,9 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
     # Borrado en cascada
     for pedido_id in todos_los_pedidos_del_cliente_ids:
         # 1. Borrar todas las cargas asociadas al pedido
-        cargas_ref = db.collection("cargas")
-        cargas_query = cargas_ref.where("companyId", "==", company_id).where("pedidoId", "==", pedido_id).stream()
-        for carga_doc in cargas_query:
-            carga_doc.reference.delete()
+        cargas_asociadas = fetch_cargas(company_id=company_id, pedido_id=pedido_id)
+        for carga in cargas_asociadas:
+            db.collection("cargas").document(carga.id).delete()
             
         # 2. Borrar el pedido
         db.collection("pedidos").document(pedido_id).delete()

@@ -84,7 +84,10 @@ def test_delete_cliente_with_active_pedidos(mock_db, monkeypatch):
     
     # En vez de mockear la cadena inmensa de Firestore de forma frágil, 
     # mockeamos directamente la función fetch_pedidos pura que importa `clientes.py`
-    mock_fetch = MagicMock(return_value=[{"id": "p1", "estado": EstadoPedido.EN_PROGRESO.value}])
+    mock_pedido = MagicMock()
+    mock_pedido.id = "p1"
+    mock_pedido.estado = EstadoPedido.EN_PROGRESO.value
+    mock_fetch = MagicMock(return_value=[mock_pedido])
     monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch)
     
     response = client.delete("/clientes/c1")
@@ -102,8 +105,17 @@ def test_delete_cliente_success_cascade(mock_db, monkeypatch):
     mock_cliente_ref.get.return_value = mock_cliente_doc
     
     # Mockear `fetch_pedidos` para que finja devolver un pedido completado 
-    mock_fetch = MagicMock(return_value=[{"id": "p1", "estado": EstadoPedido.COMPLETADO.value}])
-    monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch)
+    mock_pedido = MagicMock()
+    mock_pedido.id = "p1"
+    mock_pedido.estado = EstadoPedido.COMPLETADO.value
+    mock_fetch_pedidos = MagicMock(return_value=[mock_pedido])
+    monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch_pedidos)
+
+    # Mockear fetch_cargas
+    mock_carga = MagicMock()
+    mock_carga.id = "c1"
+    mock_fetch_cargas = MagicMock(return_value=[mock_carga])
+    monkeypatch.setattr(clientes, "fetch_cargas", mock_fetch_cargas)
 
     # Configurar qué devuelve document() según su argumento
     # db.collection("clientes").document(...)
