@@ -86,7 +86,7 @@ def test_delete_cliente_with_active_pedidos(mock_db, monkeypatch):
     # mockeamos directamente la función fetch_pedidos pura que importa `clientes.py`
     mock_pedido = MagicMock()
     mock_pedido.id = "p1"
-    mock_pedido.estado = EstadoPedido.EN_PROGRESO.value
+    mock_pedido.estado = EstadoPedido.EN_PROGRESO
     mock_fetch = MagicMock(return_value=[mock_pedido])
     monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch)
     
@@ -107,7 +107,7 @@ def test_delete_cliente_success_cascade(mock_db, monkeypatch):
     # Mockear `fetch_pedidos` para que finja devolver un pedido completado 
     mock_pedido = MagicMock()
     mock_pedido.id = "p1"
-    mock_pedido.estado = EstadoPedido.COMPLETADO.value
+    mock_pedido.estado = EstadoPedido.COMPLETADO
     mock_fetch_pedidos = MagicMock(return_value=[mock_pedido])
     monkeypatch.setattr(clientes, "fetch_pedidos", mock_fetch_pedidos)
 
@@ -151,5 +151,7 @@ def test_delete_cliente_success_cascade(mock_db, monkeypatch):
     response = client.delete("/clientes/c1")
     assert response.status_code == 204
     
-    # Verificar que se llamó delete() del cliente
-    mock_cliente_ref.delete.assert_called_once()
+    # Verificar que se usó el batch para borrar el cliente
+    mock_batch = mock_db.batch.return_value
+    mock_batch.delete.assert_any_call(mock_cliente_ref)
+    mock_batch.commit.assert_called_once()

@@ -17,7 +17,6 @@ class UserSchema(FirestoreSchema):
     companyId: str = None
     vehiculoId: Optional[str] = None        # matricula del vehiculo
 
-
     @field_validator("rol")
     @classmethod
     def normalize_roles(cls, value: list[Literal["encargado", "transportista"]]):

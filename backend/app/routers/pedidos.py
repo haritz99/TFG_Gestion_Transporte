@@ -75,12 +75,24 @@ def delete_pedido(pedido_id: str, current_user: dict[str, Any] = Depends(get_cur
             detail="No se puede eliminar un pedido en estado PLANIFICADO o EN_PROGRESO."
         )
 
-    # Borrado en cascada: eliminar todas las cargas asociadas a este pedido
+    # Borrado en cascada
     # TODO: popup de confirmacion en el frontend
     cargas_asociadas = fetch_cargas(company_id=company_id, pedido_id=pedido_id)
-    
-    for carga in cargas_asociadas:
-        db.collection("cargas").document(carga.id).delete()
 
-    pedido_ref.delete()
+    # Usar un batch de Firestore para que todas las eliminaciones sean atómicas
+    batch = db.batch()
+
+    for carga in cargas_asociadas:
+        carga_ref = db.collection("cargas").document(carga.id)
+        batch.delete(carga_ref)
+
+    batch.delete(pedido_ref)
+
+    try:
+        batch.commit()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al eliminar el pedido y sus cargas asociadas: {exc}"
+        )
     return None

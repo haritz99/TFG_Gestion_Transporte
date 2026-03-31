@@ -22,7 +22,7 @@ class PedidoSchema(FirestoreSchema):
     destinos: List[str] = Field(..., min_length=1)  # Lista de destinos
     estado: EstadoPedido = Field(default=EstadoPedido.PLANIFICADO)
     clienteId: str = Field(..., min_length=1) 
-    companyId: str = Field(..., min_length=1)
+    companyId: Optional[str] = Field(default=None, min_length=1)
 
     @model_validator(mode='after')
     def validar_fechas_pedido(self) -> 'PedidoSchema':

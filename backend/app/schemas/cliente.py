@@ -7,7 +7,7 @@ class ClienteSchema(FirestoreSchema):
     id: Optional[str] = None
     nombreComercial: str = Field(..., min_length=1)
     pedidos: List[str] = Field(default_factory=list)
-    companyId: str = Field(..., min_length=1)
+    companyId: Optional[str] = Field(default=None, min_length=1)
 
     @classmethod
     def from_firestore(cls, doc, company_id):

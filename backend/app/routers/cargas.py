@@ -53,7 +53,7 @@ def get_carga_by_id(carga_id: str,
     return CargaSchema.from_firestore(carga_doc, current_user.get("companyId"))
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CargaSchema, status_code=status.HTTP_201_CREATED)
 def create_carga(carga: CargaSchema,
                  pedido_schema: PedidoSchema = Depends(get_pedido_from_carga),
                  current_user: dict[str, Any] = Depends(get_current_encargado)):
@@ -90,16 +90,26 @@ def assign_carga_transportista(
 
     carga = CargaSchema.from_firestore(carga_doc, company_id)
 
-    # Validar que el transportista existe
+    # Validar que el transportista existe y pertenece a la compañía
     trans_doc = db.collection("users").document(data.transportistaId).get()
-    if not trans_doc.exists or trans_doc.to_dict().get("companyId") != company_id:
+    trans_data = trans_doc.to_dict() if trans_doc.exists else None
+    if not trans_data or trans_data.get("companyId") != company_id:
         raise HTTPException(status_code=404, detail="Transportista no encontrado")
 
+    # Validar que el usuario tiene rol de transportista
+    roles = trans_data.get("roles", trans_data.get("rol"))
+    if isinstance(roles, str):
+        roles = [roles]
+    if not roles or "transportista" not in roles:
+        raise HTTPException(
+            status_code=403,
+            detail="El usuario no tiene rol de transportista"
+        )
     carga.transportistaId = data.transportistaId
     
     update_data = {"transportistaId": data.transportistaId}
     
-    # Si estaba pendiente, lo pasamos a asignado automáticamente
+    # Si estaba pendiente, se pasa a asignado automáticamente
     if carga.estado == EstadoCarga.PENDIENTE:
         carga.estado = EstadoCarga.ASIGNADO
         update_data["estado"] = EstadoCarga.ASIGNADO.value

@@ -61,7 +61,7 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
         if pedido_id:
             todos_los_pedidos_del_cliente_ids.append(pedido_id)
             
-        if p.estado in [EstadoPedido.PLANIFICADO.value, EstadoPedido.EN_PROGRESO.value]:
+        if p.estado in {EstadoPedido.PLANIFICADO, EstadoPedido.EN_PROGRESO}:
             raise HTTPException(
                 status_code=400,
                 detail="No se puede eliminar el cliente. Existen pedidos en estado PLANIFICADO o EN_PROGRESO."
@@ -70,13 +70,27 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
     # TODO: El frontend debe mostrar un popup de confirmación indicando que se borrarán también en cascada todos sus pedidos y cargas asociadas.
 
     # Borrado en cascada
+    batch = db.batch()
     for pedido_id in todos_los_pedidos_del_cliente_ids:
         # 1. Borrar todas las cargas asociadas al pedido
         cargas_asociadas = fetch_cargas(company_id=company_id, pedido_id=pedido_id)
         for carga in cargas_asociadas:
-            db.collection("cargas").document(carga.id).delete()
-            
-        # 2. Borrar el pedido
-        db.collection("pedidos").document(pedido_id).delete()
+            if carga.id:
+                carga_ref = db.collection("cargas").document(carga.id)
+                batch.delete(carga_ref)
 
-    cliente_ref.delete()
+        # 2. Borrar el pedido
+        pedido_ref = db.collection("pedidos").document(pedido_id)
+        batch.delete(pedido_ref)
+
+    # 3. Borrar el cliente
+    batch.delete(cliente_ref)
+    
+    try:
+        batch.commit()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al eliminar el cliente junto con sus pedidos: {exc}"
+        )
+    return None

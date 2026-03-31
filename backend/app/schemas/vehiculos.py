@@ -19,7 +19,7 @@ class VehiculoSchema(FirestoreSchema):
     disponible: bool
     interno: bool  # subcontratado
     matriculaRemolque: Optional[str] = Field(default=None, min_length=3)
-    companyId: str = Field(..., min_length=1)
+    companyId: Optional[str] = Field(default=None, min_length=1)
     transportistaId: Optional[str] = None
 
 

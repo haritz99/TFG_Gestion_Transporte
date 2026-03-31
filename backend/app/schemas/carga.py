@@ -25,10 +25,10 @@ class CargaSchema(FirestoreSchema):
     destino: str = Field(..., min_length=1)
     mercancia: str = Field(..., min_length=1)   #tipo de mercancia
     numBultos: int = Field(..., gt=0)
-    peso: Optional[float] = Field(..., gt=0)
-    largo: Optional[float] = Field(..., gt=0)
-    ancho: Optional[float] = Field(..., gt=0)
-    alto: Optional[float] = Field(..., gt=0)
+    peso: float = Field(..., gt=0)
+    largo: Optional[float] = Field(default=None, gt=0)
+    ancho: Optional[float] = Field(default=None, gt=0)
+    alto: Optional[float] = Field(default=None, gt=0)
     estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
@@ -36,7 +36,7 @@ class CargaSchema(FirestoreSchema):
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
     rutaId: Optional[str] = None
-    companyId: str = Field(..., min_length=1)
+    companyId: Optional[str] = None
     clienteId: Optional[str] = None
 
     def validar_contra_pedido(self, pedido: 'PedidoSchema'):
