@@ -15,7 +15,7 @@ class UserSchema(FirestoreSchema):
     rol: list[Literal["encargado", "transportista"]] = Field(..., min_length=1)
     permisosCond: Optional[list[str]] = None
     companyId: str = None
-    vehiculoId: Optional[str] = None
+    vehiculoId: Optional[str] = None        # matricula del vehiculo
 
     @field_validator("rol")
     @classmethod

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import trans
+from .routers import trans, clientes, pedidos
 from .routers import vehiculos
 from .routers import intent
 from .routers import custom_claims
@@ -35,4 +35,6 @@ app.add_middleware(
 app.include_router(custom_claims.router)
 app.include_router(trans.router)
 app.include_router(vehiculos.router)
+app.include_router(clientes.router)
+app.include_router(pedidos.router)
 app.include_router(intent.router)
