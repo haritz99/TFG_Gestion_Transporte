@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/home/ui/encargado_home_screen.dart';
 import '../../features/home/ui/trans_home_screen.dart';
+import '../../features/vehiculos/ui/gestion_flota_screen.dart';
 import '../../pages/login_page.dart';
 
 Widget resolveAppHome(AuthProvider auth) {
@@ -19,7 +20,8 @@ Widget resolveAppHome(AuthProvider auth) {
     return const TransportistaHomeScreen();
   }
 
-  return const EncargadoHomeScreen();
+  // Solo para probar, luego tenog que cambiarlo
+  return const GestionFlotaScreen();
 }
 
 void navigateToHomeByRole(BuildContext context, AuthProvider auth) {

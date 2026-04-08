@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../features/auth/auth_provider.dart' as app_auth;
-import '../core/routing/role_navigation.dart';
 import 'register_page.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,9 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      if (mounted && authProvider.isAuthenticated) {
-        navigateToHomeByRole(context, authProvider);
-      }
     } catch (e) {
       if (mounted) {
         setState(() {

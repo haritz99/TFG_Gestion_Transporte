@@ -35,9 +35,8 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      UserCredential credential = await _authService.signIn(email, password);
-      _user = await _authService.getUserData(credential.user!.uid);
-      _idToken = await credential.user?.getIdToken();
+      await _authService.signIn(email, password);
+      await _waitForSessionHydration();
 
     } catch (e) {
       rethrow;
@@ -46,6 +45,18 @@ class AuthProvider extends ChangeNotifier {
     finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _waitForSessionHydration() async {
+    const timeout = Duration(seconds: 8);
+    final deadline = DateTime.now().add(timeout);
+
+    while (DateTime.now().isBefore(deadline)) {
+      if (_idToken != null && _user != null) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 80));
     }
   }
 

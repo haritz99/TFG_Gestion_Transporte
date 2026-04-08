@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
+import 'core/theme/app_theme.dart';
 import 'core/routing/role_navigation.dart';
 import 'features/auth/auth_provider.dart';
 import 'flavors.dart';
@@ -15,9 +17,23 @@ class App extends StatelessWidget {
       create: (_) => AuthProvider(),
       child: MaterialApp(
         title: F.title,
-        theme: ThemeData(primarySwatch: Colors.orange),
+        theme: AppTheme.light,
+        builder: (context, child) {
+          if (child == null) {
+            return const SizedBox.shrink();
+          }
+          return ResponsiveBreakpoints.builder(
+            child: child,
+            breakpoints: const [
+              Breakpoint(start: 0, end: 599, name: MOBILE),
+              Breakpoint(start: 600, end: 1023, name: TABLET),
+              Breakpoint(start: 1024, end: 1920, name: DESKTOP),
+              Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+            ],
+          );
+        },
         home: Consumer<AuthProvider>(
-          builder: (_, auth, __) {
+          builder: (context, auth, child) {
             final screen = resolveAppHome(auth);
             return _flavorBanner(child: screen, show: kDebugMode);
           },

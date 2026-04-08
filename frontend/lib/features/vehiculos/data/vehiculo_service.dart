@@ -17,6 +17,9 @@ class VehiculoService {
       headers: {
       'Authorization': 'Bearer $token',
       },
+    ).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw Exception('Tiempo de espera agotado al obtener vehiculos'),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
