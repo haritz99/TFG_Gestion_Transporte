@@ -9,16 +9,15 @@ class GestionFlotaPage extends StatefulWidget {
   const GestionFlotaPage({
     super.key,
     this.totalVehiculos,
-    this.activos,
+    this.asignados,
     this.enMantenimiento,
     this.disponibles,
     this.selectedStatus = 'Todos',
     this.statusOptions = const [
       'Todos',
-      'Activo',
-      'Mantenimiento',
-      'Inactivo',
+      'Asignado',
       'Disponible',
+      'Mantenimiento',
     ],
     this.columns = const [
       'MATRICULA',
@@ -28,7 +27,7 @@ class GestionFlotaPage extends StatefulWidget {
       'LARGO',
       'ANCHO',
       'ALTO',
-      'DISPONIBLE',
+      'ESTADO',
       'INTERNO',
       'MATRICULA REMOLQUE',
       'TRANSPORTISTA ASIGNADO',
@@ -41,7 +40,7 @@ class GestionFlotaPage extends StatefulWidget {
   });
 
   final int? totalVehiculos;
-  final int? activos;
+  final int? asignados;
   final int? enMantenimiento;
   final int? disponibles;
 
@@ -84,7 +83,7 @@ class _GestionFlotaPageState
                 const SizedBox(height: 16),
                 FleetKpiGrid(
                   totalVehiculos: widget.totalVehiculos,
-                  activos: widget.activos,
+                  asignados: widget.asignados,
                   enMantenimiento: widget.enMantenimiento,
                   disponibles: widget.disponibles,
                   isMobile: isMobile,

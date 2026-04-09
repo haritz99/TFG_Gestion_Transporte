@@ -6,14 +6,14 @@ class FleetKpiGrid extends StatelessWidget {
   const FleetKpiGrid({
     super.key,
     this.totalVehiculos,
-    this.activos,
+    this.asignados,
     this.enMantenimiento,
     this.disponibles,
     required this.isMobile,
   });
 
   final int? totalVehiculos;
-  final int? activos;
+  final int? asignados;
   final int? enMantenimiento;
   final int? disponibles;
   final bool isMobile;
@@ -22,7 +22,7 @@ class FleetKpiGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = [
       FleetKpiCard(value: totalVehiculos?.toString(), label: 'Total Vehiculos'),
-      FleetKpiCard(value: activos?.toString(), label: 'Activos'),
+      FleetKpiCard(value: asignados?.toString(), label: 'Asignados'),
       FleetKpiCard(value: enMantenimiento?.toString(), label: 'En Mantenimiento'),
       FleetKpiCard(value: disponibles?.toString(), label: 'Disponibles'),
     ];

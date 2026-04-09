@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Literal, Optional
 
+from fastapi import HTTPException
 from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema
@@ -16,11 +17,12 @@ class VehiculoSchema(FirestoreSchema):
     largo: float = Field(..., gt=0)
     ancho: float = Field(..., gt=0)
     alto: float = Field(..., gt=0)
-    disponible: bool
+    estado: Literal['asignado', 'disponible', 'mantenimiento']
     interno: bool  # subcontratado
     matriculaRemolque: Optional[str] = Field(default=None, min_length=3)
     companyId: Optional[str] = Field(default=None, min_length=1)
     transportistaId: Optional[str] = None
+    transportistaNombre: Optional[str] = None
 
 
     @field_validator('matricula')
@@ -44,19 +46,29 @@ class VehiculoSchema(FirestoreSchema):
         return value
 
     @model_validator(mode='after')
-    def check_disponibilidad(self) -> 'VehiculoSchema':
-        """
-        Un vehículo es disponible si y solo si transportistaId es None.
-        """
-        if self.transportistaId is not None:
-            if self.disponible:
-                raise ValueError('Un vehículo con transportista asignado no puede estar disponible')
+    def check_estado(self) -> 'VehiculoSchema':
+        if self.estado == 'asignado':
+            if self.transportistaId is None:
+                raise ValueError('Un vehículo asignado debe tener transportistaId')
+            if not self.transportistaNombre:
+                raise ValueError('Un vehículo asignado debe tener transportistaNombre')
         else:
-            if not self.disponible:
-                raise ValueError('Un vehículo sin transportista asignado debería estar disponible')
+            if self.transportistaId or self.transportistaNombre:
+                raise ValueError('Un vehículo disponible o en mantenimiento no puede tener transportista asignado')
 
         if self.interno and not self.matriculaRemolque:
             raise ValueError('matriculaRemolque es obligatoria cuando interno es true')
 
         return self
+
+    @classmethod
+    def from_firestore(cls, doc, company_id: str):
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail='Vehículo no encontrado')
+
+        data = doc.to_dict() or {}
+        if company_id != data.get('companyId'):
+            raise HTTPException(status_code=403, detail='No autorizado para usar este vehículo')
+
+        return cls(**data)
 

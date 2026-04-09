@@ -33,17 +33,12 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
 
   List<VehiculoModel> get _vehiculosFiltrados {
     switch (_selectedStatus) {
-      case 'Activo':
-        return _vehiculos.where((v) => v.disponible).toList();
-      case 'Inactivo':
-        return _vehiculos.where((v) => !v.disponible).toList();
+      case 'Asignado':
+        return _vehiculos.where((v) => v.estado == 'asignado').toList();
       case 'Disponible':
-        return _vehiculos
-            .where((v) => v.disponible && v.transportistaId == null)
-            .toList();
+        return _vehiculos.where((v) => v.estado == 'disponible').toList();
       case 'Mantenimiento':
-        // No existe este campo en VehiculoModel aun.
-        return const [];
+        return _vehiculos.where((v) => v.estado == 'mantenimiento').toList();
       default:
         return _vehiculos;
     }
@@ -64,6 +59,7 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     if (mounted) {
       setState(() {
         _vehiculos = list;
+        print(_vehiculos);
         _firstLoad = false;
       });
     }
@@ -89,19 +85,18 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         largo: '${v.largo}m',
         ancho: '${v.ancho}m',
         alto: '${v.alto}m',
-        disponible: v.disponible ? 'Sí' : 'No',
+        estado: _formatEstado(v.estado),
         interno: v.interno ? 'Interno' : 'Subcontratado',
-        // Si tienes campos adicionales en el modelo como matriculaRemolque, añádelos aquí
-        transportistaAsignado: v.transportistaId ?? 'Sin asignar',
+        transportistaAsignado: v.transportistaNombre ?? 'Sin asignar',
       );
     }).toList();
 
     return Scaffold(
       body: GestionFlotaPage(
         totalVehiculos: _vehiculos.length,
-        activos: _vehiculos.where((v) => v.disponible).length,
-        enMantenimiento: 0, // Dato no disponible en VehiculoModel actualmente
-        disponibles: _vehiculos.where((v) => v.disponible && v.transportistaId == null).length,
+        asignados: _vehiculos.where((v) => v.estado == 'asignado').length,
+        enMantenimiento: _vehiculos.where((v) => v.estado == 'mantenimiento').length,
+        disponibles: _vehiculos.where((v) => v.estado == 'disponible').length,
         selectedStatus: _selectedStatus,
         rows: rows,
         onAddVehiculo: () {
@@ -114,5 +109,18 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         },
       ),
     );
+  }
+
+  String _formatEstado(String estado) {
+    switch (estado) {
+      case 'asignado':
+        return 'Asignado';
+      case 'disponible':
+        return 'Disponible';
+      case 'mantenimiento':
+        return 'Mantenimiento';
+      default:
+        return estado;
+    }
   }
 }

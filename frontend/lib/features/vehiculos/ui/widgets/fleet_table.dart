@@ -85,40 +85,58 @@ class _FleetTableState extends State<FleetTable> {
   Widget _buildStatusFilter() {
     return Container(
       height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE6EAF2)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedStatus,
-          borderRadius: BorderRadius.circular(12),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          style: const TextStyle(
-            fontFamily: AppTextStyles.fontFamily,
-            color: Color(0xFF4A5E79),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-          items: widget.statusOptions
+      child: PopupMenuButton<String>(
+        initialValue: _selectedStatus,
+        tooltip: 'Filtrar por estado',
+        offset: const Offset(0, 42),
+        color: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onSelected: (value) {
+          setState(() {
+            _selectedStatus = value;
+          });
+          widget.onStatusChanged?.call(value);
+        },
+        itemBuilder: (context) {
+          return widget.statusOptions
               .map(
-                (status) => DropdownMenuItem<String>(
+                (status) => PopupMenuItem<String>(
                   value: status,
-                  child: Text('Estado: $status'),
+                  child: Text(
+                    'Estado: $status',
+                    style: const TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      color: Color(0xFF4A5E79),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) {
-              return;
-            }
-            setState(() {
-              _selectedStatus = value;
-            });
-            widget.onStatusChanged?.call(value);
-          },
+              .toList();
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Estado: $_selectedStatus',
+              style: const TextStyle(
+                fontFamily: AppTextStyles.fontFamily,
+                color: Color(0xFF4A5E79),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down_rounded),
+          ],
         ),
       ),
     );
@@ -240,7 +258,7 @@ class _VehicleDataRow extends StatelessWidget {
         _cell(data.largo, 80),
         _cell(data.ancho, 80),
         _cell(data.alto, 80),
-        _cell(data.disponible, 105),
+        _cell(data.estado, 105),
         _cell(data.interno, 95),
         _cell(data.matriculaRemolque, 170),
         _cell(data.transportistaAsignado, 190),
@@ -305,7 +323,7 @@ class _FleetVehicleCard extends StatelessWidget {
             _line('Modelo', data.modelo),
             _line('Capacidad', data.capacidad),
             _line('Dimensiones', '${data.largo} x ${data.ancho} x ${data.alto}'),
-            _line('Disponible', data.disponible),
+            _line('Estado', data.estado),
             _line('Interno', data.interno),
             _line('Remolque', data.matriculaRemolque),
             _line('Transportista', data.transportistaAsignado),

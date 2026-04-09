@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..schemas import VehiculoSchema
@@ -15,35 +15,63 @@ class VehiculoAssignSchema(BaseModel):
     matr: str = Field(..., min_length=3)
     uid: str = Field(..., min_length=1)
 
-@router.get("/")
-async def get_all_vehiculos(current_user: dict[str, Any] = Depends(get_current_encargado)):
+
+def _build_transportista_name(user_data: dict[str, Any]) -> str:
+    nombre = user_data.get("nombre") or ""
+    apellido = user_data.get("apellido") or ""
+    full_name = nombre.strip() + " " + apellido.strip()
+    return full_name
+
+@router.get("/", response_model=list[VehiculoSchema])
+async def get_all_vehiculos(current_user: dict[str, Any] = Depends(get_current_encargado)) -> list[VehiculoSchema]:
     try:
         company_id = current_user["companyId"]
         vehiculos_ref = db.collection("vehiculos")
         query = vehiculos_ref.where("companyId", "==", company_id).stream()
+
         vehiculos = []
         for doc in query:
-            vehiculos.append(doc.to_dict())
+            vehiculo = VehiculoSchema.from_firestore(doc, company_id)
+            vehiculos.append(vehiculo)
         return vehiculos
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-@router.get("/{matr}")
-async def get_vehiculo(matr: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
+
+@router.get("/{matr}", response_model=VehiculoSchema)
+async def get_vehiculo(
+    matr: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+) -> VehiculoSchema:
     try:
         company_id = current_user["companyId"]
         doc_ref = db.collection("vehiculos").document(matr.upper())
         doc = doc_ref.get()
 
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
+        vehiculo = VehiculoSchema.from_firestore(doc, company_id)
+        return vehiculo
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-        vehiculo_data = doc.to_dict() or {}
-        if vehiculo_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
 
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=VehiculoSchema)
+async def create_vehiculo(
+    vehiculo_data: VehiculoSchema,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+) -> VehiculoSchema:
+    try:
+        company_id = current_user["companyId"]
+        vehiculo_data.companyId = company_id
+
+        doc_ref = db.collection("vehiculos").document(vehiculo_data.matricula)
+        if doc_ref.get().exists:
+            raise HTTPException(status_code=409, detail="Ya existe un vehículo con esa matrícula")
+
+        doc_ref.set(vehiculo_data.model_dump())
         return vehiculo_data
     except HTTPException:
         raise
@@ -51,108 +79,83 @@ async def get_vehiculo(matr: str, current_user: dict[str, Any] = Depends(get_cur
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
-@router.post("/")
-async def create_vehiculo(
-    vehiculo_data: VehiculoSchema,
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-):
-    try:
-        company_id = current_user["companyId"]
-        new_vehiculo = vehiculo_data.model_dump()
-        new_vehiculo["companyId"] = company_id
-
-        doc_ref = db.collection("vehiculos").document(vehiculo_data.matricula)
-        if doc_ref.get().exists:
-            raise HTTPException(status_code=409, detail="Ya existe un vehículo con esa matrícula")
-
-        doc_ref.set(new_vehiculo)
-        return {"message": "Vehículo creado con éxito"}
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-
-@router.put("/{matr}")
+@router.put("/{matr}", response_model=VehiculoSchema)
 async def update_vehiculo(
     matr: str,
     vehiculo_data: VehiculoSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-):
+) -> VehiculoSchema:
     try:
         company_id = current_user["companyId"]
         doc_ref = db.collection("vehiculos").document(matr.upper())
         doc = doc_ref.get()
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
+        VehiculoSchema.from_firestore(doc, company_id)
 
-        doc_data = doc.to_dict() or {}
-        if doc_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
-
-        update_data = vehiculo_data.model_dump(exclude_unset=True)
-        update_data["companyId"] = company_id   # Para prevenir que alguien pueda cambiar el companyId
-
-        doc_ref.update(update_data)
-        return {"message": "Vehículo actualizado con éxito"}
+        vehiculo_data.companyId = company_id  # Se sobreescribe con el valor del token
+        doc_ref.update(vehiculo_data.model_dump())
+        return vehiculo_data
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
-@router.delete("/{matr}")
+@router.delete("/{matr}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_vehiculo(matr: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
     try:
         company_id = current_user["companyId"]
         doc_ref = db.collection("vehiculos").document(matr.upper())
         doc = doc_ref.get()
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
-
-        doc_data = doc.to_dict() or {}
-        if doc_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
+        VehiculoSchema.from_firestore(doc, company_id)
 
         doc_ref.delete()
-        return {"message": "Vehículo eliminado con éxito"}
+        return None
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
-@router.patch("/assign")
+@router.patch("/assign", response_model=VehiculoSchema)
 async def asignar_vehiculo_a_transportista(
     data: VehiculoAssignSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-):
+) -> VehiculoSchema:
     try:
         company_id = current_user["companyId"]
 
         vehiculo_ref = db.collection("vehiculos").document(data.matr.upper())
         vehiculo_doc = vehiculo_ref.get()
-        if not vehiculo_doc.exists:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
-
-        vehiculo_data = vehiculo_doc.to_dict() or {}
-        if vehiculo_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Vehículo no encontrado")
+        vehiculo = VehiculoSchema.from_firestore(vehiculo_doc, company_id)
 
         transportista_ref = db.collection("users").document(data.uid)
         transportista_doc = transportista_ref.get()
         if not transportista_doc.exists:
             raise HTTPException(status_code=404, detail="Transportista no encontrado")
 
+        transportista_data = transportista_doc.to_dict() or {}
+        transportista_nombre = _build_transportista_name(transportista_data)
+
         batch = db.batch()
 
-        batch.update(vehiculo_ref, {"transportistaId": data.uid})
+        batch.update(
+            vehiculo_ref,
+            {
+                "transportistaId": data.uid,
+                "transportistaNombre": transportista_nombre,
+                "estado": "asignado",
+            },
+        )
         batch.update(transportista_ref, {"vehiculoId": data.matr.upper()})
 
-        # Se ejecutan ambas a la vez para evitar inconsistencias
         batch.commit()
 
-        return {"message": "Vehículo asignado con éxito"}
+        return VehiculoSchema(
+            **vehiculo.model_dump(),
+            transportistaId=data.uid,
+            transportistaNombre=transportista_nombre,
+            estado="asignado",
+        )
     except HTTPException:
         raise
     except Exception:

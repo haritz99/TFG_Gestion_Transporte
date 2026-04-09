@@ -26,7 +26,7 @@ void main() {
     largo: 13.6,
     ancho: 2.5,
     alto: 4.0,
-    disponible: true,
+    estado: "disponible",
     interno: true,
     transportistaId: null,
   );
