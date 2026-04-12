@@ -23,27 +23,22 @@ class FleetKpiGrid extends StatelessWidget {
     final cards = [
       FleetKpiCard(value: totalVehiculos?.toString(), label: 'Total Vehiculos'),
       FleetKpiCard(value: asignados?.toString(), label: 'Asignados'),
-      FleetKpiCard(value: enMantenimiento?.toString(), label: 'En Mantenimiento'),
+      FleetKpiCard(value: enMantenimiento?.toString(), label: 'Mantenimiento'),
       FleetKpiCard(value: disponibles?.toString(), label: 'Disponibles'),
     ];
 
     if (isMobile) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth < 560 ? 1 : 2;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: cards.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: crossAxisCount == 1 ? 3.6 : 1.8,
-            ),
-            itemBuilder: (_, index) => cards[index],
-          );
-        },
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: cards.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 5,
+          crossAxisSpacing: 5,
+          childAspectRatio: 2.8,
+        ),
+        itemBuilder: (_, index) => cards[index],
       );
     }
 
@@ -57,5 +52,4 @@ class FleetKpiGrid extends StatelessWidget {
     );
   }
 }
-
 

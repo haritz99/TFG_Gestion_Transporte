@@ -81,7 +81,7 @@ class _GestionFlotaPageState
                   onAddVehiculo: widget.onAddVehiculo,
                   isMobile: isMobile,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isMobile ? 0 : 16),
                 FleetKpiGrid(
                   totalVehiculos: widget.totalVehiculos,
                   asignados: widget.asignados,
@@ -89,7 +89,7 @@ class _GestionFlotaPageState
                   disponibles: widget.disponibles,
                   isMobile: isMobile,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isMobile ? 0 : 16),
                 FleetTable(
                   rows: widget.rows,
                   columns: widget.columns,
