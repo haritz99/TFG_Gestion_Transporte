@@ -9,6 +9,7 @@ class VehiculoModel {
   final double alto;
   final String estado;
   final bool interno;
+  final String? matriculaRemolque;
   final String? companyId;
   final String? transportistaId;
   final String? transportistaNombre;
@@ -24,6 +25,7 @@ class VehiculoModel {
     required this.alto,
     required this.estado,
     required this.interno,
+    this.matriculaRemolque,
     this.companyId,
     this.transportistaId,
     this.transportistaNombre,
@@ -41,6 +43,7 @@ class VehiculoModel {
       alto: (map['alto'] ?? 0).toDouble(),
       estado: map['estado'] ?? '',
       interno: map['interno'] ?? false,
+      matriculaRemolque: map['matriculaRemolque'],
       companyId: map['companyId'],
       transportistaId: map['transportistaId'],
       transportistaNombre: map['transportistaNombre'],
@@ -58,6 +61,8 @@ class VehiculoModel {
       'alto': alto,
       'estado': estado,
       'interno': interno,
+      'matriculaRemolque': matriculaRemolque,
+      'companyId'
       'companyId': companyId,
       'transportistaId': transportistaId,
     };

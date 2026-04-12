@@ -146,7 +146,7 @@ class _FleetTableState extends State<FleetTable> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
-        width: 1360,
+        width: 1440,
         child: Column(
           children: [
             _buildColumnsHeader(),
@@ -187,15 +187,15 @@ class _FleetTableState extends State<FleetTable> {
     const defaultWidths = <double>[
       130,
       120,
-      170,
+      150,
       100,
       80,
       80,
       80,
-      105,
-      95,
+      120,
+      130,
       170,
-      190,
+      170,
       120,
     ];
     final count = widget.columns.length;
@@ -253,15 +253,15 @@ class _VehicleDataRow extends StatelessWidget {
       children: [
         _cell(data.matricula, 130, strong: true),
         _cell(data.marca, 120),
-        _cell(data.modelo, 170),
+        _cell(data.modelo, 150),
         _cell(data.capacidad, 100),
         _cell(data.largo, 80),
         _cell(data.ancho, 80),
         _cell(data.alto, 80),
-        _cell(data.estado, 105),
-        _cell(data.interno, 95),
+        _cell(data.estado, 120),
+        _cell(data.interno, 130),
         _cell(data.matriculaRemolque, 170),
-        _cell(data.transportistaAsignado, 190),
+        _cell(data.conductor, 170),
         const Expanded(
           child: Row(
             children: [
@@ -326,7 +326,7 @@ class _FleetVehicleCard extends StatelessWidget {
             _line('Estado', data.estado),
             _line('Interno', data.interno),
             _line('Remolque', data.matriculaRemolque),
-            _line('Transportista', data.transportistaAsignado),
+            _line('Conductor', data.conductor),
           ],
         ),
       ),

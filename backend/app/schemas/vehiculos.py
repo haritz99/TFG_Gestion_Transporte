@@ -52,9 +52,9 @@ class VehiculoSchema(FirestoreSchema):
                 raise ValueError('Un vehículo asignado debe tener transportistaId')
             if not self.transportistaNombre:
                 raise ValueError('Un vehículo asignado debe tener transportistaNombre')
-        else:
+        elif self.estado == 'disponible':
             if self.transportistaId or self.transportistaNombre:
-                raise ValueError('Un vehículo disponible o en mantenimiento no puede tener transportista asignado')
+                raise ValueError('Un vehículo disponible no puede tener transportista asignado')
 
         if self.interno and not self.matriculaRemolque:
             raise ValueError('matriculaRemolque es obligatoria cuando interno es true')
@@ -65,10 +65,8 @@ class VehiculoSchema(FirestoreSchema):
     def from_firestore(cls, doc, company_id: str):
         if not doc.exists:
             raise HTTPException(status_code=404, detail='Vehículo no encontrado')
-
         data = doc.to_dict() or {}
+        data['matricula'] = doc.id
         if company_id != data.get('companyId'):
             raise HTTPException(status_code=403, detail='No autorizado para usar este vehículo')
-
         return cls(**data)
-

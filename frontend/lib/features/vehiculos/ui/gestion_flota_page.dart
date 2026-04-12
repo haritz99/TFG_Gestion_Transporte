@@ -30,7 +30,7 @@ class GestionFlotaPage extends StatefulWidget {
       'ESTADO',
       'INTERNO',
       'MATRICULA REMOLQUE',
-      'TRANSPORTISTA ASIGNADO',
+      'CONDUCTOR',
       'ACCIONES',
     ],
     this.rows = const [],

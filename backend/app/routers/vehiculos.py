@@ -28,7 +28,6 @@ async def get_all_vehiculos(current_user: dict[str, Any] = Depends(get_current_e
         company_id = current_user["companyId"]
         vehiculos_ref = db.collection("vehiculos")
         query = vehiculos_ref.where("companyId", "==", company_id).stream()
-
         vehiculos = []
         for doc in query:
             vehiculo = VehiculoSchema.from_firestore(doc, company_id)

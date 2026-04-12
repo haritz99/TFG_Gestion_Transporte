@@ -59,7 +59,6 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     if (mounted) {
       setState(() {
         _vehiculos = list;
-        print(_vehiculos);
         _firstLoad = false;
       });
     }
@@ -87,7 +86,8 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         alto: '${v.alto}m',
         estado: _formatEstado(v.estado),
         interno: v.interno ? 'Interno' : 'Subcontratado',
-        transportistaAsignado: v.transportistaNombre ?? 'Sin asignar',
+        matriculaRemolque: v.matriculaRemolque ?? '',
+        conductor: v.transportistaNombre ?? 'Sin asignar',
       );
     }).toList();
 

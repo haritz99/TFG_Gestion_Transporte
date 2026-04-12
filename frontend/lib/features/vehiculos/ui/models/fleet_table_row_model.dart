@@ -10,7 +10,7 @@ class FleetTableRowModel {
     this.estado = '',
     this.interno = '',
     this.matriculaRemolque = '',
-    this.transportistaAsignado = '',
+    this.conductor = '',
   });
 
   final String matricula;
@@ -23,6 +23,6 @@ class FleetTableRowModel {
   final String estado;
   final String interno;
   final String matriculaRemolque;
-  final String transportistaAsignado;
+  final String conductor;
 }
 
