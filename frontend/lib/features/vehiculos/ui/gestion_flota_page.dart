@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import 'models/fleet_column_def.dart';
 import 'models/fleet_table_row_model.dart';
 import 'widgets/fleet_kpi_grid.dart';
 import 'widgets/fleet_table.dart';
@@ -20,18 +21,18 @@ class GestionFlotaPage extends StatefulWidget {
       'Mantenimiento',
     ],
     this.columns = const [
-      'MATRICULA',
-      'MARCA',
-      'MODELO',
-      'CAPACIDAD',
-      'LARGO',
-      'ANCHO',
-      'ALTO',
-      'ESTADO',
-      'INTERNO',
-      'MATRICULA REMOLQUE',
-      'CONDUCTOR',
-      'ACCIONES',
+      FleetColumnDef('MATRICULA', 13),
+      FleetColumnDef('MARCA', 12),
+      FleetColumnDef('MODELO', 15),
+      FleetColumnDef('CAPACIDAD', 10),
+      FleetColumnDef('LARGO', 8),
+      FleetColumnDef('ANCHO', 8),
+      FleetColumnDef('ALTO', 8),
+      FleetColumnDef('ESTADO', 12),
+      FleetColumnDef('INTERNO', 13),
+      FleetColumnDef('MATRICULA REMOLQUE', 17),
+      FleetColumnDef('CONDUCTOR', 17),
+      FleetColumnDef('ACCIONES', 12),
     ],
     this.rows = const [],
     this.onStatusChanged,
@@ -47,7 +48,7 @@ class GestionFlotaPage extends StatefulWidget {
   final String selectedStatus;
   final List<String> statusOptions;
 
-  final List<String> columns;
+  final List<FleetColumnDef> columns;
   final List<FleetTableRowModel> rows;
 
   final ValueChanged<String>? onStatusChanged;

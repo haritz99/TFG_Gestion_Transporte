@@ -25,7 +25,6 @@ void main() {
     final baseUrl = '${ApiConfig.baseUrl}/vehi/';
 
     final tVehiculoModel = VehiculoModel(
-        id: '1234ABC',
         matricula: '1234ABC',
         marca: 'Scania',
         modelo: 'R450',

@@ -1,5 +1,4 @@
 class VehiculoModel {
-  final String id;
   final String matricula;
   final String marca;
   final String modelo;
@@ -15,7 +14,6 @@ class VehiculoModel {
   final String? transportistaNombre;
 
   VehiculoModel({
-    required this.id,
     required this.matricula,
     required this.marca,
     required this.modelo,
@@ -33,7 +31,6 @@ class VehiculoModel {
 
   factory VehiculoModel.fromMap(Map<String, dynamic> map, String id) {
     return VehiculoModel(
-      id: id,
       matricula: map['matricula'] ?? '',
       marca: map['marca'] ?? '',
       modelo: map['modelo'] ?? '',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../models/fleet_column_def.dart';
 import '../models/fleet_table_row_model.dart';
 
 class FleetTable extends StatefulWidget {
@@ -16,7 +17,7 @@ class FleetTable extends StatefulWidget {
   });
 
   final List<FleetTableRowModel> rows;
-  final List<String> columns;
+  final List<FleetColumnDef> columns;
   final String selectedStatus;
   final List<String> statusOptions;
   final bool isMobile;
@@ -28,6 +29,7 @@ class FleetTable extends StatefulWidget {
 
 class _FleetTableState extends State<FleetTable> {
   late String _selectedStatus;
+  final ScrollController _horizontalScrollController = ScrollController();
 
   @override
   void initState() {
@@ -41,6 +43,12 @@ class _FleetTableState extends State<FleetTable> {
     if (widget.selectedStatus != oldWidget.selectedStatus) {
       _selectedStatus = widget.selectedStatus;
     }
+  }
+
+  @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -143,33 +151,47 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   Widget _buildDesktopTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: 1440,
-        child: Column(
-          children: [
-            _buildColumnsHeader(),
-            const Divider(height: 1, color: Color(0xFFE8EDF5)),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.rows.length,
-              separatorBuilder: (_, _) => const Divider(
-                height: 1,
-                color: Color(0xFFF0F3F8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double tableWidth = constraints.maxWidth > 1300 ? constraints.maxWidth : 1300;
+
+        return Scrollbar(
+          controller: _horizontalScrollController,
+          thumbVisibility: true,
+          trackVisibility: true,
+          child: SingleChildScrollView(
+            controller: _horizontalScrollController,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: tableWidth,
+              child: Column(
+                children: [
+                  _buildColumnsHeader(),
+                  const Divider(height: 1, color: Color(0xFFE8EDF5)),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: widget.rows.length,
+                    separatorBuilder: (_, _) => const Divider(
+                      height: 1,
+                      color: Color(0xFFF0F3F8),
+                    ),
+                    itemBuilder: (_, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: _VehicleDataRow(
+                          data: widget.rows[index],
+                          columns: widget.columns,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-              itemBuilder: (_, index) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: _VehicleDataRow(data: widget.rows[index]),
-                );
-              },
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -184,35 +206,18 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   Widget _buildColumnsHeader() {
-    const defaultWidths = <double>[
-      130,
-      120,
-      150,
-      100,
-      80,
-      80,
-      80,
-      120,
-      130,
-      170,
-      170,
-      120,
-    ];
-    final count = widget.columns.length;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        children: [
-          for (var i = 0; i < count; i++)
-            if (i == count - 1)
-              Expanded(child: _TableHeaderCell(widget.columns[i]))
-            else
-              SizedBox(
-                width: i < defaultWidths.length ? defaultWidths[i] : 120,
-                child: _TableHeaderCell(widget.columns[i]),
-              ),
-        ],
+        children: widget.columns.map((col) {
+          return Expanded(
+            flex: col.flex,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: _TableHeaderCell(col.label),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -243,28 +248,33 @@ class _TableHeaderCell extends StatelessWidget {
 }
 
 class _VehicleDataRow extends StatelessWidget {
-  const _VehicleDataRow({required this.data});
+  const _VehicleDataRow({
+    required this.data,
+    required this.columns,
+  });
 
   final FleetTableRowModel data;
+  final List<FleetColumnDef> columns;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _cell(data.matricula, 130, strong: true),
-        _cell(data.marca, 120),
-        _cell(data.modelo, 150),
-        _cell(data.capacidad, 100),
-        _cell(data.largo, 80),
-        _cell(data.ancho, 80),
-        _cell(data.alto, 80),
-        _cell(data.estado, 120),
-        _cell(data.interno, 130),
-        _cell(data.matriculaRemolque, 170),
-        _cell(data.conductor, 170),
-        const Expanded(
+        _flexCell(data.matricula, columns[0].flex, strong: true),
+        _flexCell(data.marca, columns[1].flex),
+        _flexCell(data.modelo, columns[2].flex),
+        _flexCell(data.capacidad, columns[3].flex),
+        _flexCell(data.largo, columns[4].flex),
+        _flexCell(data.ancho, columns[5].flex),
+        _flexCell(data.alto, columns[6].flex),
+        _flexCell(data.estado, columns[7].flex),
+        _flexCell(data.interno, columns[8].flex),
+        _flexCell(data.matriculaRemolque, columns[9].flex),
+        _flexCell(data.conductor, columns[10].flex),
+        Expanded(
+          flex: columns[11].flex,
           child: Row(
-            children: [
+            children: const [
               Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
               SizedBox(width: 12),
               Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
@@ -275,13 +285,16 @@ class _VehicleDataRow extends StatelessWidget {
     );
   }
 
-  Widget _cell(String text, double width, {bool strong = false}) {
-    return SizedBox(
-      width: width,
-      child: Text(
-        text,
-        overflow: TextOverflow.ellipsis,
-        style: strong ? AppTextStyles.tableValueStrong : AppTextStyles.tableValue,
+  Widget _flexCell(String text, int flex, {bool strong = false}) {
+    return Expanded(
+      flex: flex,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: Text(
+          text,
+          overflow: TextOverflow.ellipsis,
+          style: strong ? AppTextStyles.tableValueStrong : AppTextStyles.tableValue,
+        ),
       ),
     );
   }
@@ -346,5 +359,3 @@ class _FleetVehicleCard extends StatelessWidget {
     );
   }
 }
-
-
