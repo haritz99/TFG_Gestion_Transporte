@@ -59,7 +59,6 @@ class VehiculoModel {
       'estado': estado,
       'interno': interno,
       'matriculaRemolque': matriculaRemolque,
-      'companyId'
       'companyId': companyId,
       'transportistaId': transportistaId,
     };

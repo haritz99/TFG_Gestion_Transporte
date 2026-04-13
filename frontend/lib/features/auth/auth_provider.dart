@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
@@ -21,10 +23,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
-    if (firebaseUser != null) {
-      _user = await _authService.getUserData(firebaseUser.uid);
-      _idToken = await _authService.getIdToken();
-    } else {
+    try {
+      if (firebaseUser != null) {
+        _user = await _authService.getUserData(firebaseUser.uid);
+        _idToken = await _authService.getIdToken();
+      } else {
+        _user = null;
+        _idToken = null;
+      }
+    } catch (_) {
       _user = null;
       _idToken = null;
     }
@@ -58,6 +65,10 @@ class AuthProvider extends ChangeNotifier {
       }
       await Future<void>.delayed(const Duration(milliseconds: 80));
     }
+
+    throw TimeoutException(
+      'No se pudo hidratar la sesion tras iniciar sesion en el tiempo esperado.',
+    );
   }
 
   Future<void> register({

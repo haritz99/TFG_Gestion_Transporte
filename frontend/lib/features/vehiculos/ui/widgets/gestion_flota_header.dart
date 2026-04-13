@@ -17,10 +17,10 @@ class GestionFlotaHeader extends StatelessWidget {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
-        Text('Gestion de Flota', style: AppTextStyles.headingLg),
+        Text('Gestión de Flota', style: AppTextStyles.headingLg),
         SizedBox(height: 4),
         Text(
-          'Control y seguimiento de todos los vehiculos',
+          'Control y seguimiento de todos los vehículos',
           style: AppTextStyles.bodyMd,
         ),
       ],
@@ -39,7 +39,7 @@ class GestionFlotaHeader extends StatelessWidget {
         onPressed: onAddVehiculo,
         icon: const Icon(Icons.add, size: 18),
         label: const Text(
-          'Anadir Vehiculo',
+          'Añadir Vehículo',
           style: TextStyle(
             fontFamily: AppTextStyles.fontFamily,
             fontSize: 15,
