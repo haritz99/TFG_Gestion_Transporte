@@ -70,7 +70,16 @@ async def create_vehiculo(
         if doc_ref.get().exists:
             raise HTTPException(status_code=409, detail="Ya existe un vehículo con esa matrícula")
 
-        doc_ref.set(vehiculo_data.model_dump())
+        batch = db.batch()
+        batch.set(doc_ref, vehiculo_data.model_dump())
+
+        # Si hay transportista se actualiza el vehiculoId del transportista
+        if vehiculo_data.transportistaId:
+            transportista_ref = db.collection("users").document(vehiculo_data.transportistaId)
+            batch.update(transportista_ref, {"vehiculoId": vehiculo_data.matricula})
+
+        batch.commit()
+
         return vehiculo_data
     except HTTPException:
         raise
@@ -88,10 +97,27 @@ async def update_vehiculo(
         company_id = current_user["companyId"]
         doc_ref = db.collection("vehiculos").document(matr.upper())
         doc = doc_ref.get()
-        VehiculoSchema.from_firestore(doc, company_id)
+        vehiculo_antiguo = VehiculoSchema.from_firestore(doc, company_id)
 
         vehiculo_data.companyId = company_id  # Se sobreescribe con el valor del token
-        doc_ref.update(vehiculo_data.model_dump())
+
+        batch = db.batch()
+        batch.update(doc_ref, vehiculo_data.model_dump())
+
+        transportista_viejo_id = vehiculo_antiguo.transportistaId
+        transportista_nuevo_id = vehiculo_data.transportistaId
+
+        # Aqui se asigna o se desasigna el vehiculo al transportista
+        if transportista_viejo_id != transportista_nuevo_id:
+            if transportista_viejo_id:
+                viejo_ref = db.collection("users").document(transportista_viejo_id)
+                batch.update(viejo_ref, {"vehiculoId": None})
+
+            if transportista_nuevo_id:
+                nuevo_ref = db.collection("users").document(transportista_nuevo_id)
+                batch.update(nuevo_ref, {"vehiculoId": vehiculo_data.matricula})
+
+        batch.commit()
         return vehiculo_data
     except HTTPException:
         raise
@@ -166,4 +192,3 @@ async def asignar_vehiculo_a_transportista(
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-

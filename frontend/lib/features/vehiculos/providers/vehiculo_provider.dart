@@ -77,6 +77,35 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> saveVehiculo(VehiculoModel vehiculo, {required bool isNew}) async {
+    if (isNew) {
+      await insertaVehiculo(vehiculo);
+    } else {
+      await actualizaVehiculo(vehiculo.matricula, vehiculo);
+    }
+  }
+
+  Future<void> actualizaVehiculo(String matricula, VehiculoModel vehiculo) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      await _service.actualizaVehiculo(
+        token: token,
+        matricula: matricula,
+        vehiculoData: vehiculo,
+      );
+    } catch (e) {
+      _errorMessage = "Error al actualizar vehiculo";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
   Future<void> eliminarVehiculo(String matricula) async {
     _isLoading = true;
     _errorMessage = null;

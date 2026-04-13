@@ -39,6 +39,7 @@ class GestionFlotaPage extends StatefulWidget {
     this.onAddVehiculo,
     this.onNuevaCarga,
     this.onDeleteVehiculo,
+    this.onEditVehiculo,
   });
 
   final int? totalVehiculos;
@@ -56,6 +57,7 @@ class GestionFlotaPage extends StatefulWidget {
   final VoidCallback? onAddVehiculo;
   final VoidCallback? onNuevaCarga;
   final ValueChanged<String>? onDeleteVehiculo;
+  final ValueChanged<String>? onEditVehiculo;
 
   @override
   State<GestionFlotaPage> createState() =>
@@ -99,6 +101,7 @@ class _GestionFlotaPageState
                   statusOptions: widget.statusOptions,
                   onStatusChanged: widget.onStatusChanged,
                   onDeleteVehiculo: widget.onDeleteVehiculo,
+                  onEditVehiculo: widget.onEditVehiculo,
                   isMobile: isMobile,
                 ),
               ],

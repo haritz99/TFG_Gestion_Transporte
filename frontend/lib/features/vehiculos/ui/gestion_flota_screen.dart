@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/vehiculos/ui/widgets/vehiculo_form.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
+import '../../transportistas/providers/transportista_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'models/fleet_table_row_model.dart';
 import 'gestion_flota_page.dart';
@@ -14,8 +16,11 @@ class GestionFlotaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => VehiculoProvider(authService: AuthService()),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => VehiculoProvider(authService: AuthService())),
+        ChangeNotifierProvider(create: (_) => TransportistaProvider(authService: AuthService())),
+      ],
       child: const _GestionFlotaScreenBody(),
     );
   }
@@ -88,6 +93,46 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     );
   }
 
+  Future<void> _promptVehiculoForm(String? matricula) async {
+    final vehiculoProvider = context.read<VehiculoProvider>();
+    final transportistaProvider = context.read<TransportistaProvider>();
+    final isNew = matricula == null;
+
+    final vehiculoActual = isNew
+        ? null
+        : _vehiculos.firstWhere((v) => v.matricula == matricula);
+
+    await transportistaProvider.fetchTransportistasDisponibles();
+    List<DropdownMenuEntry<String>> conductores = transportistaProvider.getConductoresDropdown();
+
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(isNew ? 'Crear vehículo' : 'Editar vehículo'),
+          content: SizedBox(
+            width: 900,
+            child: SingleChildScrollView(
+              child: VehiculoForm(
+                vehiculo: vehiculoActual,
+                conductores: conductores,
+                onSave: (vehiculo) async {
+                  await vehiculoProvider.saveVehiculo(vehiculo, isNew: isNew);
+                  if (mounted) {
+                    Navigator.of(ctx).pop();
+                    _refreshVehiculos();
+                  }
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> deleteVehiculo(String matricula) async {
     final provider = context.read<VehiculoProvider>();
     await provider.eliminarVehiculo(matricula);
@@ -147,7 +192,9 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
             _selectedStatus = status;
           });
         },
+        onAddVehiculo: () => _promptVehiculoForm(null),
         onDeleteVehiculo: _promptDeleteVehiculo,
+        onEditVehiculo: _promptVehiculoForm,
       ),
     );
   }

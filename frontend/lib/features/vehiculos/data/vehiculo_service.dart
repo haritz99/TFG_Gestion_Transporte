@@ -85,6 +85,33 @@ class VehiculoService {
     }
   }
 
+  Future<VehiculoModel> actualizaVehiculo({
+    required String token,
+    required String matricula,
+    required VehiculoModel vehiculoData,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/vehi/$matricula');
+
+    final response = await _client.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(vehiculoData.toMap()),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final String id = (data['matricula'] ?? '').toString();
+      return VehiculoModel.fromMap(data, id);
+    } else {
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+      throw Exception(errorData['detail'] ?? 'Error al actualizar vehículo');
+    }
+  }
+
+
   Future<void> eliminaVehiculo({
     required String token,
     required String matricula,

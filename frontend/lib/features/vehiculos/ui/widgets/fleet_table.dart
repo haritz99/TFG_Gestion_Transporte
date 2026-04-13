@@ -15,6 +15,7 @@ class FleetTable extends StatefulWidget {
     required this.isMobile,
     this.onStatusChanged,
     this.onDeleteVehiculo,
+    this.onEditVehiculo,
   });
 
   final List<FleetTableRowModel> rows;
@@ -24,6 +25,8 @@ class FleetTable extends StatefulWidget {
   final bool isMobile;
   final ValueChanged<String>? onStatusChanged;
   final ValueChanged<String>? onDeleteVehiculo;
+  final ValueChanged<String>? onEditVehiculo;
+
 
   @override
   State<FleetTable> createState() => _FleetTableState();
@@ -83,7 +86,7 @@ class _FleetTableState extends State<FleetTable> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '${widget.rows.length} vehiculos',
+                '${widget.rows.length} vehículos',
                 style: AppTextStyles.bodyMd,
               ),
             ),
@@ -185,6 +188,7 @@ class _FleetTableState extends State<FleetTable> {
                           data: widget.rows[index],
                           columns: widget.columns,
                           onDelete: widget.onDeleteVehiculo,
+                          onEdit: widget.onEditVehiculo,
                         ),
                       );
                     },
@@ -207,6 +211,7 @@ class _FleetTableState extends State<FleetTable> {
       itemBuilder: (_, index) => _FleetVehicleCard(
         data: widget.rows[index],
         onDelete: widget.onDeleteVehiculo,
+        onEdit: widget.onEditVehiculo,
       ),
     );
   }
@@ -259,11 +264,13 @@ class _VehicleDataRow extends StatelessWidget {
     required this.data,
     required this.columns,
     this.onDelete,
+    this.onEdit,
   });
 
   final FleetTableRowModel data;
   final List<FleetColumnDef> columns;
   final ValueChanged<String>? onDelete;
+  final ValueChanged<String>? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +292,7 @@ class _VehicleDataRow extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                  onPressed: () {},
+                  onPressed: () => onEdit?.call(data.matricula),
                   icon : Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
               ),
               SizedBox(width: 12),
@@ -320,10 +327,12 @@ class _FleetVehicleCard extends StatelessWidget {
   const _FleetVehicleCard({
     required this.data,
     this.onDelete,
+    this.onEdit,
   });
 
   final FleetTableRowModel data;
   final ValueChanged<String>? onDelete;
+  final ValueChanged<String>? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +354,7 @@ class _FleetVehicleCard extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => onEdit?.call(data.matricula),
                       icon: Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
                     ),
                     SizedBox(width: 12),

@@ -58,9 +58,10 @@ class VehiculoModel {
       'alto': alto,
       'estado': estado,
       'interno': interno,
-      'matriculaRemolque': matriculaRemolque,
-      'companyId': companyId,
-      'transportistaId': transportistaId,
+      'matriculaRemolque': matriculaRemolque?.isEmpty == true ? null : matriculaRemolque,
+      'companyId': companyId?.isEmpty == true ? null : companyId,
+      'transportistaId': transportistaId?.isEmpty == true ? null : transportistaId,
+      'transportistaNombre': transportistaNombre?.isEmpty == true ? null : transportistaNombre,
     };
   }
 }
