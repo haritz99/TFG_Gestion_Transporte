@@ -18,7 +18,6 @@ void main() {
   const token = 'test_token';
 
   final tVehiculo = VehiculoModel(
-    id: '1234ABC',
     matricula: '1234ABC',
     marca: 'Scania',
     modelo: 'R450',
@@ -26,7 +25,7 @@ void main() {
     largo: 13.6,
     ancho: 2.5,
     alto: 4.0,
-    disponible: true,
+    estado: "disponible",
     interno: true,
     transportistaId: null,
   );

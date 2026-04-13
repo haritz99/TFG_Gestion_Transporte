@@ -1,5 +1,4 @@
 class VehiculoModel {
-  final String id;
   final String matricula;
   final String marca;
   final String modelo;
@@ -7,13 +6,14 @@ class VehiculoModel {
   final double largo;
   final double ancho;
   final double alto;
-  final bool disponible;
+  final String estado;
   final bool interno;
+  final String? matriculaRemolque;
   final String? companyId;
   final String? transportistaId;
+  final String? transportistaNombre;
 
   VehiculoModel({
-    required this.id,
     required this.matricula,
     required this.marca,
     required this.modelo,
@@ -21,15 +21,16 @@ class VehiculoModel {
     required this.largo,
     required this.ancho,
     required this.alto,
-    required this.disponible,
+    required this.estado,
     required this.interno,
+    this.matriculaRemolque,
     this.companyId,
     this.transportistaId,
+    this.transportistaNombre,
   });
 
   factory VehiculoModel.fromMap(Map<String, dynamic> map, String id) {
     return VehiculoModel(
-      id: id,
       matricula: map['matricula'] ?? '',
       marca: map['marca'] ?? '',
       modelo: map['modelo'] ?? '',
@@ -37,10 +38,12 @@ class VehiculoModel {
       largo: (map['largo'] ?? 0).toDouble(),
       ancho: (map['ancho'] ?? 0).toDouble(),
       alto: (map['alto'] ?? 0).toDouble(),
-      disponible: map['disponible'] ?? false,
+      estado: map['estado'] ?? '',
       interno: map['interno'] ?? false,
+      matriculaRemolque: map['matriculaRemolque'],
       companyId: map['companyId'],
       transportistaId: map['transportistaId'],
+      transportistaNombre: map['transportistaNombre'],
     );
   }
 
@@ -53,8 +56,9 @@ class VehiculoModel {
       'largo': largo,
       'ancho': ancho,
       'alto': alto,
-      'disponible': disponible,
+      'estado': estado,
       'interno': interno,
+      'matriculaRemolque': matriculaRemolque,
       'companyId': companyId,
       'transportistaId': transportistaId,
     };
