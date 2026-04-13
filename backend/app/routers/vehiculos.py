@@ -105,9 +105,16 @@ async def delete_vehiculo(matr: str, current_user: dict[str, Any] = Depends(get_
         company_id = current_user["companyId"]
         doc_ref = db.collection("vehiculos").document(matr.upper())
         doc = doc_ref.get()
-        VehiculoSchema.from_firestore(doc, company_id)
-
-        doc_ref.delete()
+        vehiculo = VehiculoSchema.from_firestore(doc, company_id)
+        
+        batch = db.batch()
+        batch.delete(doc_ref)
+        
+        if vehiculo.transportistaId:
+            transportista_ref = db.collection("users").document(vehiculo.transportistaId)
+            batch.update(transportista_ref, {"vehiculoId": None})
+            
+        batch.commit()
         return None
     except HTTPException:
         raise
@@ -159,7 +166,4 @@ async def asignar_vehiculo_a_transportista(
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-
-
 

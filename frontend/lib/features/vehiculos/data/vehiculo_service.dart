@@ -84,4 +84,23 @@ class VehiculoService {
       throw Exception(errorData['detail'] ?? 'Error al insertar vehículo');
     }
   }
+
+  Future<void> eliminaVehiculo({
+    required String token,
+    required String matricula,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/vehi/$matricula');
+
+    final response = await _client.delete(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 204) {
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+      throw Exception(errorData['detail'] ?? 'Error al eliminar vehiculo');
+    }
+  }
 }

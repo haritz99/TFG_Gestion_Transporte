@@ -38,6 +38,7 @@ class GestionFlotaPage extends StatefulWidget {
     this.onStatusChanged,
     this.onAddVehiculo,
     this.onNuevaCarga,
+    this.onDeleteVehiculo,
   });
 
   final int? totalVehiculos;
@@ -54,6 +55,7 @@ class GestionFlotaPage extends StatefulWidget {
   final ValueChanged<String>? onStatusChanged;
   final VoidCallback? onAddVehiculo;
   final VoidCallback? onNuevaCarga;
+  final ValueChanged<String>? onDeleteVehiculo;
 
   @override
   State<GestionFlotaPage> createState() =>
@@ -81,7 +83,7 @@ class _GestionFlotaPageState
                   onAddVehiculo: widget.onAddVehiculo,
                   isMobile: isMobile,
                 ),
-                SizedBox(height: isMobile ? 0 : 16),
+                SizedBox(height: isMobile ? 10 : 16),
                 FleetKpiGrid(
                   totalVehiculos: widget.totalVehiculos,
                   asignados: widget.asignados,
@@ -89,13 +91,14 @@ class _GestionFlotaPageState
                   disponibles: widget.disponibles,
                   isMobile: isMobile,
                 ),
-                SizedBox(height: isMobile ? 0 : 16),
+                SizedBox(height: isMobile ? 10 : 16),
                 FleetTable(
                   rows: widget.rows,
                   columns: widget.columns,
                   selectedStatus: widget.selectedStatus,
                   statusOptions: widget.statusOptions,
                   onStatusChanged: widget.onStatusChanged,
+                  onDeleteVehiculo: widget.onDeleteVehiculo,
                   isMobile: isMobile,
                 ),
               ],

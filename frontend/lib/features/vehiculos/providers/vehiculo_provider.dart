@@ -77,4 +77,23 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> eliminarVehiculo(String matricula) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      await _service.eliminaVehiculo(
+        token: token,
+        matricula: matricula,
+      );
+      await fetchVehiculos();
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

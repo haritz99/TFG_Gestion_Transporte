@@ -6,6 +6,8 @@ import '../providers/vehiculo_provider.dart';
 import 'models/fleet_table_row_model.dart';
 import 'gestion_flota_page.dart';
 import '../../auth/auth_service.dart';
+import 'widgets/confirm_delete_vehicle.dart';
+import 'package:flutter/cupertino.dart';
 
 class GestionFlotaScreen extends StatelessWidget {
   const GestionFlotaScreen({super.key});
@@ -64,6 +66,46 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     }
   }
 
+  String _formatEstado(String rawStatus) {
+    if (rawStatus.isEmpty) return 'Desconocido';
+    return rawStatus[0].toUpperCase() + rawStatus.substring(1).toLowerCase();
+  }
+
+  void _promptDeleteVehiculo(String matricula) {
+    final vehiculo = _vehiculos.firstWhere((v) => v.matricula == matricula);
+    final conductor = vehiculo.transportistaNombre ?? '';
+
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => ConfirmDeleteVehicle(
+        conductor: conductor,
+        onCancel: () => Navigator.of(ctx).pop(),
+        onConfirm: () {
+          Navigator.of(ctx).pop();
+          deleteVehiculo(matricula);
+        },
+      ),
+    );
+  }
+
+  Future<void> deleteVehiculo(String matricula) async {
+    final provider = context.read<VehiculoProvider>();
+    await provider.eliminarVehiculo(matricula);
+    if (mounted) {
+      final error = provider.errorMessage;
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar: $error')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vehículo eliminado correctamente')),
+        );
+        _refreshVehiculos();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<VehiculoProvider>();
@@ -98,29 +140,15 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         enMantenimiento: _vehiculos.where((v) => v.estado == 'mantenimiento').length,
         disponibles: _vehiculos.where((v) => v.estado == 'disponible').length,
         selectedStatus: _selectedStatus,
+        statusOptions: const ['Todos', 'Asignado', 'Disponible', 'Mantenimiento'],
         rows: rows,
-        onAddVehiculo: () {
-          // Lógica para abrir diálogo de creación
-        },
         onStatusChanged: (status) {
           setState(() {
             _selectedStatus = status;
           });
         },
+        onDeleteVehiculo: _promptDeleteVehiculo,
       ),
     );
-  }
-
-  String _formatEstado(String estado) {
-    switch (estado) {
-      case 'asignado':
-        return 'Asignado';
-      case 'disponible':
-        return 'Disponible';
-      case 'mantenimiento':
-        return 'Mantenimiento';
-      default:
-        return estado;
-    }
   }
 }

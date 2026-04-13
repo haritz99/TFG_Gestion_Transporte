@@ -14,6 +14,7 @@ class FleetTable extends StatefulWidget {
     required this.statusOptions,
     required this.isMobile,
     this.onStatusChanged,
+    this.onDeleteVehiculo,
   });
 
   final List<FleetTableRowModel> rows;
@@ -22,12 +23,14 @@ class FleetTable extends StatefulWidget {
   final List<String> statusOptions;
   final bool isMobile;
   final ValueChanged<String>? onStatusChanged;
+  final ValueChanged<String>? onDeleteVehiculo;
 
   @override
   State<FleetTable> createState() => _FleetTableState();
 }
 
 class _FleetTableState extends State<FleetTable> {
+  // Esta clase controla el estado de la tabla y sus filtros
   late String _selectedStatus;
   final ScrollController _horizontalScrollController = ScrollController();
 
@@ -113,22 +116,21 @@ class _FleetTableState extends State<FleetTable> {
           widget.onStatusChanged?.call(value);
         },
         itemBuilder: (context) {
-          return widget.statusOptions
-              .map(
-                (status) => PopupMenuItem<String>(
-                  value: status,
-                  child: Text(
-                    'Estado: $status',
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.fontFamily,
-                      color: Color(0xFF4A5E79),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+          return widget.statusOptions.map(
+            (status) => PopupMenuItem<String>(
+              value: status,
+              child: Text(
+                'Estado: $status',
+                style: const TextStyle(
+                  fontFamily: AppTextStyles.fontFamily,
+                  color: Color(0xFF4A5E79),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
-              )
-              .toList();
+              ),
+            ),
+          )
+          .toList();
         },
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -182,6 +184,7 @@ class _FleetTableState extends State<FleetTable> {
                         child: _VehicleDataRow(
                           data: widget.rows[index],
                           columns: widget.columns,
+                          onDelete: widget.onDeleteVehiculo,
                         ),
                       );
                     },
@@ -201,7 +204,10 @@ class _FleetTableState extends State<FleetTable> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: widget.rows.length,
       separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF0F3F8)),
-      itemBuilder: (_, index) => _FleetVehicleCard(data: widget.rows[index]),
+      itemBuilder: (_, index) => _FleetVehicleCard(
+        data: widget.rows[index],
+        onDelete: widget.onDeleteVehiculo,
+      ),
     );
   }
 
@@ -248,13 +254,16 @@ class _TableHeaderCell extends StatelessWidget {
 }
 
 class _VehicleDataRow extends StatelessWidget {
+  // Esta clase se utiliza para crear filas para tamaño desktop
   const _VehicleDataRow({
     required this.data,
     required this.columns,
+    this.onDelete,
   });
 
   final FleetTableRowModel data;
   final List<FleetColumnDef> columns;
+  final ValueChanged<String>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -274,10 +283,16 @@ class _VehicleDataRow extends StatelessWidget {
         Expanded(
           flex: columns[11].flex,
           child: Row(
-            children: const [
-              Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+            children: [
+              IconButton(
+                  onPressed: () {},
+                  icon : Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+              ),
               SizedBox(width: 12),
-              Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+              IconButton(
+                  onPressed: () => onDelete?.call(data.matricula),
+                  icon: Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+              ),
             ],
           ),
         ),
@@ -301,9 +316,14 @@ class _VehicleDataRow extends StatelessWidget {
 }
 
 class _FleetVehicleCard extends StatelessWidget {
-  const _FleetVehicleCard({required this.data});
+  // Esta clase se utiliza para crear tarjetas responsive para móvil
+  const _FleetVehicleCard({
+    required this.data,
+    this.onDelete,
+  });
 
   final FleetTableRowModel data;
+  final ValueChanged<String>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -323,10 +343,16 @@ class _FleetVehicleCard extends StatelessWidget {
               children: [
                 Text(data.matricula, style: AppTextStyles.tableValueStrong),
                 Row(
-                  children: const [
-                    Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+                    ),
                     SizedBox(width: 12),
-                    Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+                    IconButton(
+                      onPressed: () => onDelete?.call(data.matricula),
+                      icon: Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+                    ),
                   ],
                 ),
               ],
