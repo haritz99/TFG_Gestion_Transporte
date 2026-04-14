@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../../core/models/vehiculo_model.dart';
+import '../../../core/models/paginated_response.dart';
 import '../../../core/token_provider.dart';
 import '../../auth/auth_service.dart';
 import '../data/vehiculo_service.dart';
@@ -12,6 +13,11 @@ class VehiculoProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  int? _totalVehiculos;
+  int? _asignados;
+  int? _disponibles;
+  int? _enMantenimiento;
+
   VehiculoProvider({
     required AuthService authService,
     VehiculoService? service,
@@ -21,19 +27,31 @@ class VehiculoProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  Future<List<VehiculoModel>> fetchVehiculos() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  int? get totalVehiculos => _totalVehiculos;
+  int? get asignados => _asignados;
+  int? get disponibles => _disponibles;
+  int? get enMantenimiento => _enMantenimiento;
 
+  Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = 6, String? lastDocId,}) async {
     try {
       final token = await _tokenProvider.getRequiredToken();
-      return await _service.fetchVehiculos(token: token);
+      return await _service.fetchVehiculos(token: token, limit: limit, lastDocId: lastDocId);
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return [];
-    } finally {
-      _isLoading = false;
+      rethrow;
+    }
+  }
+
+  Future<void> fetchKpis() async {
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      final counts = await _service.fetchVehiculosCount(token: token);
+      _totalVehiculos = counts['totalVehiculos'];
+      _asignados = counts['asignados'];
+      _disponibles = counts['disponibles'];
+      _enMantenimiento = counts['enMantenimiento'];
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = "Error al obtener KPIs: $e";
       notifyListeners();
     }
   }
@@ -58,47 +76,53 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> insertaVehiculo(VehiculoModel vehiculoData) async {
+  Future<VehiculoModel?> insertaVehiculo(VehiculoModel vehiculoData) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final token = await _tokenProvider.getRequiredToken();
-      await _service.insertaVehiculo(
+      final model = await _service.insertaVehiculo(
         token: token,
         vehiculoData: vehiculoData,
       );
+      await fetchKpis();
+      return model;
     } catch (e) {
       _errorMessage = "Error al insertar vehiculo";
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> saveVehiculo(VehiculoModel vehiculo, {required bool isNew}) async {
+  Future<VehiculoModel?> saveVehiculo(VehiculoModel vehiculo, {required bool isNew}) async {
     if (isNew) {
-      await insertaVehiculo(vehiculo);
+      return await insertaVehiculo(vehiculo);
     } else {
-      await actualizaVehiculo(vehiculo.matricula, vehiculo);
+      return await actualizaVehiculo(vehiculo.matricula, vehiculo);
     }
   }
 
-  Future<void> actualizaVehiculo(String matricula, VehiculoModel vehiculo) async {
+  Future<VehiculoModel?> actualizaVehiculo(String matricula, VehiculoModel vehiculo) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final token = await _tokenProvider.getRequiredToken();
-      await _service.actualizaVehiculo(
+      final updated = await _service.actualizaVehiculo(
         token: token,
         matricula: matricula,
         vehiculoData: vehiculo,
       );
+      await fetchKpis();
+      return updated;
     } catch (e) {
       _errorMessage = "Error al actualizar vehiculo";
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -117,7 +141,7 @@ class VehiculoProvider extends ChangeNotifier {
         token: token,
         matricula: matricula,
       );
-      await fetchVehiculos();
+      await fetchKpis();
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
     } finally {

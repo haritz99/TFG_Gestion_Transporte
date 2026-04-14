@@ -70,3 +70,15 @@ class VehiculoSchema(FirestoreSchema):
         if company_id != data.get('companyId'):
             raise HTTPException(status_code=403, detail='No autorizado para usar este vehículo')
         return cls(**data)
+
+
+class VehiculoPaginatedSchema(FirestoreSchema):
+    items: list[VehiculoSchema]
+    last_doc_id: Optional[str] = None
+    has_more: bool
+
+class VehiculoCountSchema(FirestoreSchema):
+    asignados: int
+    enMantenimiento: int
+    disponibles: int
+    totalVehiculos: int
