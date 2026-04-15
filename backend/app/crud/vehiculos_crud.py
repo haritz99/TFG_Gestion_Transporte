@@ -1,7 +1,7 @@
 from ..firebase_config import db
 
 class VehiculoCRUD:
-    def get_all(self, company_id: str, limit: int = 7, last_doc_id: str | None = None):
+    def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None):
         query = db.collection("vehiculos").where("companyId", "==", company_id).order_by("__name__")
 
         if last_doc_id:
