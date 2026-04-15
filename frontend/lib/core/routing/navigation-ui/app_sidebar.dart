@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import 'sidebar_item.dart';
 
 class AppSidebar extends StatelessWidget {
+  // Esta clase construye el sidebar de la barra de navegación
   const AppSidebar({super.key});
 
   @override
@@ -15,11 +16,14 @@ class AppSidebar extends StatelessWidget {
     final user = context.read<AuthProvider>().user;
 
     return Container(
+      // Container principal
       width: 250,
       color: AppColors.surface,
       child: Column(
+        // Columna principal que guarda el contenido
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // La columna principal contiene el header del sidebar, los items y el footer
           _buildSideBarHeader(),
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 16),
@@ -37,6 +41,7 @@ class AppSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Expanded(
+            // Aquí van los items principales del sidebar
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
@@ -80,6 +85,7 @@ class AppSidebar extends StatelessWidget {
       padding: const EdgeInsets.all(20.0),
       child: Row(
         children: [
+          // Contiene el icono y el nombre de la app
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -115,12 +121,14 @@ class AppSidebar extends StatelessWidget {
   }
 
   Widget _buildFooter(BuildContext context, user) {
+    // Contiene el avatar, nombre del usuario y el boton para logout
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           const SizedBox(height: 16),
           Row(
+            // Dentro de este row van el avagar y el nombre del usuario
             children: [
               CircleAvatar(
                 backgroundColor: AppColors.primary,

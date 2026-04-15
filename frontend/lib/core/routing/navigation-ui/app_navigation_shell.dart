@@ -4,6 +4,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'app_sidebar.dart';
 
 class AppNavigationShell extends StatelessWidget {
+  // Esta clase funciona como componente principal que construye la barra de navegación y el contenido de la página
   final Widget child;
 
   const AppNavigationShell({super.key, required this.child});
@@ -13,6 +14,7 @@ class AppNavigationShell extends StatelessWidget {
     final isMobile = ResponsiveBreakpoints.of(context).smallerOrEqualTo(TABLET);
 
     if (isMobile) {
+      // En movil se usa un Drawer
       return Scaffold(
         appBar: AppBar(
           title: const Text('Nombre', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
