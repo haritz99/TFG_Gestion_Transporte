@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/auth/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
-import 'package:gestion_transporte/pages/login_page.dart';
+import 'package:gestion_transporte/features/auth/ui/login_page.dart';
 
 class TransportistaHomeScreen extends StatefulWidget {
   const TransportistaHomeScreen({super.key});

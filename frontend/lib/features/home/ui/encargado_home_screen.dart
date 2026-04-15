@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../auth/auth_provider.dart';
 import '../../transportistas/ui/gestionar_transportistas.dart';
-import '../../../pages/login_page.dart';
+import '../../auth/ui/login_page.dart';
 
 class EncargadoHomeScreen extends StatefulWidget {
   const EncargadoHomeScreen({super.key});
