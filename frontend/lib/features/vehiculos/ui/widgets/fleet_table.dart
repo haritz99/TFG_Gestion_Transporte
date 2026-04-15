@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../models/fleet_column_def.dart';
 import '../models/fleet_table_row_model.dart';
 
@@ -19,7 +20,6 @@ class FleetTable extends StatefulWidget {
     this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
-    this.rowsPerPage = 6,
   });
 
   final List<FleetTableRowModel> rows;
@@ -33,7 +33,6 @@ class FleetTable extends StatefulWidget {
   final ValueChanged<int>? onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
-  final int rowsPerPage;
 
   @override
   State<FleetTable> createState() => _FleetTableState();
@@ -171,39 +170,46 @@ class _FleetTableState extends State<FleetTable> {
       onEdit: widget.onEditVehiculo,
       hasMore: widget.hasMore,
       isLoadingMore: widget.isLoadingMore,
-      rowsPerPage: widget.rowsPerPage,
     );
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final tableWidth = constraints.maxWidth > 1350 ? constraints.maxWidth : 1350.0;
 
-        return SingleChildScrollView(
+        return Scrollbar(
           controller: _horizontalScrollController,
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: tableWidth,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                cardColor: Colors.transparent,
-                dividerColor: const Color(0xFFE8EDF5),
-              ),
-              child: PaginatedDataTable(
-                columns: widget.columns
-                    .map((col) => DataColumn(label: Text(col.label, style: AppTextStyles.tableHeader)))
-                    .toList(),
-                source: source,
-                showCheckboxColumn: false,
-                rowsPerPage: widget.rowsPerPage,
-                availableRowsPerPage: const [6],
-                onRowsPerPageChanged: (_) {},
-                onPageChanged: widget.onDesktopPageChanged,
-                showFirstLastButtons: true,
-                headingRowHeight: 44,
-                dataRowMinHeight: 56,
-                dataRowMaxHeight: 56,
-                horizontalMargin: 16,
-                columnSpacing: 12,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _horizontalScrollController,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: tableWidth,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  cardColor: Colors.white,
+                  cardTheme: const CardThemeData(
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
+                  ),
+                  dividerColor: const Color(0xFFE8EDF5),
+                ),
+                child: PaginatedDataTable(
+                  columns: widget.columns
+                      .map((col) => DataColumn(label: Text(col.label, style: AppTextStyles.tableHeader)))
+                      .toList(),
+                  source: source,
+                  showCheckboxColumn: false,
+                  rowsPerPage: AppConstants.vehiclePaginationPageSize,
+                  onPageChanged: widget.onDesktopPageChanged,
+                  showFirstLastButtons: true,
+                  headingRowHeight: 44,
+                  dataRowMinHeight: 56,
+                  dataRowMaxHeight: 56,
+                  horizontalMargin: 16,
+                  columnSpacing: 12,
+                ),
               ),
             ),
           ),
@@ -257,7 +263,6 @@ class _FleetDesktopSource extends DataTableSource {
     required this.onEdit,
     required this.hasMore,
     required this.isLoadingMore,
-    required this.rowsPerPage,
   });
 
   final List<FleetTableRowModel> rows;
@@ -266,7 +271,6 @@ class _FleetDesktopSource extends DataTableSource {
   final ValueChanged<String>? onEdit;
   final bool hasMore;
   final bool isLoadingMore;
-  final int rowsPerPage;
 
   @override
   DataRow? getRow(int index) {
@@ -323,7 +327,7 @@ class _FleetDesktopSource extends DataTableSource {
   bool get isRowCountApproximate => hasMore;
 
   @override
-  int get rowCount => hasMore ? rows.length + rowsPerPage : rows.length;
+  int get rowCount => hasMore ? rows.length + AppConstants.vehiclePaginationPageSize : rows.length;
 
   @override
   int get selectedRowCount => 0;

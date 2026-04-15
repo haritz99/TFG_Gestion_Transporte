@@ -44,7 +44,6 @@ class GestionFlotaPage extends StatefulWidget {
     this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
-    this.rowsPerPage = 6,
   });
 
   final int? totalVehiculos;
@@ -67,7 +66,6 @@ class GestionFlotaPage extends StatefulWidget {
   final ValueChanged<int>? onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
-  final int rowsPerPage;
 
   @override
   State<GestionFlotaPage> createState() =>
@@ -125,7 +123,6 @@ class _GestionFlotaPageState
                     isMobile: isMobile,
                     hasMore: widget.hasMore,
                     isLoadingMore: widget.isLoadingMore,
-                    rowsPerPage: widget.rowsPerPage,
                     onDesktopPageChanged: widget.onDesktopPageChanged,
                   ),
                 ],

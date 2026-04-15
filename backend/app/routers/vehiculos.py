@@ -19,7 +19,7 @@ class VehiculoAssignSchema(BaseModel):
 
 @router.get("/", response_model=VehiculoPaginatedSchema)
 async def get_all_vehiculos(
-    limit: int = 6,
+    limit: int = 8,
     last_doc_id: str | None = None,
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: VehiculoService = Depends(get_vehiculo_service),

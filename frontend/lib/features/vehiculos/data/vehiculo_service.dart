@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../../core/config/api_config.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/models/paginated_response.dart';
 
@@ -10,11 +11,8 @@ class VehiculoService {
   final http.Client _client;
   VehiculoService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<PaginatedResponse<VehiculoModel>> fetchVehiculos({
-    required String token,
-    int limit = 6,
-    String? lastDocId,
-  }) async {
+  Future<PaginatedResponse<VehiculoModel>> fetchVehiculos({required String token, int limit = AppConstants.vehiclePaginationPageSize, String? lastDocId,}) async {
+
     String url = '${ApiConfig.baseUrl}/vehi/?limit=$limit';
     if (lastDocId != null) {
       url += '&last_doc_id=$lastDocId';

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
 import '../../auth/auth_service.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../transportistas/providers/transportista_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'gestion_flota_page.dart';
@@ -34,7 +35,7 @@ class _GestionFlotaScreenBody extends StatefulWidget {
 }
 
 class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
-  static const int _pageSize = 6;
+  static const int _pageSize = AppConstants.vehiclePaginationPageSize;
 
   final List<VehiculoModel> _vehiculos = [];
   bool _firstLoad = true;
@@ -241,7 +242,6 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         rows: rows,
         hasMore: _hasMore,
         isLoadingMore: _isLoadingPage,
-        rowsPerPage: _pageSize,
         onStatusChanged: (status) {
           setState(() {
             _selectedStatus = status;

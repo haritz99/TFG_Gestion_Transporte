@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/models/paginated_response.dart';
 import '../../../core/token_provider.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../auth/auth_service.dart';
 import '../data/vehiculo_service.dart';
 
@@ -32,7 +33,7 @@ class VehiculoProvider extends ChangeNotifier {
   int? get disponibles => _disponibles;
   int? get enMantenimiento => _enMantenimiento;
 
-  Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = 6, String? lastDocId,}) async {
+  Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = AppConstants.vehiclePaginationPageSize, String? lastDocId,}) async {
     try {
       final token = await _tokenProvider.getRequiredToken();
       return await _service.fetchVehiculos(token: token, limit: limit, lastDocId: lastDocId);

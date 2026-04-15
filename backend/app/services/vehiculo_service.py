@@ -18,7 +18,7 @@ class VehiculoService:
     def __init__(self):
         self.crud = VehiculoCRUD()
 
-    def get_all(self, company_id: str, limit: int = 6, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
+    def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
         try:
             # Se trae limit + 1 para saber si es el ultimo o hay que paginar más
             query = self.crud.get_all(company_id, limit=limit + 1, last_doc_id=last_doc_id)
