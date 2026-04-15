@@ -2,7 +2,8 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from ..schemas import VehiculoSchema
+from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
+from ..schemas.vehiculos import VehiculoCountSchema
 from ..crud.vehiculos_crud import VehiculoCRUD
 
 
@@ -17,18 +18,57 @@ class VehiculoService:
     def __init__(self):
         self.crud = VehiculoCRUD()
 
-    def get_all(self, company_id: str) -> list[VehiculoSchema]:
+    def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
         try:
-            query = self.crud.get_all(company_id)
+            # Se trae limit + 1 para saber si es el ultimo o hay que paginar más
+            query = self.crud.get_all(company_id, limit=limit + 1, last_doc_id=last_doc_id)
+            docs = list(query)
+
+            has_more = len(docs) > limit
+            if has_more:
+                docs = docs[:-1]
+
             vehiculos = []
-            for doc in query:
+            for doc in docs:
                 vehiculo = VehiculoSchema.from_firestore(doc, company_id)
                 vehiculos.append(vehiculo)
-            return vehiculos
+
+            last_id = docs[-1].id if docs else None
+
+            return VehiculoPaginatedSchema(
+                items=vehiculos,
+                last_doc_id=last_id,
+                has_more=has_more
+            )
         except HTTPException:
             raise
         except Exception:
             raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+    def get_count(self, company_id: str) -> VehiculoCountSchema:
+        try:
+
+            total_res = self.crud.get_count(company_id)
+            total = total_res[0][0].value if isinstance(total_res[0], list) else total_res[0].value
+
+            asignados_res = self.crud.get_count_by_estado(company_id, "asignado")
+            asignados = asignados_res[0][0].value if isinstance(asignados_res[0], list) else asignados_res[0].value
+
+            disponibles_res = self.crud.get_count_by_estado(company_id, "disponible")
+            disponibles = disponibles_res[0][0].value if isinstance(disponibles_res[0], list) else disponibles_res[0].value
+
+            mantenimiento_res = self.crud.get_count_by_estado(company_id, "mantenimiento")
+            mantenimiento = mantenimiento_res[0][0].value if isinstance(mantenimiento_res[0], list) else mantenimiento_res[0].value
+
+            return VehiculoCountSchema(
+                totalVehiculos=total,
+                asignados=asignados,
+                disponibles=disponibles,
+                enMantenimiento=mantenimiento,
+            )
+        except Exception as e:
+            print(f"Error en get_count: {e}")
+            raise HTTPException(status_code=500, detail=f"Error al contar los vehículos: {str(e)}")
 
     def get_by_id(self, matr: str, company_id: str) -> VehiculoSchema:
         try:

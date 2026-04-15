@@ -40,6 +40,10 @@ class GestionFlotaPage extends StatefulWidget {
     this.onNuevaCarga,
     this.onDeleteVehiculo,
     this.onEditVehiculo,
+    this.onMobileLoadMore,
+    this.onDesktopPageChanged,
+    this.hasMore = false,
+    this.isLoadingMore = false,
   });
 
   final int? totalVehiculos;
@@ -58,6 +62,10 @@ class GestionFlotaPage extends StatefulWidget {
   final VoidCallback? onNuevaCarga;
   final ValueChanged<String>? onDeleteVehiculo;
   final ValueChanged<String>? onEditVehiculo;
+  final Future<void> Function()? onMobileLoadMore;
+  final ValueChanged<int>? onDesktopPageChanged;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   @override
   State<GestionFlotaPage> createState() =>
@@ -73,38 +81,52 @@ class _GestionFlotaPageState
         final isMobile = constraints.maxWidth < 900;
         return Container(
           color: AppColors.pageBackground,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 24,
-              vertical: isMobile ? 12 : 20,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestionFlotaHeader(
-                  onAddVehiculo: widget.onAddVehiculo,
-                  isMobile: isMobile,
-                ),
-                SizedBox(height: isMobile ? 10 : 16),
-                FleetKpiGrid(
-                  totalVehiculos: widget.totalVehiculos,
-                  asignados: widget.asignados,
-                  enMantenimiento: widget.enMantenimiento,
-                  disponibles: widget.disponibles,
-                  isMobile: isMobile,
-                ),
-                SizedBox(height: isMobile ? 10 : 16),
-                FleetTable(
-                  rows: widget.rows,
-                  columns: widget.columns,
-                  selectedStatus: widget.selectedStatus,
-                  statusOptions: widget.statusOptions,
-                  onStatusChanged: widget.onStatusChanged,
-                  onDeleteVehiculo: widget.onDeleteVehiculo,
-                  onEditVehiculo: widget.onEditVehiculo,
-                  isMobile: isMobile,
-                ),
-              ],
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (!isMobile || !widget.hasMore || widget.isLoadingMore) {
+                return false;
+              }
+              if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 120) {
+                widget.onMobileLoadMore?.call();
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 24,
+                vertical: isMobile ? 12 : 20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestionFlotaHeader(
+                    onAddVehiculo: widget.onAddVehiculo,
+                    isMobile: isMobile,
+                  ),
+                  SizedBox(height: isMobile ? 10 : 16),
+                  FleetKpiGrid(
+                    totalVehiculos: widget.totalVehiculos,
+                    asignados: widget.asignados,
+                    enMantenimiento: widget.enMantenimiento,
+                    disponibles: widget.disponibles,
+                    isMobile: isMobile,
+                  ),
+                  SizedBox(height: isMobile ? 10 : 16),
+                  FleetTable(
+                    rows: widget.rows,
+                    columns: widget.columns,
+                    selectedStatus: widget.selectedStatus,
+                    statusOptions: widget.statusOptions,
+                    onStatusChanged: widget.onStatusChanged,
+                    onDeleteVehiculo: widget.onDeleteVehiculo,
+                    onEditVehiculo: widget.onEditVehiculo,
+                    isMobile: isMobile,
+                    hasMore: widget.hasMore,
+                    isLoadingMore: widget.isLoadingMore,
+                    onDesktopPageChanged: widget.onDesktopPageChanged,
+                  ),
+                ],
+              ),
             ),
           ),
         );

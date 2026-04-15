@@ -3,8 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
-from ..schemas import VehiculoSchema
+from ..schemas import VehiculoPaginatedSchema, VehiculoSchema
 from ..dependencies.auth import get_current_encargado
+from ..schemas.vehiculos import VehiculoCountSchema
 from ..services.vehiculo_service import VehiculoService, get_vehiculo_service
 
 
@@ -16,12 +17,21 @@ class VehiculoAssignSchema(BaseModel):
     uid: str = Field(..., min_length=1)
 
 
-@router.get("/", response_model=list[VehiculoSchema])
+@router.get("/", response_model=VehiculoPaginatedSchema)
 async def get_all_vehiculos(
+    limit: int = 8,
+    last_doc_id: str | None = None,
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: VehiculoService = Depends(get_vehiculo_service),
-) -> list[VehiculoSchema]:
-    return service.get_all(current_user["companyId"])
+) -> VehiculoPaginatedSchema:
+    return service.get_all(current_user["companyId"], limit, last_doc_id)
+
+@router.get("/count", response_model=VehiculoCountSchema)
+async def get_count_vehiculos(
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: VehiculoService = Depends(get_vehiculo_service),
+) -> VehiculoCountSchema:
+    return service.get_count(current_user["companyId"])
 
 
 @router.get("/{matr}", response_model=VehiculoSchema)
@@ -68,3 +78,4 @@ async def asignar_vehiculo_a_transportista(
     service: VehiculoService = Depends(get_vehiculo_service),
 ) -> VehiculoSchema:
     return service.assign(data.matr, data.uid, current_user["companyId"])
+

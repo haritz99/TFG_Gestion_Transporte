@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../models/fleet_column_def.dart';
 import '../models/fleet_table_row_model.dart';
 
@@ -16,6 +17,9 @@ class FleetTable extends StatefulWidget {
     this.onStatusChanged,
     this.onDeleteVehiculo,
     this.onEditVehiculo,
+    this.onDesktopPageChanged,
+    this.hasMore = false,
+    this.isLoadingMore = false,
   });
 
   final List<FleetTableRowModel> rows;
@@ -26,7 +30,9 @@ class FleetTable extends StatefulWidget {
   final ValueChanged<String>? onStatusChanged;
   final ValueChanged<String>? onDeleteVehiculo;
   final ValueChanged<String>? onEditVehiculo;
-
+  final ValueChanged<int>? onDesktopPageChanged;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   @override
   State<FleetTable> createState() => _FleetTableState();
@@ -119,21 +125,22 @@ class _FleetTableState extends State<FleetTable> {
           widget.onStatusChanged?.call(value);
         },
         itemBuilder: (context) {
-          return widget.statusOptions.map(
-            (status) => PopupMenuItem<String>(
-              value: status,
-              child: Text(
-                'Estado: $status',
-                style: const TextStyle(
-                  fontFamily: AppTextStyles.fontFamily,
-                  color: Color(0xFF4A5E79),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+          return widget.statusOptions
+              .map(
+                (status) => PopupMenuItem<String>(
+                  value: status,
+                  child: Text(
+                    'Estado: $status',
+                    style: const TextStyle(
+                      fontFamily: AppTextStyles.fontFamily,
+                      color: Color(0xFF4A5E79),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          )
-          .toList();
+              )
+              .toList();
         },
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -156,44 +163,53 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   Widget _buildDesktopTable() {
+    final source = _FleetDesktopSource(
+      rows: widget.rows,
+      columns: widget.columns,
+      onDelete: widget.onDeleteVehiculo,
+      onEdit: widget.onEditVehiculo,
+      hasMore: widget.hasMore,
+      isLoadingMore: widget.isLoadingMore,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double tableWidth = constraints.maxWidth > 1300 ? constraints.maxWidth : 1300;
+        final tableWidth = constraints.maxWidth > 1350 ? constraints.maxWidth : 1350.0;
 
         return Scrollbar(
           controller: _horizontalScrollController,
           thumbVisibility: true,
-          trackVisibility: true,
           child: SingleChildScrollView(
             controller: _horizontalScrollController,
             scrollDirection: Axis.horizontal,
             child: SizedBox(
               width: tableWidth,
-              child: Column(
-                children: [
-                  _buildColumnsHeader(),
-                  const Divider(height: 1, color: Color(0xFFE8EDF5)),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: widget.rows.length,
-                    separatorBuilder: (_, _) => const Divider(
-                      height: 1,
-                      color: Color(0xFFF0F3F8),
-                    ),
-                    itemBuilder: (_, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: _VehicleDataRow(
-                          data: widget.rows[index],
-                          columns: widget.columns,
-                          onDelete: widget.onDeleteVehiculo,
-                          onEdit: widget.onEditVehiculo,
-                        ),
-                      );
-                    },
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  cardColor: Colors.white,
+                  cardTheme: const CardThemeData(
+                    color: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
                   ),
-                ],
+                  dividerColor: const Color(0xFFE8EDF5),
+                ),
+                child: PaginatedDataTable(
+                  columns: widget.columns
+                      .map((col) => DataColumn(label: Text(col.label, style: AppTextStyles.tableHeader)))
+                      .toList(),
+                  source: source,
+                  showCheckboxColumn: false,
+                  rowsPerPage: AppConstants.vehiclePaginationPageSize,
+                  onPageChanged: widget.onDesktopPageChanged,
+                  showFirstLastButtons: true,
+                  headingRowHeight: 44,
+                  dataRowMinHeight: 56,
+                  dataRowMaxHeight: 56,
+                  horizontalMargin: 16,
+                  columnSpacing: 12,
+                ),
               ),
             ),
           ),
@@ -203,33 +219,25 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   Widget _buildMobileCards() {
+    final itemCount = widget.rows.length + (widget.isLoadingMore ? 1 : 0);
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: widget.rows.length,
+      itemCount: itemCount,
       separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF0F3F8)),
-      itemBuilder: (_, index) => _FleetVehicleCard(
-        data: widget.rows[index],
-        onDelete: widget.onDeleteVehiculo,
-        onEdit: widget.onEditVehiculo,
-      ),
-    );
-  }
-
-  Widget _buildColumnsHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: widget.columns.map((col) {
-          return Expanded(
-            flex: col.flex,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: _TableHeaderCell(col.label),
-            ),
+      itemBuilder: (_, index) {
+        if (index >= widget.rows.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
           );
-        }).toList(),
-      ),
+        }
+        return _FleetVehicleCard(
+          data: widget.rows[index],
+          onDelete: widget.onDeleteVehiculo,
+          onEdit: widget.onEditVehiculo,
+        );
+      },
     );
   }
 
@@ -247,58 +255,66 @@ class _FleetTableState extends State<FleetTable> {
   }
 }
 
-class _TableHeaderCell extends StatelessWidget {
-  const _TableHeaderCell(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(label, style: AppTextStyles.tableHeader, overflow: TextOverflow.ellipsis);
-  }
-}
-
-class _VehicleDataRow extends StatelessWidget {
-  // Esta clase se utiliza para crear filas para tamaño desktop
-  const _VehicleDataRow({
-    required this.data,
+class _FleetDesktopSource extends DataTableSource {
+  _FleetDesktopSource({
+    required this.rows,
     required this.columns,
-    this.onDelete,
-    this.onEdit,
+    required this.onDelete,
+    required this.onEdit,
+    required this.hasMore,
+    required this.isLoadingMore,
   });
 
-  final FleetTableRowModel data;
+  final List<FleetTableRowModel> rows;
   final List<FleetColumnDef> columns;
   final ValueChanged<String>? onDelete;
   final ValueChanged<String>? onEdit;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _flexCell(data.matricula, columns[0].flex, strong: true),
-        _flexCell(data.marca, columns[1].flex),
-        _flexCell(data.modelo, columns[2].flex),
-        _flexCell(data.capacidad, columns[3].flex),
-        _flexCell(data.largo, columns[4].flex),
-        _flexCell(data.ancho, columns[5].flex),
-        _flexCell(data.alto, columns[6].flex),
-        _flexCell(data.estado, columns[7].flex),
-        _flexCell(data.interno, columns[8].flex),
-        _flexCell(data.matriculaRemolque, columns[9].flex),
-        _flexCell(data.conductor, columns[10].flex),
-        Expanded(
-          flex: columns[11].flex,
-          child: Row(
+  DataRow? getRow(int index) {
+    if (index >= rows.length) {
+      return DataRow.byIndex(
+        index: index,
+        cells: List<DataCell>.generate(
+          columns.length,
+          (cellIndex) {
+            if (cellIndex == columns.length - 1 && isLoadingMore) {
+              return const DataCell(Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))));
+            }
+            return const DataCell(SizedBox.shrink());
+          },
+        ),
+      );
+    }
+
+    final data = rows[index];
+    return DataRow.byIndex(
+      index: index,
+      cells: [
+        DataCell(Text(data.matricula, style: AppTextStyles.tableValueStrong)),
+        DataCell(Text(data.marca, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.modelo, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.capacidad, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.largo, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.ancho, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.alto, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.estado, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.interno, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.matriculaRemolque, style: AppTextStyles.tableValue)),
+        DataCell(Text(data.conductor, style: AppTextStyles.tableValue)),
+        DataCell(
+          Row(
             children: [
               IconButton(
-                  onPressed: () => onEdit?.call(data.matricula),
-                  icon : Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+                onPressed: () => onEdit?.call(data.matricula),
+                icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 8),
               IconButton(
-                  onPressed: () => onDelete?.call(data.matricula),
-                  icon: Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+                onPressed: () => onDelete?.call(data.matricula),
+                icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
               ),
             ],
           ),
@@ -307,19 +323,14 @@ class _VehicleDataRow extends StatelessWidget {
     );
   }
 
-  Widget _flexCell(String text, int flex, {bool strong = false}) {
-    return Expanded(
-      flex: flex,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8.0),
-        child: Text(
-          text,
-          overflow: TextOverflow.ellipsis,
-          style: strong ? AppTextStyles.tableValueStrong : AppTextStyles.tableValue,
-        ),
-      ),
-    );
-  }
+  @override
+  bool get isRowCountApproximate => hasMore;
+
+  @override
+  int get rowCount => hasMore ? rows.length + AppConstants.vehiclePaginationPageSize : rows.length;
+
+  @override
+  int get selectedRowCount => 0;
 }
 
 class _FleetVehicleCard extends StatelessWidget {
@@ -355,12 +366,12 @@ class _FleetVehicleCard extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: () => onEdit?.call(data.matricula),
-                      icon: Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+                      icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     IconButton(
                       onPressed: () => onDelete?.call(data.matricula),
-                      icon: Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+                      icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
                     ),
                   ],
                 ),
@@ -394,3 +405,4 @@ class _FleetVehicleCard extends StatelessWidget {
     );
   }
 }
+

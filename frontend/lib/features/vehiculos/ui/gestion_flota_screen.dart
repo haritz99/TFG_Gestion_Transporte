@@ -1,15 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/vehiculos/ui/widgets/vehiculo_form.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
+import '../../auth/auth_service.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../transportistas/providers/transportista_provider.dart';
 import '../providers/vehiculo_provider.dart';
-import 'models/fleet_table_row_model.dart';
 import 'gestion_flota_page.dart';
-import '../../auth/auth_service.dart';
+import 'models/fleet_table_row_model.dart';
 import 'widgets/confirm_delete_vehicle.dart';
-import 'package:flutter/cupertino.dart';
 
 class GestionFlotaScreen extends StatelessWidget {
   const GestionFlotaScreen({super.key});
@@ -34,8 +35,13 @@ class _GestionFlotaScreenBody extends StatefulWidget {
 }
 
 class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
-  List<VehiculoModel> _vehiculos = [];
+  static const int _pageSize = AppConstants.vehiclePaginationPageSize;
+
+  final List<VehiculoModel> _vehiculos = [];
   bool _firstLoad = true;
+  bool _isLoadingPage = false;
+  bool _hasMore = true;
+  String? _lastDocId;
   String _selectedStatus = 'Todos';
 
   List<VehiculoModel> get _vehiculosFiltrados {
@@ -56,19 +62,48 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _refreshVehiculos();
+      _loadInitialData();
     });
   }
 
-  Future<void> _refreshVehiculos() async {
+  Future<void> _loadInitialData() async {
     final provider = context.read<VehiculoProvider>();
-    final list = await provider.fetchVehiculos();
-    if (mounted) {
-      setState(() {
-        _vehiculos = list;
-        _firstLoad = false;
-      });
-    }
+    await provider.fetchKpis();
+    await _loadNextPage(reset: true);
+    if (!mounted) return;
+    setState(() {
+      _firstLoad = false;
+    });
+  }
+
+  Future<void> _loadNextPage({bool reset = false}) async {
+    if (_isLoadingPage) return;
+    if (!reset && !_hasMore) return;
+
+    setState(() {
+      _isLoadingPage = true;
+    });
+
+    final provider = context.read<VehiculoProvider>();
+    final response = await provider.fetchVehiculosPage(
+      limit: _pageSize,
+      lastDocId: reset ? null : _lastDocId,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      if (reset) {
+        _vehiculos
+          ..clear()
+          ..addAll(response.items);
+      } else {
+        _vehiculos.addAll(response.items);
+      }
+      _lastDocId = response.lastDocId;
+      _hasMore = response.hasMore;
+      _isLoadingPage = false;
+    });
   }
 
   String _formatEstado(String rawStatus) {
@@ -98,12 +133,10 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     final transportistaProvider = context.read<TransportistaProvider>();
     final isNew = matricula == null;
 
-    final vehiculoActual = isNew
-        ? null
-        : _vehiculos.firstWhere((v) => v.matricula == matricula);
+    final vehiculoActual = isNew ? null : _vehiculos.firstWhere((v) => v.matricula == matricula);
 
     await transportistaProvider.fetchTransportistasDisponibles();
-    List<DropdownMenuEntry<String>> conductores = transportistaProvider.getConductoresDropdown();
+    final conductores = transportistaProvider.getConductoresDropdown();
 
     if (!mounted) return;
 
@@ -119,10 +152,22 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
                 vehiculo: vehiculoActual,
                 conductores: conductores,
                 onSave: (vehiculo) async {
-                  await vehiculoProvider.saveVehiculo(vehiculo, isNew: isNew);
-                  if (mounted) {
-                    Navigator.of(ctx).pop();
-                    _refreshVehiculos();
+                  final saved = await vehiculoProvider.saveVehiculo(vehiculo, isNew: isNew);
+                  if (!mounted || saved == null) return;
+                  if (!ctx.mounted) return;
+
+                  Navigator.of(ctx).pop();
+
+                  if (isNew) {
+                    await _loadInitialData();
+                    return;
+                  }
+
+                  final index = _vehiculos.indexWhere((item) => item.matricula == saved.matricula);
+                  if (index != -1) {
+                    setState(() {
+                      _vehiculos[index] = saved;
+                    });
                   }
                 },
               ),
@@ -136,32 +181,40 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   Future<void> deleteVehiculo(String matricula) async {
     final provider = context.read<VehiculoProvider>();
     await provider.eliminarVehiculo(matricula);
-    if (mounted) {
-      final error = provider.errorMessage;
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar: $error')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vehículo eliminado correctamente')),
-        );
-        _refreshVehiculos();
-      }
+    if (!mounted) return;
+
+    final error = provider.errorMessage;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al eliminar: $error')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Vehículo eliminado correctamente')),
+    );
+
+    setState(() {
+      _vehiculos.removeWhere((item) => item.matricula == matricula);
+    });
+  }
+
+  Future<void> _handleDesktopPageChanged(int firstRowIndex) async {
+    final filteredCount = _vehiculosFiltrados.length;
+    if (firstRowIndex + _pageSize > filteredCount && _hasMore) {
+      await _loadNextPage();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    context.watch<VehiculoProvider>();
+    final provider = context.watch<VehiculoProvider>();
 
     if (_firstLoad) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Mapear los modelos de dominio a los modelos de la UI de presentación
     final rows = _vehiculosFiltrados.map((v) {
       return FleetTableRowModel(
         matricula: v.matricula,
@@ -180,13 +233,15 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
 
     return Scaffold(
       body: GestionFlotaPage(
-        totalVehiculos: _vehiculos.length,
-        asignados: _vehiculos.where((v) => v.estado == 'asignado').length,
-        enMantenimiento: _vehiculos.where((v) => v.estado == 'mantenimiento').length,
-        disponibles: _vehiculos.where((v) => v.estado == 'disponible').length,
+        totalVehiculos: provider.totalVehiculos ?? 0,
+        asignados: provider.asignados ?? 0,
+        enMantenimiento: provider.enMantenimiento ?? 0,
+        disponibles: provider.disponibles ?? 0,
         selectedStatus: _selectedStatus,
         statusOptions: const ['Todos', 'Asignado', 'Disponible', 'Mantenimiento'],
         rows: rows,
+        hasMore: _hasMore,
+        isLoadingMore: _isLoadingPage,
         onStatusChanged: (status) {
           setState(() {
             _selectedStatus = status;
@@ -195,6 +250,8 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         onAddVehiculo: () => _promptVehiculoForm(null),
         onDeleteVehiculo: _promptDeleteVehiculo,
         onEditVehiculo: _promptVehiculoForm,
+        onMobileLoadMore: _loadNextPage,
+        onDesktopPageChanged: _handleDesktopPageChanged,
       ),
     );
   }

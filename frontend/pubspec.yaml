@@ -50,6 +50,7 @@ dependencies:
   # Estado
   provider: ^6.1.2
   responsive_framework: ^1.5.1
+  infinite_scroll_pagination: ^5.1.1
 
 dev_dependencies:
   flutter_flavorizr: ^2.4.2
