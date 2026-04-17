@@ -1,45 +1,40 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
+import '../../constants/app_constants.dart';
+import 'core_table_column.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../models/fleet_column_def.dart';
-import '../models/fleet_table_row_model.dart';
-
-class FleetTable extends StatefulWidget {
-  const FleetTable({
+class CoreTable<T> extends StatefulWidget {
+  const CoreTable({
     super.key,
     required this.rows,
     required this.columns,
     required this.selectedStatus,
     required this.statusOptions,
     required this.isMobile,
+    required this.mobileCardBuilder,
     this.onStatusChanged,
-    this.onDeleteVehiculo,
-    this.onEditVehiculo,
     this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
   });
 
-  final List<FleetTableRowModel> rows;
-  final List<FleetColumnDef> columns;
+  final List<T> rows;
+  final List<CoreTableColumn<T>> columns;
   final String selectedStatus;
   final List<String> statusOptions;
   final bool isMobile;
+  final Widget Function(T item) mobileCardBuilder;
   final ValueChanged<String>? onStatusChanged;
-  final ValueChanged<String>? onDeleteVehiculo;
-  final ValueChanged<String>? onEditVehiculo;
   final ValueChanged<int>? onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
 
   @override
-  State<FleetTable> createState() => _FleetTableState();
+  State<CoreTable<T>> createState() => _CoreTableState<T>();
 }
 
-class _FleetTableState extends State<FleetTable> {
-  // Esta clase controla el estado de la tabla y sus filtros
+class _CoreTableState<T> extends State<CoreTable<T>> {
   late String _selectedStatus;
   final ScrollController _horizontalScrollController = ScrollController();
 
@@ -50,7 +45,7 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   @override
-  void didUpdateWidget(covariant FleetTable oldWidget) {
+  void didUpdateWidget(covariant CoreTable<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedStatus != oldWidget.selectedStatus) {
       _selectedStatus = widget.selectedStatus;
@@ -87,12 +82,13 @@ class _FleetTableState extends State<FleetTable> {
             _buildMobileCards()
           else
             _buildDesktopTable(),
+
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '${widget.rows.length} vehículos',
+                '${widget.rows.length} registros',
                 style: AppTextStyles.bodyMd,
               ),
             ),
@@ -163,11 +159,9 @@ class _FleetTableState extends State<FleetTable> {
   }
 
   Widget _buildDesktopTable() {
-    final source = _FleetDesktopSource(
+    final source = _CoreDesktopSource<T>(
       rows: widget.rows,
       columns: widget.columns,
-      onDelete: widget.onDeleteVehiculo,
-      onEdit: widget.onEditVehiculo,
       hasMore: widget.hasMore,
       isLoadingMore: widget.isLoadingMore,
     );
@@ -232,11 +226,7 @@ class _FleetTableState extends State<FleetTable> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        return _FleetVehicleCard(
-          data: widget.rows[index],
-          onDelete: widget.onDeleteVehiculo,
-          onEdit: widget.onEditVehiculo,
-        );
+        return widget.mobileCardBuilder(widget.rows[index]);
       },
     );
   }
@@ -255,20 +245,16 @@ class _FleetTableState extends State<FleetTable> {
   }
 }
 
-class _FleetDesktopSource extends DataTableSource {
-  _FleetDesktopSource({
+class _CoreDesktopSource<T> extends DataTableSource {
+  _CoreDesktopSource({
     required this.rows,
     required this.columns,
-    required this.onDelete,
-    required this.onEdit,
     required this.hasMore,
     required this.isLoadingMore,
   });
 
-  final List<FleetTableRowModel> rows;
-  final List<FleetColumnDef> columns;
-  final ValueChanged<String>? onDelete;
-  final ValueChanged<String>? onEdit;
+  final List<T> rows;
+  final List<CoreTableColumn<T>> columns;
   final bool hasMore;
   final bool isLoadingMore;
 
@@ -292,34 +278,7 @@ class _FleetDesktopSource extends DataTableSource {
     final data = rows[index];
     return DataRow.byIndex(
       index: index,
-      cells: [
-        DataCell(Text(data.matricula, style: AppTextStyles.tableValueStrong)),
-        DataCell(Text(data.marca, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.modelo, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.capacidad, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.largo, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.ancho, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.alto, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.estado, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.interno, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.matriculaRemolque, style: AppTextStyles.tableValue)),
-        DataCell(Text(data.conductor, style: AppTextStyles.tableValue)),
-        DataCell(
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => onEdit?.call(data.matricula),
-                icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () => onDelete?.call(data.matricula),
-                icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
-              ),
-            ],
-          ),
-        ),
-      ],
+      cells: columns.map((col) => DataCell(col.cellBuilder(data))).toList(),
     );
   }
 
@@ -332,77 +291,3 @@ class _FleetDesktopSource extends DataTableSource {
   @override
   int get selectedRowCount => 0;
 }
-
-class _FleetVehicleCard extends StatelessWidget {
-  // Esta clase se utiliza para crear tarjetas responsive para móvil
-  const _FleetVehicleCard({
-    required this.data,
-    this.onDelete,
-    this.onEdit,
-  });
-
-  final FleetTableRowModel data;
-  final ValueChanged<String>? onDelete;
-  final ValueChanged<String>? onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE8EDF5)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(data.matricula, style: AppTextStyles.tableValueStrong),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => onEdit?.call(data.matricula),
-                      icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(
-                      onPressed: () => onDelete?.call(data.matricula),
-                      icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _line('Marca', data.marca),
-            _line('Modelo', data.modelo),
-            _line('Capacidad', data.capacidad),
-            _line('Dimensiones', '${data.largo} x ${data.ancho} x ${data.alto}'),
-            _line('Estado', data.estado),
-            _line('Interno', data.interno),
-            _line('Remolque', data.matriculaRemolque),
-            _line('Conductor', data.conductor),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _line(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: RichText(
-        text: TextSpan(
-          text: '$label: ',
-          style: AppTextStyles.tableValueStrong,
-          children: [TextSpan(text: value, style: AppTextStyles.tableValue)],
-        ),
-      ),
-    );
-  }
-}
-

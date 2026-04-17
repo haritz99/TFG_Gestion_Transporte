@@ -11,7 +11,7 @@ class VehiculoService {
   final http.Client _client;
   VehiculoService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<PaginatedResponse<VehiculoModel>> fetchVehiculos({required String token, int limit = AppConstants.vehiclePaginationPageSize, String? lastDocId,}) async {
+  Future<PaginatedResponse<VehiculoModel>> fetchVehiculos({required String token, int limit = AppConstants.paginationPageSize, String? lastDocId,}) async {
 
     String url = '${ApiConfig.baseUrl}/vehi/?limit=$limit';
     if (lastDocId != null) {
