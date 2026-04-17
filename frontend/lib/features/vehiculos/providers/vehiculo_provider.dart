@@ -33,7 +33,7 @@ class VehiculoProvider extends ChangeNotifier {
   int? get disponibles => _disponibles;
   int? get enMantenimiento => _enMantenimiento;
 
-  Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = AppConstants.vehiclePaginationPageSize, String? lastDocId,}) async {
+  Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = AppConstants.paginationPageSize, String? lastDocId,}) async {
     try {
       final token = await _tokenProvider.getRequiredToken();
       return await _service.fetchVehiculos(token: token, limit: limit, lastDocId: lastDocId);

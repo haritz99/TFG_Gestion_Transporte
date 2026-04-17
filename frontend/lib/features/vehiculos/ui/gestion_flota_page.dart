@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import 'models/fleet_column_def.dart';
+import '../../../core/widgets/core_table/core_table_column.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'models/fleet_table_row_model.dart';
 import 'widgets/fleet_kpi_grid.dart';
 import 'widgets/fleet_table.dart';
@@ -21,18 +22,17 @@ class GestionFlotaPage extends StatefulWidget {
       'Mantenimiento',
     ],
     this.columns = const [
-      FleetColumnDef('MATRICULA', 13),
-      FleetColumnDef('MARCA', 12),
-      FleetColumnDef('MODELO', 15),
-      FleetColumnDef('CAPACIDAD', 10),
-      FleetColumnDef('LARGO', 8),
-      FleetColumnDef('ANCHO', 8),
-      FleetColumnDef('ALTO', 8),
-      FleetColumnDef('ESTADO', 12),
-      FleetColumnDef('INTERNO', 13),
-      FleetColumnDef('MATRICULA REMOLQUE', 17),
-      FleetColumnDef('CONDUCTOR', 17),
-      FleetColumnDef('ACCIONES', 12),
+      CoreTableColumn<FleetTableRowModel>(label: 'MATRÍCULA', flex: 13, cellBuilder: _buildMatriculaCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'MARCA', flex: 12, cellBuilder: _buildMarcaCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'MODELO', flex: 15, cellBuilder: _buildModeloCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'CAPACIDAD', flex: 10, cellBuilder: _buildCapacidadCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'LARGO', flex: 8, cellBuilder: _buildLargoCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'ANCHO', flex: 8, cellBuilder: _buildAnchoCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'ALTO', flex: 8, cellBuilder: _buildAltoCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'ESTADO', flex: 12, cellBuilder: _buildEstadoCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'INTERNO', flex: 13, cellBuilder: _buildInternoCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'MATRÍCULA REMOLQUE', flex: 17, cellBuilder: _buildRemolqueCell),
+      CoreTableColumn<FleetTableRowModel>(label: 'CONDUCTOR', flex: 17, cellBuilder: _buildConductorCell),
     ],
     this.rows = const [],
     this.onStatusChanged,
@@ -54,7 +54,7 @@ class GestionFlotaPage extends StatefulWidget {
   final String selectedStatus;
   final List<String> statusOptions;
 
-  final List<FleetColumnDef> columns;
+  final List<CoreTableColumn<FleetTableRowModel>> columns;
   final List<FleetTableRowModel> rows;
 
   final ValueChanged<String>? onStatusChanged;
@@ -72,10 +72,31 @@ class GestionFlotaPage extends StatefulWidget {
       _GestionFlotaPageState();
 }
 
-class _GestionFlotaPageState
-    extends State<GestionFlotaPage> {
+class _GestionFlotaPageState extends State<GestionFlotaPage> {
   @override
   Widget build(BuildContext context) {
+    // Se añade la columna de ACCIONES para tener acceso a los callbacks y dejas this.columsn const
+    final tableColumns = [
+      ...widget.columns,
+      CoreTableColumn<FleetTableRowModel>(
+        label: 'ACCIONES',
+        flex: 12,
+        cellBuilder: (item) => Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8E99AB)),
+              onPressed: () => widget.onEditVehiculo?.call(item.matricula),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFF8E99AB)),
+              onPressed: () => widget.onDeleteVehiculo?.call(item.matricula),
+            ),
+          ],
+        ),
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 900;
@@ -114,7 +135,7 @@ class _GestionFlotaPageState
                   SizedBox(height: isMobile ? 10 : 16),
                   FleetTable(
                     rows: widget.rows,
-                    columns: widget.columns,
+                    columns: tableColumns,
                     selectedStatus: widget.selectedStatus,
                     statusOptions: widget.statusOptions,
                     onStatusChanged: widget.onStatusChanged,
@@ -134,3 +155,15 @@ class _GestionFlotaPageState
     );
   }
 }
+
+Widget _buildMatriculaCell(FleetTableRowModel item) => Text(item.matricula, style: AppTextStyles.tableValueStrong);
+Widget _buildMarcaCell(FleetTableRowModel item) => Text(item.marca, style: AppTextStyles.tableValue);
+Widget _buildModeloCell(FleetTableRowModel item) => Text(item.modelo, style: AppTextStyles.tableValue);
+Widget _buildCapacidadCell(FleetTableRowModel item) => Text(item.capacidad, style: AppTextStyles.tableValue);
+Widget _buildLargoCell(FleetTableRowModel item) => Text(item.largo, style: AppTextStyles.tableValue);
+Widget _buildAnchoCell(FleetTableRowModel item) => Text(item.ancho, style: AppTextStyles.tableValue);
+Widget _buildAltoCell(FleetTableRowModel item) => Text(item.alto, style: AppTextStyles.tableValue);
+Widget _buildEstadoCell(FleetTableRowModel item) => Text(item.estado, style: AppTextStyles.tableValue);
+Widget _buildInternoCell(FleetTableRowModel item) => Text(item.interno, style: AppTextStyles.tableValue);
+Widget _buildRemolqueCell(FleetTableRowModel item) => Text(item.matriculaRemolque, style: AppTextStyles.tableValue);
+Widget _buildConductorCell(FleetTableRowModel item) => Text(item.conductor, style: AppTextStyles.tableValue);

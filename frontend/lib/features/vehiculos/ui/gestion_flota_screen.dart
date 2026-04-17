@@ -35,7 +35,7 @@ class _GestionFlotaScreenBody extends StatefulWidget {
 }
 
 class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
-  static const int _pageSize = AppConstants.vehiclePaginationPageSize;
+  static const int _pageSize = AppConstants.paginationPageSize;
 
   final List<VehiculoModel> _vehiculos = [];
   bool _firstLoad = true;
