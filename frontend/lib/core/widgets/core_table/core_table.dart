@@ -61,6 +61,7 @@ class _CoreTableState<T> extends State<CoreTable<T>> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: ValueKey('core_table_${widget.selectedStatus}'),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -167,6 +168,7 @@ class _CoreTableState<T> extends State<CoreTable<T>> {
     );
 
     return LayoutBuilder(
+      key: ValueKey('desktop_table_${_selectedStatus}'),
       builder: (context, constraints) {
         final tableWidth = constraints.maxWidth > 1350 ? constraints.maxWidth : 1350.0;
 
