@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/kpi_card.dart';
 
-class FleetKpiGrid extends StatelessWidget {
-  const FleetKpiGrid({
+class TeamKpiGrid extends StatelessWidget {
+  const TeamKpiGrid ({
     super.key,
-    this.totalVehiculos,
-    this.asignados,
-    this.enMantenimiento,
+    this.totalEquipo,
+    this.enRuta,
     this.disponibles,
+    this.inactivos,
     required this.isMobile,
   });
 
-  final int? totalVehiculos;
-  final int? asignados;
-  final int? enMantenimiento;
+  final int? totalEquipo;
+  final int? enRuta;
   final int? disponibles;
+  final int? inactivos;
   final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
     final cards = [
-      FleetKpiCard(value: totalVehiculos?.toString(), label: 'Total Vehiculos'),
-      FleetKpiCard(value: asignados?.toString(), label: 'Asignados'),
-      FleetKpiCard(value: enMantenimiento?.toString(), label: 'Mantenimiento'),
+      FleetKpiCard(value: totalEquipo?.toString(), label: 'Total Equipo'),
+      FleetKpiCard(value: enRuta?.toString(), label: 'En Ruta'),
       FleetKpiCard(value: disponibles?.toString(), label: 'Disponibles'),
+      FleetKpiCard(value: inactivos?.toString(), label: 'Inactivos'),
     ];
 
     if (isMobile) {

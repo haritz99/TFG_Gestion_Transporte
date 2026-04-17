@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../features/home/ui/encargado_home_screen.dart';
 import '../../features/vehiculos/ui/gestion_flota_screen.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/auth/ui/login_page.dart';
@@ -43,7 +42,9 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/panel',
-            builder: (context, state) => const EncargadoHomeScreen(),
+            builder: (context, state) => const Scaffold(
+              body: Center(child: Text("Panel de control (No implementado)")),
+            ),
           ),
           GoRoute(
             path: '/flota',
@@ -51,9 +52,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/equipo',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text("Gestión de Equipo (No implementado)")),
-            ),
+            builder: (context, state) => const GestionEquipoScreen(),
           ),
           GoRoute(
             path: '/incidencias',

@@ -1,8 +1,9 @@
+/*
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/auth_provider.dart';
-import '../../transportistas/ui/gestionar_transportistas.dart';
+import '../../transportistas/ui/insert_transportista_form.dart';
 import '../../auth/ui/login_page.dart';
 
 class EncargadoHomeScreen extends StatefulWidget {
@@ -56,3 +57,4 @@ class _EncargadoHomeScreenState extends State<EncargadoHomeScreen> {
     );
   }
 }
+*/

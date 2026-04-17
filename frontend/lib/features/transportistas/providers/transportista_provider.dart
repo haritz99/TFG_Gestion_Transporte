@@ -3,6 +3,8 @@ import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:gestion_transporte/core/token_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_constants.dart';
+import '../../../core/models/paginated_response.dart';
 import '../../auth/auth_service.dart';
 import '../data/transportista_service.dart';
 
@@ -12,6 +14,12 @@ class TransportistaProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+
+  int? _totalEquipo;
+  int? _enRuta;
+  int? _disponibles;
+  int? _inactivos;
+
   Map<String, dynamic>? _createResponse;
   String? _lastCreatedEmail;
   List<UserModel> _transportistas = [];
@@ -28,6 +36,12 @@ class TransportistaProvider extends ChangeNotifier {
   Map<String, dynamic>? get createResponse => _createResponse;
   List<UserModel> get transportistas => _transportistas;
   List<UserModel> get transportistasDisponibles => _transportistasDisponibles;
+
+  int? get totalEquipo => _totalEquipo;
+  int? get enRuta => _enRuta;
+  int? get disponibles => _disponibles;
+  int? get inactivos => _inactivos;
+
   List<DropdownMenuEntry<String>> get conductoresDropdown {
     return _transportistasDisponibles
         .map((t) => DropdownMenuEntry<String>(
@@ -45,21 +59,33 @@ class TransportistaProvider extends ChangeNotifier {
     return fullName;
   }
 
-  Future<List<UserModel>> fetchTransportistas() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
+  Future<PaginatedResponse<UserModel>> fetchEquipoPage({
+    int limit = AppConstants.paginationPageSize,
+    String? lastDocId,
+  }) async {
     try {
       final token = await _tokenProvider.getRequiredToken();
-
-      _transportistas = await _service.fetchTransportistas(token: token);
-      return _transportistas;
+      return await _service.fetchTransportistas(
+        token: token,
+        limit: limit,
+        lastDocId: lastDocId,
+      );
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return [];
-    } finally {
-      _isLoading = false;
+      rethrow;
+    }
+  }
+
+  Future<void> fetchEquipoKpis() async {
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      final counts = await _service.fetchEquipoCount(token: token);
+      _totalEquipo = counts['totalEquipo'];
+      _enRuta = counts['asignados'];
+      _disponibles = counts['disponibles'];
+      _inactivos = counts['inactivos'];
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = "Error al obtener KPIs: $e";
       notifyListeners();
     }
   }
@@ -72,11 +98,12 @@ class TransportistaProvider extends ChangeNotifier {
 
     try {
       final token = await _tokenProvider.getRequiredToken();
-
-      _transportistasDisponibles = await _service.fetchTransportistas(
+      final response = await _service.fetchTransportistas(
         token: token,
         soloDisponibles: true,
+        limit: 1000,
       );
+      _transportistasDisponibles = response.items;
       return _transportistasDisponibles;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');

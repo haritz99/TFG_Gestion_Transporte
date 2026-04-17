@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/core_table/core_table_column.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/management_page_layout.dart';
 import 'models/fleet_table_row_model.dart';
 import 'widgets/fleet_kpi_grid.dart';
 import 'widgets/fleet_table.dart';
@@ -97,61 +97,33 @@ class _GestionFlotaPageState extends State<GestionFlotaPage> {
       ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 900;
-        return Container(
-          color: AppColors.pageBackground,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (!isMobile || !widget.hasMore || widget.isLoadingMore) {
-                return false;
-              }
-              if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 120) {
-                widget.onMobileLoadMore?.call();
-              }
-              return false;
-            },
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 12 : 24,
-                vertical: isMobile ? 12 : 20,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestionFlotaHeader(
-                    onAddVehiculo: widget.onAddVehiculo,
-                    isMobile: isMobile,
-                  ),
-                  SizedBox(height: isMobile ? 10 : 16),
-                  FleetKpiGrid(
-                    totalVehiculos: widget.totalVehiculos,
-                    asignados: widget.asignados,
-                    enMantenimiento: widget.enMantenimiento,
-                    disponibles: widget.disponibles,
-                    isMobile: isMobile,
-                  ),
-                  SizedBox(height: isMobile ? 10 : 16),
-                  FleetTable(
-                    rows: widget.rows,
-                    columns: tableColumns,
-                    selectedStatus: widget.selectedStatus,
-                    statusOptions: widget.statusOptions,
-                    onStatusChanged: widget.onStatusChanged,
-                    onDeleteVehiculo: widget.onDeleteVehiculo,
-                    onEditVehiculo: widget.onEditVehiculo,
-                    isMobile: isMobile,
-                    hasMore: widget.hasMore,
-                    isLoadingMore: widget.isLoadingMore,
-                    onDesktopPageChanged: widget.onDesktopPageChanged,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    final isMobile = MediaQuery.of(context).size.width < 900;
+    return ManagementPageLayout(
+      header: GestionFlotaHeader(
+        onAddVehiculo: widget.onAddVehiculo,
+        isMobile: isMobile,
+      ),
+      kpiGrid: FleetKpiGrid(
+        totalVehiculos: widget.totalVehiculos,
+        asignados: widget.asignados,
+        enMantenimiento: widget.enMantenimiento,
+        disponibles: widget.disponibles,
+        isMobile: isMobile,
+      ),
+      table: FleetTable(
+        rows: widget.rows,
+        columns: tableColumns,
+        selectedStatus: widget.selectedStatus,
+        statusOptions: widget.statusOptions,
+        onStatusChanged: widget.onStatusChanged,
+        onDeleteVehiculo: widget.onDeleteVehiculo,
+        onEditVehiculo: widget.onEditVehiculo,
+        isMobile: isMobile,
+      ),
+      onMobileLoadMore: widget.onMobileLoadMore,
+      hasMore: widget.hasMore,
+      isLoadingMore: widget.isLoadingMore,
+      isMobile: isMobile,
     );
   }
 }
