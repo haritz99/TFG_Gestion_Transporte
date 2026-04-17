@@ -1,5 +1,6 @@
 class TransportistaRowModel {
   const TransportistaRowModel({
+    this.uid = '',
     this.nombre = '',
     this.apellido = '',
     this.email = '',
@@ -8,9 +9,11 @@ class TransportistaRowModel {
     this.licencias = const [],
     this.cargaAsignada = '',
     this.fechaDeAlta = '',
-    this.vehiculoAsignado = ''
+    this.vehiculoAsignado = '',
+    this.estado = 'disponible'
   });
 
+  final String uid;
   final String nombre;
   final String apellido;
   final String email;
@@ -20,5 +23,6 @@ class TransportistaRowModel {
   final String cargaAsignada;
   final String fechaDeAlta;
   final String vehiculoAsignado;
+  final String estado;
 
 }

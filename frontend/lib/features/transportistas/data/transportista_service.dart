@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:gestion_transporte/core/models/paginated_response.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/config/api_config.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/models/user_model.dart';
 
 class TransportistaService {
@@ -40,29 +42,45 @@ class TransportistaService {
     }
   }
 
-  Future<List<UserModel>> fetchTransportistas({required String token, bool? soloDisponibles}) async {
-
-    final queryParams = soloDisponibles != null ? '?solodis=$soloDisponibles' : '';
-    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/$queryParams');
+  Future<PaginatedResponse<UserModel>> fetchTransportistas({required String token, int limit = AppConstants.paginationPageSize, String? lastDocId, bool? soloDisponibles,}) async {
+    String url = '${ApiConfig.baseUrl}/trans/?limit=$limit';
+    if (lastDocId != null) {
+      url += '&last_doc_id=$lastDocId';
+    }
+    if (soloDisponibles != null) {
+      url += '&solodis=$soloDisponibles';
+    }
+    final uri = Uri.parse(url);
 
     final response = await _client.get(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
       },
+    ).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw Exception('Tiempo de espera agotado al obtener transportistas'),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-      return data.map((item) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final List<dynamic> itemsData = data['items'] as List<dynamic>? ?? [];
+
+      final items = itemsData.map((item) {
         final map = item as Map<String, dynamic>;
         final uid = (map['uid'] ?? '').toString();
         return UserModel.fromMap(map, uid);
       }).toList();
-    } else {
-      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-      throw Exception(errorData['detail'] ?? 'Error al obtener transportistas');
+
+      return PaginatedResponse<UserModel>(
+        items: items,
+        lastDocId: data['last_doc_id']?.toString(),
+        hasMore: data['has_more'] ?? false,
+      );
     }
+
+    final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+    throw Exception(errorData['detail'] ?? 'Error al obtener transportistas');
   }
 
   Future<Map<String, dynamic>> updateTransportista({
@@ -118,6 +136,33 @@ class TransportistaService {
 
     final errorData = jsonDecode(response.body) as Map<String, dynamic>;
     throw Exception(errorData['detail'] ?? 'Error al eliminar transportista');
+  }
+
+  Future<Map<String, int>> fetchEquipoCount({required String token}) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/count');
+
+    final response = await _client.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception('Tiempo de espera agotado al obtener KPIs'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'totalEquipo': data['totalEquipo'] as int? ?? 0,
+        'asignados': data['asignados'] as int? ?? 0,
+        'disponibles': data['disponibles'] as int? ?? 0,
+        'inactivos': data['inactivos'] as int? ?? 0,
+      };
+    }
+
+    final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+    throw Exception(errorData['detail'] ?? 'Error al obtener KPIs');
   }
 
 }
