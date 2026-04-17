@@ -109,6 +109,7 @@ class _CoreTableState<T> extends State<CoreTable<T>> {
         border: Border.all(color: const Color(0xFFE6EAF2)),
       ),
       child: PopupMenuButton<String>(
+        key: ValueKey('status_filter_${_selectedStatus}_${T.toString()}'),
         initialValue: _selectedStatus,
         tooltip: 'Filtrar por estado',
         offset: const Offset(0, 42),
@@ -125,6 +126,7 @@ class _CoreTableState<T> extends State<CoreTable<T>> {
           return widget.statusOptions
               .map(
                 (status) => PopupMenuItem<String>(
+                  key: ValueKey('popup_item_${status}_${T.toString()}'),
                   value: status,
                   child: Text(
                     'Estado: $status',
