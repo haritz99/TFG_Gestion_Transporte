@@ -42,7 +42,7 @@ class TransportistaService {
 
   Future<List<UserModel>> fetchTransportistas({required String token, bool? soloDisponibles}) async {
 
-    final queryParams = soloDisponibles != null ? '?disponible=$soloDisponibles' : '';
+    final queryParams = soloDisponibles != null ? '?solodis=$soloDisponibles' : '';
     final uri = Uri.parse('${ApiConfig.baseUrl}/trans/$queryParams');
 
     final response = await _client.get(

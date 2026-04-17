@@ -10,17 +10,22 @@ import string
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
 
 @router.get("/")
-async def get_all_trans(current_user: dict[str, Any] = Depends(get_current_encargado)):
+async def get_all_trans(
+        solodis: bool = False,
+        current_user: dict[str, Any] = Depends(get_current_encargado)):
 
     users_ref = db.collection("users")
     company_id = current_user.get("companyId")
-    query = (
+    query_ref = (
         users_ref
         .where("companyId", "==", company_id)
         .where("rol", "array_contains", "transportista")
-        .stream()
     )
 
+    if solodis:
+        query_ref = query_ref.where("vehiculoId", "==", None)
+
+    query = query_ref.stream()
     transportistas = []
     current_uid = current_user.get("uid")
 
@@ -33,7 +38,6 @@ async def get_all_trans(current_user: dict[str, Any] = Depends(get_current_encar
         transportistas.append(user_data)
 
     return transportistas
-
 
 @router.get("/{uid}")
 async def get_trans(uid: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
