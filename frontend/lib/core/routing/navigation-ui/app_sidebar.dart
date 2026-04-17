@@ -29,7 +29,7 @@ class AppSidebar extends StatelessWidget {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
+            child: const Text(
               'NAVEGACIÓN',
               style: TextStyle(
                 color: AppColors.mutedText,
@@ -88,17 +88,17 @@ class AppSidebar extends StatelessWidget {
           // Contiene el icono y el nombre de la app
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
             child: const Icon(Icons.local_shipping, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Nombre',
                 style: TextStyle(
                   color: AppColors.titleText,

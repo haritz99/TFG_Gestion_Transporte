@@ -29,6 +29,7 @@ class SidebarItem extends StatelessWidget {
           if (Scaffold.of(context).isDrawerOpen) {
             Scaffold.of(context).closeDrawer();
           }
+          // Esto cambia la ruta para todas las plataformas
           context.go(route);
         },
         borderRadius: BorderRadius.circular(8),
@@ -36,9 +37,6 @@ class SidebarItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary.withAlpha(25) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            border: isSelected
-                ? Border(left: BorderSide(color: AppColors.primary, width: 4))
-                : null,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
