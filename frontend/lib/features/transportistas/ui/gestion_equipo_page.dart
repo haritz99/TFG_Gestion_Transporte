@@ -38,7 +38,7 @@ class GestionEquipoPage extends StatefulWidget {
     this.onDeleteMiembro,
     this.onEditMiembro,
     this.onMobileLoadMore,
-    this.onDesktopPageChanged,
+    required this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
   });
@@ -59,7 +59,7 @@ class GestionEquipoPage extends StatefulWidget {
   final ValueChanged<String>? onDeleteMiembro;
   final ValueChanged<String>? onEditMiembro;
   final Future<void> Function()? onMobileLoadMore;
-  final ValueChanged<int>? onDesktopPageChanged;
+  final ValueChanged<int> onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
 

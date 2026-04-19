@@ -14,7 +14,7 @@ class TeamTable extends StatelessWidget{
     required this.statusOptions,
     required this.isMobile,
     this.onStatusChanged,
-    this.onDesktopPageChanged,
+    required this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
     this.onDeleteTransportista,
@@ -27,7 +27,7 @@ class TeamTable extends StatelessWidget{
   final List<String> statusOptions;
   final bool isMobile;
   final ValueChanged<String>? onStatusChanged;
-  final ValueChanged<int>? onDesktopPageChanged;
+  final ValueChanged<int> onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
   final ValueChanged<String>? onDeleteTransportista;
