@@ -99,6 +99,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         _transportistas
           ..clear()
           ..addAll(response.items);
+        //print(jsonEncode(_transportistas.map((t) => t.toMap()).toList()));
       } else {
         _transportistas.addAll(response.items);
       }
@@ -150,7 +151,6 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
       builder: (_) => ConfirmDeleteMember(uid: uid, nombreCompleto: fullName),
     );
     if (result == true && mounted) {
-      // El provider ya remueve de su lista local, pero como guardamos localmente:
       setState(() {
         _transportistas.removeWhere((t) => t.uid == uid);
       });
@@ -177,7 +177,6 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         cargaAsignada: t.vehiculoId ?? '',
       );
     }).toList();
-
     return Scaffold(
       body: GestionEquipoPage(
         totalEquipo: provider.totalEquipo ?? 0,
@@ -186,7 +185,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         asignacionParcial: provider.asignacionParcial ?? 0,
         inactivos: provider.inactivos ?? 0,
         selectedStatus: _selectedStatus,
-        statusOptions: const ['Todos', 'En Ruta', 'Activo', 'Disponible'],
+        statusOptions: const ['Todos', 'En Ruta', 'Asignado', 'Asignado Parcial', 'Inactivo'],
         rows: rows,
         hasMore: _hasMore,
         isLoadingMore: _isLoadingPage,

@@ -1,6 +1,6 @@
 class TransportistaRowModel {
   const TransportistaRowModel({
-    this.uid = '',
+    this.uid = '', // No lo enseño en la tabla pero es neceario para los callbacks
     this.nombre = '',
     this.apellido = '',
     this.email = '',

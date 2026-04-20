@@ -20,11 +20,11 @@ class GestionEquipoPage extends StatefulWidget {
     this.statusOptions = const [
       'Todos',
       'En Ruta',
-      'Activo',
-      'Disponible',
+      'Asignado',
+      'Asignado Parcial',
+      'Inactivo'
     ],
     this.columns = const [
-      CoreTableColumn<TransportistaRowModel>(label: 'ID', flex: 10, cellBuilder: _buildIdCell),
       CoreTableColumn<TransportistaRowModel>(label: 'NOMBRE', flex: 20, cellBuilder: _buildNombreCell),
       CoreTableColumn<TransportistaRowModel>(label: 'ROL', flex: 15, cellBuilder: _buildRolCell),
       CoreTableColumn<TransportistaRowModel>(label: 'LICENCIA', flex: 10, cellBuilder: _buildLicenciaCell),
@@ -130,7 +130,6 @@ class _GestionEquipoPageState extends State<GestionEquipoPage> {
   
 }
 
-Widget _buildIdCell(TransportistaRowModel item) => Text(item.uid.substring(0, 6), style: AppTextStyles.tableValue);
 Widget _buildNombreCell(TransportistaRowModel item) => Row(
   children: [
     CircleAvatar(
