@@ -47,15 +47,13 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   List<UserModel> get _transportistasFiltrados {
     switch (_selectedStatus) {
       case 'En Ruta':
+        return _transportistas.where((t) => t.estado == 'en_ruta').toList();
       case 'Asignado':
-      case 'Activo':
-        // Por ahora simulamos que estas opciones se cumplen si tienen vehículo
-        return _transportistas.where((t) => t.vehiculoId != null && t.vehiculoId!.isNotEmpty).toList();
-      case 'Disponible':
-        return _transportistas.where((t) => t.vehiculoId == null || t.vehiculoId!.isEmpty).toList();
+        return _transportistas.where((t) => t.estado == 'asignado').toList();
+      case 'Asignado Parcial':
+        return _transportistas.where((t) => t.estado == 'asignacion_parcial').toList();
       case 'Inactivo':
-        // Añadir lógica de inactivadad real si la implementas, de momento vacío
-        return [];
+        return _transportistas.where((t) => t.estado == 'inactivo').toList();
       default:
         return _transportistas;
     }
@@ -184,7 +182,8 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
       body: GestionEquipoPage(
         totalEquipo: provider.totalEquipo ?? 0,
         enRuta: provider.enRuta ?? 0,
-        disponibles: provider.disponibles ?? 0,
+        sinAsignar: provider.sinAsignar ?? 0,
+        asignacionParcial: provider.asignacionParcial ?? 0,
         inactivos: provider.inactivos ?? 0,
         selectedStatus: _selectedStatus,
         statusOptions: const ['Todos', 'En Ruta', 'Activo', 'Disponible'],

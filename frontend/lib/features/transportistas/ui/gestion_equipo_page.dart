@@ -13,7 +13,8 @@ class GestionEquipoPage extends StatefulWidget {
     super.key,
     this.totalEquipo,
     this.enRuta,
-    this.disponibles,
+    this.sinAsignar,
+    this.asignacionParcial,
     this.inactivos,
     this.selectedStatus = 'Todos',
     this.statusOptions = const [
@@ -45,7 +46,8 @@ class GestionEquipoPage extends StatefulWidget {
 
   final int? totalEquipo;
   final int? enRuta;
-  final int? disponibles;
+  final int? sinAsignar;
+  final int? asignacionParcial;
   final int? inactivos;
 
   final String selectedStatus;
@@ -101,7 +103,8 @@ class _GestionEquipoPageState extends State<GestionEquipoPage> {
       kpiGrid: TeamKpiGrid(
         totalEquipo: widget.totalEquipo,
         enRuta: widget.enRuta,
-        disponibles: widget.disponibles,
+        sinAsignar: widget.sinAsignar,
+        asignacionParcial: widget.asignacionParcial,
         inactivos: widget.inactivos, 
         isMobile: isMobile,
       ),

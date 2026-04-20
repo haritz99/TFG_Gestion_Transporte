@@ -21,6 +21,9 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
   late String _telefono;
   List<String> _rol = ['transportista'];
   List<String> _licencias = [];
+  String? _vehiculoId;
+  String? _cargaId;
+  bool _inactivo = false;
 
   final List<String> _licenciasOptions = [
     'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE',
@@ -36,11 +39,17 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
       _telefono = widget.member!.telefono;
       _rol = List.from(widget.member!.rol);
       _licencias = List.from(widget.member!.permisosCond);
+      _vehiculoId = widget.member!.vehiculoId;
+      _cargaId = widget.member!.cargaId;
+      _inactivo = widget.member!.estado == 'inactivo';
     } else {
       _nombre = '';
       _apellido = '';
       _email = '';
       _telefono = '';
+      _vehiculoId = null;
+      _cargaId = null;
+      _inactivo = false;
     }
   }
 
@@ -48,6 +57,23 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final provider = context.read<TransportistaProvider>();
+
+      String vId = _vehiculoId?.trim() ?? '';
+      String cId = _cargaId?.trim() ?? '';
+
+      String finalVehiculoId = vId.isNotEmpty ? vId : '';
+      String finalCargaId = cId.isNotEmpty ? cId : '';
+
+      String nuevoEstado = 'sin_asignar';
+      if (_inactivo) {
+        nuevoEstado = 'inactivo';
+      } else {
+        if (finalVehiculoId.isNotEmpty && finalCargaId.isNotEmpty) {
+          nuevoEstado = 'asignado';
+        } else if (finalVehiculoId.isNotEmpty || finalCargaId.isNotEmpty) {
+          nuevoEstado = 'asignacion_parcial';
+        }
+      }
 
       bool success;
       if (widget.member == null) {
@@ -68,7 +94,9 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
           telefono: _telefono,
           rol: _rol,
           permisosCond: _licencias,
-          vehiculoId: widget.member!.vehiculoId,
+          vehiculoId: finalVehiculoId.isNotEmpty ? finalVehiculoId : null,
+          cargaId: finalCargaId.isNotEmpty ? finalCargaId : null,
+          estado: nuevoEstado,
         );
       }
 
@@ -203,6 +231,31 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                   );
                 },
               ),
+              if (isEditing) ...[
+                const SizedBox(height: 16),
+                const Divider(),
+                const Text('Asignaciones', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: _vehiculoId,
+                        decoration: const InputDecoration(labelText: 'Matrícula Vehículo'),
+                        onSaved: (value) => _vehiculoId = value,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: _cargaId,
+                        decoration: const InputDecoration(labelText: 'ID Carga'),
+                        onSaved: (value) => _cargaId = value,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

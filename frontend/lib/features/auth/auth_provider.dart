@@ -80,6 +80,7 @@ class AuthProvider extends ChangeNotifier {
     required List<String> permisosCond,
     required String password,
     required String nombreEmpresa,
+    required String estado,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -97,6 +98,7 @@ class AuthProvider extends ChangeNotifier {
         rol: rol,
         permisosCond: permisosCond,
         companyId: companyId,
+        estado: estado,
         vehiculoId: null,
       );
 

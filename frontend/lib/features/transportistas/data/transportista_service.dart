@@ -98,6 +98,8 @@ class TransportistaService {
       'rol': userData.rol,
       'permisosCond': userData.permisosCond,
       'vehiculoId': userData.vehiculoId,
+      'cargaId': userData.cargaId,
+      'estado': userData.estado,
     };
 
     final response = await _client.put(
@@ -154,9 +156,10 @@ class TransportistaService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       return {
-        'totalEquipo': data['totalEquipo'] as int? ?? 0,
-        'asignados': data['asignados'] as int? ?? 0,
-        'disponibles': data['disponibles'] as int? ?? 0,
+        'totalEquipo': data['total_trans'] as int? ?? 0,
+        'sin_asignar': data['sin_asignar'] as int? ?? 0,
+        'asignacion_parcial': data['asignacion_parcial'] as int? ?? 0,
+        'en_ruta': data['en_ruta'] as int? ?? 0,
         'inactivos': data['inactivos'] as int? ?? 0,
       };
     }

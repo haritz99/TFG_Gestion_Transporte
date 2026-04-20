@@ -52,6 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
         permisosCond: [],
         password: _passwordController.text.trim(),
         nombreEmpresa: _nombreEmpresaController.text.trim(),
+        estado: 'disponible'
       );
     } catch (e) {
       if (mounted) {

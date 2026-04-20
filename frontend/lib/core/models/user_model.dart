@@ -7,7 +7,9 @@ class UserModel {
   final List<String> rol;
   final List<String> permisosCond;
   final String companyId;
+  final String estado;
   final String? vehiculoId;
+  final String? cargaId;
 
   UserModel({
     required this.uid,
@@ -18,7 +20,9 @@ class UserModel {
     required this.rol,
     required this.permisosCond,
     required this.companyId,
+    required this.estado,
     this.vehiculoId,
+    this.cargaId,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
@@ -36,7 +40,9 @@ class UserModel {
       rol: normalizedRol,
       permisosCond: List<String>.from(map['permisosCond'] ?? []),
       companyId: map['companyId'] ?? '',
+      estado: map['estado'] ?? '',
       vehiculoId: map['vehiculoId'],
+      cargaId: map['cargaId'],
     );
   }
 
@@ -50,7 +56,9 @@ class UserModel {
       'rol': rol,
       'permisosCond': permisosCond,
       'companyId': companyId,
+      'estado': estado,
       'vehiculoId': vehiculoId,
+      'cargaId': cargaId,
     };
   }
 }

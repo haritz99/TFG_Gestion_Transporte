@@ -17,7 +17,8 @@ class TransportistaProvider extends ChangeNotifier {
 
   int? _totalEquipo;
   int? _enRuta;
-  int? _disponibles;
+  int? _sinAsignar;
+  int? _asignacionParcial;
   int? _inactivos;
 
   Map<String, dynamic>? _createResponse;
@@ -39,7 +40,8 @@ class TransportistaProvider extends ChangeNotifier {
 
   int? get totalEquipo => _totalEquipo;
   int? get enRuta => _enRuta;
-  int? get disponibles => _disponibles;
+  int? get sinAsignar => _sinAsignar;
+  int? get asignacionParcial => _asignacionParcial;
   int? get inactivos => _inactivos;
 
   List<DropdownMenuEntry<String>> get conductoresDropdown {
@@ -80,8 +82,9 @@ class TransportistaProvider extends ChangeNotifier {
       final token = await _tokenProvider.getRequiredToken();
       final counts = await _service.fetchEquipoCount(token: token);
       _totalEquipo = counts['totalEquipo'];
-      _enRuta = counts['asignados'];
-      _disponibles = counts['disponibles'];
+      _enRuta = counts['en_ruta'];
+      _sinAsignar = counts['sin_asignar'];
+      _asignacionParcial = counts['asignacion_parcial'];
       _inactivos = counts['inactivos'];
       notifyListeners();
     } catch (e) {
@@ -141,6 +144,7 @@ class TransportistaProvider extends ChangeNotifier {
         'telefono': telefono,
         'rol': rol,
         'permisosCond': permisosCond,
+        'estado': 'sin_asignar'
       }, '');
 
       final response = await _service.createTransportista(
@@ -168,7 +172,9 @@ class TransportistaProvider extends ChangeNotifier {
     required String telefono,
     required List<String> rol,
     required List<String> permisosCond,
+    required String estado,
     String? vehiculoId,
+    String? cargaId,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -188,7 +194,9 @@ class TransportistaProvider extends ChangeNotifier {
         rol: rol,
         permisosCond: permisosCond,
         companyId: companyId,
+        estado: estado,
         vehiculoId: vehiculoId,
+        cargaId: cargaId,
       );
 
       await _service.updateTransportista(
