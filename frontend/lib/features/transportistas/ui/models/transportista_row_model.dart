@@ -1,6 +1,6 @@
 class TransportistaRowModel {
-  const TransportistaRowModel({
-    this.uid = '',
+  TransportistaRowModel({
+    this.uid = '', // No lo enseño en la tabla pero es neceario para los callbacks
     this.nombre = '',
     this.apellido = '',
     this.email = '',
@@ -8,9 +8,9 @@ class TransportistaRowModel {
     this.rol = const [],
     this.licencias = const [],
     this.cargaAsignada = '',
-    this.fechaDeAlta = '',
     this.vehiculoAsignado = '',
-    this.estado = 'disponible'
+    this.estado = 'Sin Asignar',
+    this.fechaDeAlta,
   });
 
   final String uid;
@@ -21,8 +21,7 @@ class TransportistaRowModel {
   final List<String> rol;
   final List<String> licencias;
   final String cargaAsignada;
-  final String fechaDeAlta;
   final String vehiculoAsignado;
   final String estado;
-
+  final DateTime? fechaDeAlta;
 }

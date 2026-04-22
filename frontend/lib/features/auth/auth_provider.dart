@@ -25,8 +25,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     try {
       if (firebaseUser != null) {
-        _user = await _authService.getUserData(firebaseUser.uid);
-        _idToken = await _authService.getIdToken();
+        final results = await Future.wait([
+          _authService.getUserData(firebaseUser.uid),
+          _authService.getIdToken(),
+        ]);
+
+        _user = results[0] as UserModel?;
+        _idToken = results[1] as String?;
       } else {
         _user = null;
         _idToken = null;
@@ -80,6 +85,7 @@ class AuthProvider extends ChangeNotifier {
     required List<String> permisosCond,
     required String password,
     required String nombreEmpresa,
+    required String estado,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -97,6 +103,7 @@ class AuthProvider extends ChangeNotifier {
         rol: rol,
         permisosCond: permisosCond,
         companyId: companyId,
+        estado: estado,
         vehiculoId: null,
       );
 

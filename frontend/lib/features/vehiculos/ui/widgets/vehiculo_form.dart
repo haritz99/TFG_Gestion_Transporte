@@ -90,7 +90,7 @@ class _VehiculoFormState extends State<VehiculoForm> {
         alto: double.tryParse(_altoController.text) ?? 0.0,
         interno: _interno,
         matriculaRemolque: _matriculaRemolqueController.text.trim().toUpperCase(),
-        estado: nuevoEstado,
+          estado: nuevoEstado,
         transportistaId: finalConductorId,
         transportistaNombre: conductorNombre,
         companyId: widget.vehiculo?.companyId,

@@ -41,7 +41,7 @@ class GestionFlotaPage extends StatefulWidget {
     this.onDeleteVehiculo,
     this.onEditVehiculo,
     this.onMobileLoadMore,
-    this.onDesktopPageChanged,
+    required this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
   });
@@ -63,7 +63,7 @@ class GestionFlotaPage extends StatefulWidget {
   final ValueChanged<String>? onDeleteVehiculo;
   final ValueChanged<String>? onEditVehiculo;
   final Future<void> Function()? onMobileLoadMore;
-  final ValueChanged<int>? onDesktopPageChanged;
+  final ValueChanged<int> onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
 
@@ -116,6 +116,9 @@ class _GestionFlotaPageState extends State<GestionFlotaPage> {
         selectedStatus: widget.selectedStatus,
         statusOptions: widget.statusOptions,
         onStatusChanged: widget.onStatusChanged,
+        onDesktopPageChanged: widget.onDesktopPageChanged,
+        hasMore: widget.hasMore,
+        isLoadingMore: widget.isLoadingMore,
         onDeleteVehiculo: widget.onDeleteVehiculo,
         onEditVehiculo: widget.onEditVehiculo,
         isMobile: isMobile,

@@ -35,7 +35,11 @@ class TransportistaService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (data['user'] == null) {
+        throw Exception('La API no devolvio el objeto user al crear transportista');
+      }
+      return data;
     } else {
       final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(errorData['detail'] ?? 'Error al crear transportista');
@@ -83,7 +87,7 @@ class TransportistaService {
     throw Exception(errorData['detail'] ?? 'Error al obtener transportistas');
   }
 
-  Future<Map<String, dynamic>> updateTransportista({
+  Future<UserModel> updateTransportista({
     required String uid,
     required UserModel userData,
     required String token,
@@ -98,6 +102,8 @@ class TransportistaService {
       'rol': userData.rol,
       'permisosCond': userData.permisosCond,
       'vehiculoId': userData.vehiculoId,
+      'cargaId': userData.cargaId,
+      'estado': userData.estado,
     };
 
     final response = await _client.put(
@@ -110,7 +116,9 @@ class TransportistaService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final Map<String, dynamic> userData = jsonDecode(response.body);
+      final user = UserModel.fromMap(userData, userData['uid']);
+      return user;
     }
 
     final errorData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -154,9 +162,10 @@ class TransportistaService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       return {
-        'totalEquipo': data['totalEquipo'] as int? ?? 0,
-        'asignados': data['asignados'] as int? ?? 0,
-        'disponibles': data['disponibles'] as int? ?? 0,
+        'totalEquipo': data['total_trans'] as int? ?? 0,
+        'sin_asignar': data['sin_asignar'] as int? ?? 0,
+        'asignacion_parcial': data['asignacion_parcial'] as int? ?? 0,
+        'en_ruta': data['en_ruta'] as int? ?? 0,
         'inactivos': data['inactivos'] as int? ?? 0,
       };
     }

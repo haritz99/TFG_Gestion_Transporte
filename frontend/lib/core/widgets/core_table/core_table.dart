@@ -14,7 +14,7 @@ class CoreTable<T> extends StatefulWidget {
     required this.isMobile,
     required this.mobileCardBuilder,
     this.onStatusChanged,
-    this.onDesktopPageChanged,
+    required this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
   });
@@ -26,7 +26,7 @@ class CoreTable<T> extends StatefulWidget {
   final bool isMobile;
   final Widget Function(T item) mobileCardBuilder;
   final ValueChanged<String>? onStatusChanged;
-  final ValueChanged<int>? onDesktopPageChanged;
+  final ValueChanged<int> onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
 

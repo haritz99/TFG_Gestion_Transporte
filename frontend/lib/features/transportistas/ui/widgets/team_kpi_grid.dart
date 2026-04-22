@@ -7,14 +7,16 @@ class TeamKpiGrid extends StatelessWidget {
     super.key,
     this.totalEquipo,
     this.enRuta,
-    this.disponibles,
+    this.sinAsignar,
+    this.asignacionParcial,
     this.inactivos,
     required this.isMobile,
   });
 
   final int? totalEquipo;
   final int? enRuta;
-  final int? disponibles;
+  final int? sinAsignar;
+  final int? asignacionParcial;
   final int? inactivos;
   final bool isMobile;
 
@@ -23,7 +25,8 @@ class TeamKpiGrid extends StatelessWidget {
     final cards = [
       FleetKpiCard(value: totalEquipo?.toString(), label: 'Total Equipo'),
       FleetKpiCard(value: enRuta?.toString(), label: 'En Ruta'),
-      FleetKpiCard(value: disponibles?.toString(), label: 'Disponibles'),
+      FleetKpiCard(value: sinAsignar?.toString(), label: 'Sin Asignar'),
+      FleetKpiCard(value: asignacionParcial?.toString(), label: 'Asignados Parcialmente'),
       FleetKpiCard(value: inactivos?.toString(), label: 'Inactivos'),
     ];
 

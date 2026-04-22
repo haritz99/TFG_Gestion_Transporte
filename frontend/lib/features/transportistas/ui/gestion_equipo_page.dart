@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/transportistas/ui/widgets/team_kpi_grid.dart';
+import 'package:intl/intl.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/core_table/core_table_column.dart';
@@ -13,22 +15,21 @@ class GestionEquipoPage extends StatefulWidget {
     super.key,
     this.totalEquipo,
     this.enRuta,
-    this.disponibles,
+    this.sinAsignar,
+    this.asignacionParcial,
     this.inactivos,
     this.selectedStatus = 'Todos',
-    this.statusOptions = const [
-      'Todos',
-      'En Ruta',
-      'Activo',
-      'Disponible',
+    this.statusOptions = const ['Todos', 'Sin Asignar', 'En Ruta', 'Asignado',
+      'Asignado Parcial',
+      'Inactivo'
     ],
     this.columns = const [
-      CoreTableColumn<TransportistaRowModel>(label: 'ID', flex: 10, cellBuilder: _buildIdCell),
       CoreTableColumn<TransportistaRowModel>(label: 'NOMBRE', flex: 20, cellBuilder: _buildNombreCell),
       CoreTableColumn<TransportistaRowModel>(label: 'ROL', flex: 15, cellBuilder: _buildRolCell),
       CoreTableColumn<TransportistaRowModel>(label: 'LICENCIA', flex: 10, cellBuilder: _buildLicenciaCell),
       CoreTableColumn<TransportistaRowModel>(label: 'TELÉFONO', flex: 15, cellBuilder: _buildTelefonoCell),
       CoreTableColumn<TransportistaRowModel>(label: 'ESTADO', flex: 12, cellBuilder: _buildEstadoCell),
+      CoreTableColumn<TransportistaRowModel>(label: 'VEHÍCULO ASIGNADO', flex: 10, cellBuilder: _buildVehiculoCell),
       CoreTableColumn<TransportistaRowModel>(label: 'CARGA ASIGNADA', flex: 10, cellBuilder: _buildCargasCell),
       CoreTableColumn<TransportistaRowModel>(label: 'ALTA', flex: 12, cellBuilder: _buildAltaCell),
     ],
@@ -38,14 +39,15 @@ class GestionEquipoPage extends StatefulWidget {
     this.onDeleteMiembro,
     this.onEditMiembro,
     this.onMobileLoadMore,
-    this.onDesktopPageChanged,
+    required this.onDesktopPageChanged,
     this.hasMore = false,
     this.isLoadingMore = false,
   });
 
   final int? totalEquipo;
   final int? enRuta;
-  final int? disponibles;
+  final int? sinAsignar;
+  final int? asignacionParcial;
   final int? inactivos;
 
   final String selectedStatus;
@@ -59,7 +61,7 @@ class GestionEquipoPage extends StatefulWidget {
   final ValueChanged<String>? onDeleteMiembro;
   final ValueChanged<String>? onEditMiembro;
   final Future<void> Function()? onMobileLoadMore;
-  final ValueChanged<int>? onDesktopPageChanged;
+  final ValueChanged<int> onDesktopPageChanged;
   final bool hasMore;
   final bool isLoadingMore;
 
@@ -101,7 +103,8 @@ class _GestionEquipoPageState extends State<GestionEquipoPage> {
       kpiGrid: TeamKpiGrid(
         totalEquipo: widget.totalEquipo,
         enRuta: widget.enRuta,
-        disponibles: widget.disponibles,
+        sinAsignar: widget.sinAsignar,
+        asignacionParcial: widget.asignacionParcial,
         inactivos: widget.inactivos, 
         isMobile: isMobile,
       ),
@@ -127,7 +130,8 @@ class _GestionEquipoPageState extends State<GestionEquipoPage> {
   
 }
 
-Widget _buildIdCell(TransportistaRowModel item) => Text(item.uid.substring(0, 6), style: AppTextStyles.tableValue);
+// Construcción de celdas de la tabla
+
 Widget _buildNombreCell(TransportistaRowModel item) => Row(
   children: [
     CircleAvatar(
@@ -147,6 +151,11 @@ Widget _buildLicenciaCell(TransportistaRowModel item) => Container(
 );
 Widget _buildTelefonoCell(TransportistaRowModel item) => Text(item.telefono, style: AppTextStyles.tableValue);
 Widget _buildEstadoCell(TransportistaRowModel item) => Text(item.estado, style: AppTextStyles.tableValue);
+Widget _buildVehiculoCell(TransportistaRowModel item) => Text(item.vehiculoAsignado, style: AppTextStyles.tableValue);
 Widget _buildCargasCell(TransportistaRowModel item) => Text(item.cargaAsignada, style: AppTextStyles.tableValue);
-Widget _buildAltaCell(TransportistaRowModel item) => Text(item.fechaDeAlta, style: AppTextStyles.tableValue);
-
+Widget _buildAltaCell(TransportistaRowModel item) {
+  final dateStr = item.fechaDeAlta != null
+    ? DateFormat('dd/MM/yyyy').format(item.fechaDeAlta!)
+    : '-';
+  return Text(dateStr, style: AppTextStyles.tableValue);
+}

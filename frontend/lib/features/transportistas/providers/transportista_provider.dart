@@ -17,13 +17,17 @@ class TransportistaProvider extends ChangeNotifier {
 
   int? _totalEquipo;
   int? _enRuta;
-  int? _disponibles;
+  int? _sinAsignar;
+  int? _asignacionParcial;
   int? _inactivos;
 
   Map<String, dynamic>? _createResponse;
   String? _lastCreatedEmail;
   List<UserModel> _transportistas = [];
   List<UserModel> _transportistasDisponibles = [];
+  bool _hasMore = true;
+  bool _isLoadingPage = false;
+  String? _lastDocId;
 
   TransportistaProvider({
     required AuthService authService,
@@ -36,10 +40,13 @@ class TransportistaProvider extends ChangeNotifier {
   Map<String, dynamic>? get createResponse => _createResponse;
   List<UserModel> get transportistas => _transportistas;
   List<UserModel> get transportistasDisponibles => _transportistasDisponibles;
+  bool get hasMore => _hasMore;
+  bool get isLoadingPage => _isLoadingPage;
 
   int? get totalEquipo => _totalEquipo;
   int? get enRuta => _enRuta;
-  int? get disponibles => _disponibles;
+  int? get sinAsignar => _sinAsignar;
+  int? get asignacionParcial => _asignacionParcial;
   int? get inactivos => _inactivos;
 
   List<DropdownMenuEntry<String>> get conductoresDropdown {
@@ -75,13 +82,63 @@ class TransportistaProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> loadInitialEquipo({
+    int limit = AppConstants.paginationPageSize,
+  }) async {
+    _transportistas = [];
+    _lastDocId = null;
+    _hasMore = true;
+    notifyListeners();
+    await loadNextPage(limit: limit, reset: true);
+  }
+
+  Future<void> loadNextPage({
+    int limit = AppConstants.paginationPageSize,
+    bool reset = false,
+  }) async {
+    if (_isLoadingPage) return;
+    if (!reset && !_hasMore) return;
+
+    _isLoadingPage = true;
+    notifyListeners();
+
+    try {
+      final page = await fetchEquipoPage(limit: limit, lastDocId: reset ? null : _lastDocId,);
+
+      if (reset) {
+        _transportistas = [...page.items];
+      } else {
+        _transportistas = [..._transportistas, ...page.items];
+      }
+
+      _lastDocId = page.lastDocId;
+      _hasMore = page.hasMore;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingPage = false;
+      notifyListeners();
+    }
+  }
+
+  void _upsertTransportista(UserModel item) {
+    final index = _transportistas.indexWhere((t) => t.uid == item.uid);
+    if (index == -1) {
+      _transportistas = [item, ..._transportistas];
+    } else {
+      _transportistas[index] = item;
+      _transportistas = [..._transportistas];
+    }
+  }
+
   Future<void> fetchEquipoKpis() async {
     try {
       final token = await _tokenProvider.getRequiredToken();
       final counts = await _service.fetchEquipoCount(token: token);
       _totalEquipo = counts['totalEquipo'];
-      _enRuta = counts['asignados'];
-      _disponibles = counts['disponibles'];
+      _enRuta = counts['en_ruta'];
+      _sinAsignar = counts['sin_asignar'];
+      _asignacionParcial = counts['asignacion_parcial'];
       _inactivos = counts['inactivos'];
       notifyListeners();
     } catch (e) {
@@ -118,7 +175,7 @@ class TransportistaProvider extends ChangeNotifier {
     return conductoresDropdown;
   }
 
-  Future<bool> createTransportista({
+  Future<UserModel?> createTransportista({
     required String nombre,
     required String apellido,
     required String email,
@@ -141,6 +198,7 @@ class TransportistaProvider extends ChangeNotifier {
         'telefono': telefono,
         'rol': rol,
         'permisosCond': permisosCond,
+        'estado': 'Sin Asignar'
       }, '');
 
       final response = await _service.createTransportista(
@@ -148,19 +206,25 @@ class TransportistaProvider extends ChangeNotifier {
         token: token,
       );
 
-      _createResponse = response;
+      final userMap = response['user'];
+      _createResponse = {
+        'temp_password': response['temp_password'],
+        'password_reset_link': response['password_reset_link'],
+      };
       _lastCreatedEmail = email;
-      return true;
+      final created = UserModel.fromMap(userMap, userMap['uid']);
+      _upsertTransportista(created);
+      return created;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return false;
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> updateTransportista({
+  Future<UserModel?> updateTransportista({
     required String uid,
     required String nombre,
     required String apellido,
@@ -168,7 +232,9 @@ class TransportistaProvider extends ChangeNotifier {
     required String telefono,
     required List<String> rol,
     required List<String> permisosCond,
+    required String estado,
     String? vehiculoId,
+    String? cargaId,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -188,23 +254,22 @@ class TransportistaProvider extends ChangeNotifier {
         rol: rol,
         permisosCond: permisosCond,
         companyId: companyId,
+        estado: estado,
         vehiculoId: vehiculoId,
+        cargaId: cargaId,
       );
 
-      await _service.updateTransportista(
+      final updated = await _service.updateTransportista(
         uid: uid,
         userData: userData,
         token: token,
       );
 
-      if (index != -1) {
-        _transportistas[index] = userData;
-      }
-
-      return true;
+      _upsertTransportista(updated);
+      return updated;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return false;
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -220,7 +285,7 @@ class TransportistaProvider extends ChangeNotifier {
       final token = await _tokenProvider.getRequiredToken();
 
       await _service.deleteTransportista(uid: uid, token: token);
-      _transportistas.removeWhere((t) => t.uid == uid);
+      _transportistas = _transportistas.where((t) => t.uid != uid).toList(growable: false);
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
