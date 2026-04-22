@@ -57,3 +57,9 @@ class UserCountSchema(FirestoreSchema):
     asignacion_parcial: int
     en_ruta: int
     inactivos: int
+
+class UserCreateResponseSchema(FirestoreSchema):
+    user: UserSchema
+    temp_password: Optional[str] = None
+    password_reset_link: Optional[str] = None
+

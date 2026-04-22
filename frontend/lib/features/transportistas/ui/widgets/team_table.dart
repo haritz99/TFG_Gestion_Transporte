@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:gestion_transporte/features/transportistas/ui/models/transportista_row_model.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/widgets/core_table/core_mobile_card.dart';
 import '../../../../core/widgets/core_table/core_table.dart';
@@ -50,14 +51,17 @@ class TeamTable extends StatelessWidget{
         onEdit: () => onEditTransportista?.call(transportista.uid),
         onDelete: () => onDeleteTransportista?.call(transportista.uid),
         details: [
-          MapEntry('Id', transportista.uid),
           MapEntry('Nombre', transportista.nombre),
           MapEntry('Email', transportista.email),
           MapEntry('Telefono', transportista.telefono),
           MapEntry('Rol', transportista.rol.join(', ')),
           MapEntry('Licencias', transportista.licencias.join(', ')),
+          MapEntry('Estado', transportista.estado),
+          MapEntry('Vehículo asignado', transportista.vehiculoAsignado),
           MapEntry('Carga asignada', transportista.cargaAsignada),
-          MapEntry('Fecha de alta', transportista.fechaDeAlta),
+          MapEntry('Fecha de alta', transportista.fechaDeAlta != null
+            ? DateFormat('dd/MM/yyyy').format(transportista.fechaDeAlta!)
+            : 'N/A'),
         ],
       )
     );

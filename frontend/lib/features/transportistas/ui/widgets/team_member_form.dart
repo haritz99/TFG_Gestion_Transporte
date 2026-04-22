@@ -29,6 +29,9 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
     'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE',
   ];
 
+  bool _isCreated = false;
+  UserModel? _createdUser;
+
   @override
   void initState() {
     super.initState();
@@ -75,9 +78,9 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
         }
       }
 
-      bool success;
+      UserModel? result;
       if (widget.member == null) {
-        success = await provider.createTransportista(
+        result = await provider.createTransportista(
           nombre: _nombre,
           apellido: _apellido,
           email: _email,
@@ -86,7 +89,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
           permisosCond: _licencias,
         );
       } else {
-        success = await provider.updateTransportista(
+        result = await provider.updateTransportista(
           uid: widget.member!.uid,
           nombre: _nombre,
           apellido: _apellido,
@@ -101,13 +104,35 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
       }
 
       if (mounted) {
-        if (success) {
-          Navigator.of(context).pop(true);
+        if (result != null) {
+          if (widget.member == null) {
+            _createdUser = result;
+            setState(() {
+              _isCreated = true;
+            });
+          } else {
+            Navigator.of(context).pop(result);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(provider.errorMessage ?? 'Error al guardar')),
           );
         }
+      }
+    }
+  }
+
+  void _sendEmail() async {
+    final provider = context.read<TransportistaProvider>();
+    bool success = await provider.sendCredentialsEmail();
+
+    if (mounted) {
+      if (success) {
+        Navigator.of(context).pop(_createdUser);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(provider.errorMessage ?? 'Error al enviar credenciales')),
+        );
       }
     }
   }
@@ -262,16 +287,25 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                    child: Text(_isCreated ? 'Cerrar' : 'Cancelar'),
                   ),
                   const SizedBox(width: 16),
-                  context.watch<TransportistaProvider>().isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: _submit,
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                          child: const Text('Guardar'),
-                        ),
+                  if (_isCreated && widget.member == null)
+                    ElevatedButton(
+                      onPressed: _sendEmail,
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                      child: const Text('Enviar credenciales'),
+                    )
+                  else ...[
+                    if (context.watch<TransportistaProvider>().isLoading)
+                      const CircularProgressIndicator()
+                    else
+                      ElevatedButton(
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                        child: const Text('Guardar'),
+                      ),
+                  ],
                 ],
               ),
             ],

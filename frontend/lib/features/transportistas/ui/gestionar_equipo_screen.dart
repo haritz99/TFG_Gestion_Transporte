@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestion_equipo_page.dart';
 import 'package:provider/provider.dart';
@@ -37,25 +36,25 @@ class _GestionEquipoScreenBody extends StatefulWidget {
 class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   static const int _pageSize = AppConstants.paginationPageSize;
 
-  final List<UserModel> _transportistas = [];
+  TransportistaProvider get _transportistaProvider => context.read<TransportistaProvider>();
+
   bool _firstLoad = true;
-  bool _isLoadingPage = false;
-  bool _hasMore = true;
-  String? _lastDocId;
   String _selectedStatus = 'Todos';
 
-  List<UserModel> get _transportistasFiltrados {
+  List<UserModel> _filterTransportistas(List<UserModel> source) {
     switch (_selectedStatus) {
       case 'En Ruta':
-        return _transportistas.where((t) => t.estado == 'en_ruta').toList();
+        return source.where((t) => t.estado == 'en_ruta').toList();
+      case 'Sin Asignar':
+        return source.where((t) => t.estado == 'sin_asignar').toList();
       case 'Asignado':
-        return _transportistas.where((t) => t.estado == 'asignado').toList();
+        return source.where((t) => t.estado == 'asignado').toList();
       case 'Asignado Parcial':
-        return _transportistas.where((t) => t.estado == 'asignacion_parcial').toList();
+        return source.where((t) => t.estado == 'asignacion_parcial').toList();
       case 'Inactivo':
-        return _transportistas.where((t) => t.estado == 'inactivo').toList();
+        return source.where((t) => t.estado == 'inactivo').toList();
       default:
-        return _transportistas;
+        return source;
     }
   }
 
@@ -69,91 +68,102 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   }
 
   Future<void> _loadInitialData() async {
-    final provider = context.read<TransportistaProvider>();
-    await provider.fetchEquipoKpis();
-    await _loadNextPage(reset: true);
+    await _transportistaProvider.fetchEquipoKpis();
+    await _transportistaProvider.loadInitialEquipo(limit: _pageSize);
     if (!mounted) return;
     setState(() {
       _firstLoad = false;
     });
   }
 
-  Future<void> _loadNextPage({bool reset = false}) async {
-    if (_isLoadingPage) return;
-    if (!reset && !_hasMore) return;
-
-    setState(() {
-      _isLoadingPage = true;
-    });
-
-    final provider = context.read<TransportistaProvider>();
-    final response = await provider.fetchEquipoPage(
-      limit: _pageSize,
-      lastDocId: reset ? null : _lastDocId,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      if (reset) {
-        _transportistas
-          ..clear()
-          ..addAll(response.items);
-        //print(jsonEncode(_transportistas.map((t) => t.toMap()).toList()));
-      } else {
-        _transportistas.addAll(response.items);
-      }
-      _lastDocId = response.lastDocId;
-      _hasMore = response.hasMore;
-      _isLoadingPage = false;
-    });
+  Future<void> _handleDesktopPageChanged(int firstRowIndex) async {
+    final filteredCount = _transportistaProvider.transportistas.length;
+    if (firstRowIndex + _pageSize > filteredCount && _transportistaProvider.hasMore) {
+      await _transportistaProvider.loadNextPage(limit: _pageSize);
+    }
   }
 
-  Future<void> _handleDesktopPageChanged(int firstRowIndex) async {
-    final filteredCount = _transportistas.length;
-    if (firstRowIndex + _pageSize > filteredCount && _hasMore) {
-      await _loadNextPage();
+  Future<void> _deleteMember(String uid) async {
+    final success = await _transportistaProvider.deleteTransportista(uid);
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Miembro eliminado correctamente')),
+      );
+      await _transportistaProvider.fetchEquipoKpis();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_transportistaProvider.errorMessage ?? 'Error al eliminar')),
+      );
     }
   }
 
   Future<void> _promptAddMiembro() async {
-    final result = await showModalBottomSheet<bool>(
+    final created = await showModalBottomSheet<UserModel?>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => const TeamMemberForm(),
+      builder: (modalContext) => ChangeNotifierProvider.value(
+        value: _transportistaProvider,
+        child: const TeamMemberForm(),
+      )
     );
-    if (result == true && mounted) {
-      _lastDocId = null;
-      _transportistas.clear();
-      _hasMore = true;
-      _firstLoad = true;
-      _loadInitialData();
+    if (created != null && mounted) {
+      await _transportistaProvider.fetchEquipoKpis();
     }
   }
 
   Future<void> _promptEditMiembro(String uid) async {
-    final member = _transportistas.firstWhere((t) => t.uid == uid);
-    final result = await showModalBottomSheet<bool>(
+    final member = _transportistaProvider.transportistas.firstWhere((t) => t.uid == uid);
+    final updated = await showModalBottomSheet<UserModel?>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => TeamMemberForm(member: member),
+      builder: (modalContext) => ChangeNotifierProvider.value(
+        value: _transportistaProvider,
+        child: TeamMemberForm(member: member),
+      )
     );
-    if (result == true && mounted) {
-      setState(() {});
+    if (updated != null && mounted) {
+      await _transportistaProvider.fetchEquipoKpis();
     }
   }
 
   Future<void> _promptDeleteMiembro(String uid) async {
-    final member = _transportistas.firstWhere((t) => t.uid == uid);
+    final member = _transportistaProvider.transportistas.firstWhere((t) => t.uid == uid);
     final fullName = '${member.nombre} ${member.apellido}';
-    final result = await showDialog<bool>(
+
+    await showDialog<void>(
       context: context,
-      builder: (_) => ConfirmDeleteMember(uid: uid, nombreCompleto: fullName),
+      builder: (ctx) => ChangeNotifierProvider.value(
+        value: _transportistaProvider,
+        child: ConfirmDeleteMember(
+          uid: uid,
+          nombreCompleto: fullName,
+          onCancel: () => Navigator.of(ctx).pop(),
+          onConfirm: () async {
+            Navigator.of(ctx).pop();
+            await _deleteMember(uid);
+          },
+        ),
+      )
     );
-    if (result == true && mounted) {
-      setState(() {
-        _transportistas.removeWhere((t) => t.uid == uid);
-      });
+  }
+
+  String _formatEstado(String rawStatus) {
+    switch (rawStatus) {
+      case 'sin_asignar':
+        return 'Sin Asignar';
+      case 'asignacion_parcial':
+        return 'Asignado Parcial';
+      case 'asignado':
+        return 'Asignado';
+      case 'en_ruta':
+        return 'En Ruta';
+      case 'inactivo':
+        return 'Inactivo';
+      default:
+        if (rawStatus.isEmpty) return 'Desconocido';
+        return rawStatus[0].toUpperCase() + rawStatus.substring(1).toLowerCase();
     }
   }
 
@@ -165,16 +175,20 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final rows = _transportistasFiltrados.map((t) {
+    final filtered = _filterTransportistas(provider.transportistas);
+    final rows = filtered.map((t) {
       return TransportistaRowModel(
         uid: t.uid,
         nombre: t.nombre,
         apellido: t.apellido,
         email: t.email,
         telefono: t.telefono,
+        estado: _formatEstado(t.estado),
         rol: t.rol,
         licencias: t.permisosCond,
-        cargaAsignada: t.vehiculoId ?? '',
+        cargaAsignada: t.cargaId ?? '',
+        vehiculoAsignado: t.vehiculoId ?? '',
+        fechaDeAlta: t.createdAt,
       );
     }).toList();
     return Scaffold(
@@ -185,10 +199,10 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         asignacionParcial: provider.asignacionParcial ?? 0,
         inactivos: provider.inactivos ?? 0,
         selectedStatus: _selectedStatus,
-        statusOptions: const ['Todos', 'En Ruta', 'Asignado', 'Asignado Parcial', 'Inactivo'],
+        statusOptions: const ['Todos', 'Sin Asignar', 'En Ruta', 'Asignado', 'Asignado Parcial', 'Inactivo'],
         rows: rows,
-        hasMore: _hasMore,
-        isLoadingMore: _isLoadingPage,
+        hasMore: provider.hasMore,
+        isLoadingMore: provider.isLoadingPage,
         onStatusChanged: (status) {
           setState(() {
             _selectedStatus = status;
@@ -197,7 +211,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         onAddMiembro: _promptAddMiembro,
         onDeleteMiembro: _promptDeleteMiembro,
         onEditMiembro: _promptEditMiembro,
-        onMobileLoadMore: _loadNextPage,
+        onMobileLoadMore: () => provider.loadNextPage(limit: _pageSize),
         onDesktopPageChanged: _handleDesktopPageChanged,
       )
     );

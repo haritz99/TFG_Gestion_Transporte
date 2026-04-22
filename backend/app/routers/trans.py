@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from typing import Any
-from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema
+from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema, UserCreateResponseSchema
 from ..dependencies.auth import get_current_encargado
 from ..services.trans_service import TransService, get_trans_service
 
@@ -38,7 +38,7 @@ async def get_trans(uid: str, current_user: dict[str, Any] = Depends(get_current
     company_id = current_user.get("companyId")
     return service.get_trans(uid=uid, company_id=company_id)
 
-@router.post("/")
+@router.post("/", response_model=UserCreateResponseSchema)
 async def create_trans(
     user_data: UserSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
@@ -47,7 +47,7 @@ async def create_trans(
     company_id = current_user.get("companyId")
     return service.create_trans(user_data=user_data, company_id=company_id)
 
-@router.put("/{uid}")
+@router.put("/{uid}", response_model=UserSchema)
 async def update_trans(
     uid: str,
     user_data: UserSchema,

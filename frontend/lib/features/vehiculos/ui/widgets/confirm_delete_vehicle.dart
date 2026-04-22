@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class ConfirmDeleteVehicle extends StatelessWidget{
   const ConfirmDeleteVehicle({
@@ -22,18 +22,18 @@ class ConfirmDeleteVehicle extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoAlertDialog(
+    return AlertDialog(
       title: const Text('Confirmar eliminación'),
       content: Text(_buildContent(conductor)),
       actions: [
-        CupertinoDialogAction(
+        TextButton(
           onPressed: onCancel,
           child: const Text('Cancelar'),
         ),
-        CupertinoDialogAction(
+        TextButton(
           onPressed: onConfirm,
-          isDestructiveAction: true,
-          child: const Text('Eliminar'),
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('Eliminar', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

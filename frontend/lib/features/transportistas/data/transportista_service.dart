@@ -35,7 +35,11 @@ class TransportistaService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (data['user'] == null) {
+        throw Exception('La API no devolvio el objeto user al crear transportista');
+      }
+      return data;
     } else {
       final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(errorData['detail'] ?? 'Error al crear transportista');
@@ -83,7 +87,7 @@ class TransportistaService {
     throw Exception(errorData['detail'] ?? 'Error al obtener transportistas');
   }
 
-  Future<Map<String, dynamic>> updateTransportista({
+  Future<UserModel> updateTransportista({
     required String uid,
     required UserModel userData,
     required String token,
@@ -112,7 +116,9 @@ class TransportistaService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final Map<String, dynamic> userData = jsonDecode(response.body);
+      final user = UserModel.fromMap(userData, userData['uid']);
+      return user;
     }
 
     final errorData = jsonDecode(response.body) as Map<String, dynamic>;

@@ -1,7 +1,8 @@
 from typing import Any, Dict
 from fastapi import HTTPException
 from firebase_admin import auth as firebase_auth
-from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema
+from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema, \
+    UserCreateResponseSchema
 from ..crud.trans_crud import TransCRUD
 import secrets
 import string
@@ -59,8 +60,8 @@ class TransService:
             # En algunas versiones de Firestore se devuelve una lista dentro de otra lista, esto acepta ambos casos
             total = total_res[0][0].value if isinstance(total_res[0], list) else total_res[0].value
 
-            asingados_res = self.crud.get_count_by_estado(company_id, "asignado")
-            asingados = asingados_res[0][0].value if isinstance(asingados_res[0], list) else asingados_res[0].value
+            asignados_res = self.crud.get_count_by_estado(company_id, "asignado")
+            asignados = asignados_res[0][0].value if isinstance(asignados_res[0], list) else asignados_res[0].value
 
             sin_asignar_res = self.crud.get_count_by_estado(company_id, "sin_asignar")
             sin_asignar = sin_asignar_res[0][0].value if isinstance(sin_asignar_res[0], list) else sin_asignar_res[0].value
@@ -90,7 +91,7 @@ class TransService:
         characters = string.ascii_letters + string.digits + "!@#$%^&*"
         return ''.join(secrets.choice(characters) for _ in range(length))
 
-    def create_trans(self, user_data: UserSchema, company_id: str) -> Dict[str, Any]:
+    def create_trans(self, user_data: UserSchema, company_id: str) -> UserCreateResponseSchema:
         new_auth_user = None
         try:
             temp_password = self.generate_temp_password()
@@ -108,19 +109,26 @@ class TransService:
             except Exception:
                 reset_link = None
 
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+
             user_dict = user_data.model_dump()
+            user_dict['uid'] = uid
             if "transportista" not in user_dict.get("rol", []):
                  user_dict["rol"] = ["transportista"]
             user_dict["companyId"] = company_id
+            user_dict["createdAt"] = now
+            user_dict["updatedAt"] = now
 
             self.crud.create(uid, user_dict)
 
-            return {
-                "message": "Transportista creado con éxito",
-                "uid": uid,
-                "temp_password": temp_password,
-                "password_reset_link": reset_link
-            }
+            created_user = UserSchema(**user_dict)
+
+            return  UserCreateResponseSchema(
+                user=created_user,
+                temp_password=temp_password,
+                password_reset_link=reset_link
+            )
         except firebase_auth.EmailAlreadyExistsError:
             raise HTTPException(status_code=400, detail="El email ya está registrado en el sistema")
         except Exception:
@@ -131,7 +139,7 @@ class TransService:
                     pass
             raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-    def update_trans(self, uid: str, user_data: UserSchema, company_id: str) -> Dict[str, str]:
+    def update_trans(self, uid: str, user_data: UserSchema, company_id: str) -> UserSchema:
         doc = self.crud.get_by_id(uid)
 
         if not doc.exists:
@@ -150,6 +158,9 @@ class TransService:
         update_data = user_data.model_dump(exclude_unset=True)
         update_data.pop("companyId", None)
         update_data.pop("rol", None)
+
+        from datetime import datetime, timezone
+        update_data["updatedAt"] = datetime.now(timezone.utc)
 
         new_email = update_data.get("email")
         old_email = doc_data.get("email")
@@ -170,7 +181,9 @@ class TransService:
                 raise HTTPException(status_code=400, detail=str(e))
 
         self.crud.update(uid, update_data)
-        return {"message": "Transportista actualizado con éxito"}
+        full_data = {**doc_data, **update_data, "uid": uid}
+        updated_user = UserSchema(**full_data)
+        return updated_user
 
     def delete_trans(self, uid: str, company_id: str) -> Dict[str, str]:
         try:
