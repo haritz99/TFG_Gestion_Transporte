@@ -100,7 +100,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   }
 
   Future<void> _promptAddMiembro() async {
-    final created = await showModalBottomSheet<UserModel?>(
+    await showModalBottomSheet<UserModel?>(
       context: context,
       isScrollControlled: true,
       builder: (modalContext) => ChangeNotifierProvider.value(
@@ -108,9 +108,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         child: const TeamMemberForm(),
       )
     );
-    if (created != null && mounted) {
-      await _transportistaProvider.fetchEquipoKpis();
-    }
+    await _transportistaProvider.fetchEquipoKpis();
   }
 
   Future<void> _promptEditMiembro(String uid) async {
