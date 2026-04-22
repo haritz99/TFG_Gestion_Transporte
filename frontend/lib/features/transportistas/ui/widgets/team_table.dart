@@ -51,7 +51,6 @@ class TeamTable extends StatelessWidget{
         onEdit: () => onEditTransportista?.call(transportista.uid),
         onDelete: () => onDeleteTransportista?.call(transportista.uid),
         details: [
-          MapEntry('Nombre', transportista.nombre),
           MapEntry('Email', transportista.email),
           MapEntry('Telefono', transportista.telefono),
           MapEntry('Rol', transportista.rol.join(', ')),

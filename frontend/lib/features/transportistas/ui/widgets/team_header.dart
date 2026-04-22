@@ -14,44 +14,67 @@ class TeamHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'Gestión de Equipo',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.bodyText,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Conductores y encargados registrados',
+          style: AppTextStyles.bodyMd,
+        ),
+      ],
+    );
+
+    final button = SizedBox(
+      height: 40,
+      child: ElevatedButton.icon(
+        onPressed: onAddMiembro,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text(
+          'Añadir Miembro',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          content,
+          const SizedBox(height: 12),
+          SizedBox(width: double.infinity, child: button),
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Gestión de Equipo',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.bodyText,
-              ),
-            ),
-            Text(
-              'Conductores y encargados registrados',
-              style: AppTextStyles.bodyMd,
-            ),
-          ],
-        ),
-        ElevatedButton.icon(
-          onPressed: onAddMiembro,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 16,
-              vertical: 12,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          icon: const Icon(Icons.add),
-          label: const Text('Añadir Miembro'),
-        ),
+        content,
+        button,
       ],
     );
   }
 }
-

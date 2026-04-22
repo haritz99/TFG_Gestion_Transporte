@@ -100,26 +100,40 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   }
 
   Future<void> _promptAddMiembro() async {
-    await showModalBottomSheet<UserModel?>(
+    await showDialog<UserModel?>(
       context: context,
-      isScrollControlled: true,
-      builder: (modalContext) => ChangeNotifierProvider.value(
-        value: _transportistaProvider,
-        child: const TeamMemberForm(),
-      )
+      builder: (modalContext) => Dialog(
+        //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: SingleChildScrollView(
+            child: ChangeNotifierProvider.value(
+              value: _transportistaProvider,
+              child: const TeamMemberForm(),
+            ),
+          ),
+        ),
+      ),
     );
     await _transportistaProvider.fetchEquipoKpis();
   }
 
   Future<void> _promptEditMiembro(String uid) async {
     final member = _transportistaProvider.transportistas.firstWhere((t) => t.uid == uid);
-    final updated = await showModalBottomSheet<UserModel?>(
+    final updated = await showDialog<UserModel?>(
       context: context,
-      isScrollControlled: true,
-      builder: (modalContext) => ChangeNotifierProvider.value(
-        value: _transportistaProvider,
-        child: TeamMemberForm(member: member),
-      )
+      builder: (modalContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: SingleChildScrollView(
+            child: ChangeNotifierProvider.value(
+              value: _transportistaProvider,
+              child: TeamMemberForm(member: member),
+            ),
+          ),
+        ),
+      ),
     );
     if (updated != null && mounted) {
       await _transportistaProvider.fetchEquipoKpis();
