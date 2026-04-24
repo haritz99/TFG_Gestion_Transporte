@@ -4,7 +4,6 @@ import 'package:gestion_transporte/features/vehiculos/ui/widgets/vehiculo_form.d
 import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
-import '../../auth/auth_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../transportistas/providers/transportista_provider.dart';
 import '../providers/vehiculo_provider.dart';
@@ -17,13 +16,7 @@ class GestionFlotaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => VehiculoProvider(authService: AuthService())),
-        ChangeNotifierProvider(create: (_) => TransportistaProvider(authService: AuthService())),
-      ],
-      child: const _GestionFlotaScreenBody(),
-    );
+    return const _GestionFlotaScreenBody();
   }
 }
 

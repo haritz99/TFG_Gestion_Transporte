@@ -4,7 +4,12 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/token_provider.dart';
 import 'features/auth/auth_provider.dart';
+import 'features/auth/auth_service.dart';
+import 'features/dashboard/providers/dashboard_provider.dart';
+import 'features/transportistas/providers/transportista_provider.dart';
+import 'features/vehiculos/providers/vehiculo_provider.dart';
 import 'flavors.dart';
 
 class App extends StatelessWidget {
@@ -12,8 +17,29 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiProvider(
+      providers: [
+        Provider<AuthService>(create: (_) => AuthService()),
+        ProxyProvider<AuthService, AuthTokenProvider>(
+          update: (_, authService, __) => AuthTokenProvider(authService),
+        ),
+        ChangeNotifierProxyProvider<AuthService, AuthProvider>(
+          create: (context) => AuthProvider(authService: context.read<AuthService>()),
+          update: (_, authService, previous) => previous ?? AuthProvider(authService: authService),
+        ),
+        ChangeNotifierProxyProvider<AuthTokenProvider, DashboardProvider>(
+          create: (context) => DashboardProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? DashboardProvider(tokenProvider: tokenProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthTokenProvider, VehiculoProvider>(
+          create: (context) => VehiculoProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? VehiculoProvider(tokenProvider: tokenProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthTokenProvider, TransportistaProvider>(
+          create: (context) => TransportistaProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? TransportistaProvider(tokenProvider: tokenProvider),
+        ),
+      ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           return MaterialApp.router(

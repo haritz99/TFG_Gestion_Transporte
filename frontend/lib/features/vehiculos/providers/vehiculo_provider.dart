@@ -2,9 +2,8 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/models/paginated_response.dart';
-import '../../../core/token_provider.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../auth/auth_service.dart';
+import '../../../core/token_provider.dart';
 import '../data/vehiculo_service.dart';
 
 class VehiculoProvider extends ChangeNotifier {
@@ -20,10 +19,10 @@ class VehiculoProvider extends ChangeNotifier {
   int? _enMantenimiento;
 
   VehiculoProvider({
-    required AuthService authService,
+    required AuthTokenProvider tokenProvider,
     VehiculoService? service,
   })  : _service = service ?? VehiculoService(),
-        _tokenProvider = AuthTokenProvider(authService);
+        _tokenProvider = tokenProvider;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;

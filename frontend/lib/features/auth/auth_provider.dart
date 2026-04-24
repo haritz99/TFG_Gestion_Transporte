@@ -7,7 +7,7 @@ import 'auth_service.dart';
 import 'register_company.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final AuthService _authService;
   final RegisterCompanyService _registerCompanyService = RegisterCompanyService();
   UserModel? _user;
   bool _isLoading = false;
@@ -18,7 +18,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _idToken != null;
   String? get idToken => _idToken;
 
-  AuthProvider() {
+  AuthProvider({required AuthService authService}) : _authService = authService {
     _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 

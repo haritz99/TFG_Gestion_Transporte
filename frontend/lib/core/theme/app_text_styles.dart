@@ -10,8 +10,8 @@ class AppTextStyles {
   static const TextStyle headingLg = TextStyle(
     fontFamily: fontFamily,
     fontSize: 24,
-    fontWeight: FontWeight.w700,
-    color: AppColors.titleText,
+    fontWeight: FontWeight.bold,
+    color: AppColors.bodyText,
   );
 
   static const TextStyle headingMd = TextStyle(
