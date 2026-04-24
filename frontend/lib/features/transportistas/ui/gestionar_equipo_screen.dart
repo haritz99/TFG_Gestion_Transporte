@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/user_model.dart';
-import '../../auth/auth_service.dart';
-import '../../vehiculos/providers/vehiculo_provider.dart';
 import '../providers/transportista_provider.dart';
 import 'models/transportista_row_model.dart';
 import 'widgets/confirm_delete_member.dart';
@@ -16,13 +14,7 @@ class GestionEquipoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => VehiculoProvider(authService: AuthService())),
-        ChangeNotifierProvider(create: (_) => TransportistaProvider(authService: AuthService())),
-      ],
-      child: const _GestionEquipoScreenBody(),
-    );
+    return const _GestionEquipoScreenBody();
   }
 }
 

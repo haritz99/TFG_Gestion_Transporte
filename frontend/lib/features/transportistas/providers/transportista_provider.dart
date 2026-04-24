@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/paginated_response.dart';
-import '../../auth/auth_service.dart';
 import '../data/transportista_service.dart';
 
 class TransportistaProvider extends ChangeNotifier {
@@ -30,10 +29,10 @@ class TransportistaProvider extends ChangeNotifier {
   String? _lastDocId;
 
   TransportistaProvider({
-    required AuthService authService,
+    required AuthTokenProvider tokenProvider,
     TransportistaService? service,
   })  : _service = service ?? TransportistaService(),
-        _tokenProvider = AuthTokenProvider(authService);
+        _tokenProvider = tokenProvider;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;

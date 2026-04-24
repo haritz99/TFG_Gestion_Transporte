@@ -19,11 +19,7 @@ class TeamHeader extends StatelessWidget {
       children: const [
         Text(
           'Gestión de Equipo',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.bodyText,
-          ),
+          style: AppTextStyles.headingLg
         ),
         SizedBox(height: 4),
         Text(
