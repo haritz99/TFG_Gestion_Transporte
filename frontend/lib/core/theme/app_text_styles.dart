@@ -63,5 +63,32 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.bodyText,
   );
-}
 
+  static const TextStyle buttonSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+  );
+
+  static const TextStyle badgeSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    color: AppColors.warning,
+  );
+
+  static const TextStyle captionSemiBold = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.mutedText,
+  );
+
+  static const TextStyle captionBold = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.mutedText,
+  );
+}

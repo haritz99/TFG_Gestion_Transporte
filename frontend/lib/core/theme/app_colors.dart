@@ -10,5 +10,6 @@ class AppColors {
   static const Color mutedText = Color(0xFF9AA6B6);
   static const Color titleText = Color(0xFF0E203A);
   static const Color bodyText = Color(0xFF344B68);
+  static const Color warning = Color(0xFFEF4444);
+  static const Color warningBackground = Color(0xFFFEE2E2);
 }
-
