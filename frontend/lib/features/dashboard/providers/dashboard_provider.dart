@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/token_provider.dart';
 import '../data/dashboard_service.dart';
 
-// TODO: Estos servicios deberían estar definidos en sus respectivos features.
-// Actualmente usaremos el DashboardService temporal que luego llamará a un endpoint agregado
-// o a iterar sobre los servicios de cada feature según la estrategia.
-
 class DashboardProvider extends ChangeNotifier {
   final DashboardService _service;
   final AuthTokenProvider _tokenProvider;
@@ -14,7 +10,7 @@ class DashboardProvider extends ChangeNotifier {
   String? _errorMessage;
 
   // KPIs
-  int _cargasActivas = 0;
+  int _cargasAsignadas = 0;
   int _cargasSinAsignar = 0;
   int _incidenciasAbiertas = 0;
   int _entregadasHoy = 0;
@@ -24,7 +20,7 @@ class DashboardProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  int get cargasActivas => _cargasActivas;
+  int get cargasAsignadas => _cargasAsignadas;
   int get cargasSinAsignar => _cargasSinAsignar;
   int get incidenciasAbiertas => _incidenciasAbiertas;
   int get entregadasHoy => _entregadasHoy;
@@ -47,7 +43,7 @@ class DashboardProvider extends ChangeNotifier {
       final token = await _tokenProvider.getRequiredToken();
       final summary = await _service.fetchDashboardSummary(token: token);
 
-      _cargasActivas = summary.cargasActivas;
+      _cargasAsignadas = summary.cargasAsignadas;
       _cargasSinAsignar = summary.cargasSinAsignar;
       _incidenciasAbiertas = summary.incidenciasAbiertas;
       _entregadasHoy = summary.entregadasHoy;

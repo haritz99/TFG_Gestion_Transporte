@@ -8,6 +8,7 @@ import 'core/token_provider.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/auth/auth_service.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
+import 'features/cargas/providers/carga_provider.dart';
 import 'features/transportistas/providers/transportista_provider.dart';
 import 'features/vehiculos/providers/vehiculo_provider.dart';
 import 'flavors.dart';
@@ -30,6 +31,10 @@ class App extends StatelessWidget {
         ChangeNotifierProxyProvider<AuthTokenProvider, DashboardProvider>(
           create: (context) => DashboardProvider(tokenProvider: context.read<AuthTokenProvider>()),
           update: (_, tokenProvider, previous) => previous ?? DashboardProvider(tokenProvider: tokenProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthTokenProvider, CargaProvider>(
+          create: (context) => CargaProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? CargaProvider(tokenProvider: tokenProvider),
         ),
         ChangeNotifierProxyProvider<AuthTokenProvider, VehiculoProvider>(
           create: (context) => VehiculoProvider(tokenProvider: context.read<AuthTokenProvider>()),

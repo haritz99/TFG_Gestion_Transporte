@@ -20,13 +20,13 @@ class DashboardKpiGrid extends StatelessWidget {
       crossAxisCount: isMobile ? 2 : 4,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: isMobile ? 1.0 : 1.25,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: isMobile ? 1.0 : 1.75,
       children: [
         DashboardKpiCard(
           label: 'Cargas Activas',
-          value: provider.cargasActivas.toString(),
+          value: provider.cargasAsignadas.toString(),
         ),
         DashboardKpiCard(
           label: 'Cargas sin asignar',
@@ -59,27 +59,6 @@ class DashboardKpiGrid extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.south_east,
-                    color: provider.incidenciasAbiertas > 0
-                        ? AppColors.warning
-                        : Colors.grey,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${provider.incidenciasAbiertas} críticas urgentes',
-                    style: AppTextStyles.captionSemiBold.copyWith(
-                      color: provider.incidenciasAbiertas > 0
-                          ? AppColors.warning
-                          : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
               InkWell(
                 onTap: () {
                   // TODO: Ir a pantalla de incidencias

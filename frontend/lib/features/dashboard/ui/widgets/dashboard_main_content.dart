@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/dashboard/ui/widgets/dashboard_calendar.dart';
+import '../../../../core/models/carga_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class DashboardMainContent extends StatelessWidget {
   final bool isMobile;
+  final List<CargaModel> cargas;
 
   const DashboardMainContent({
     super.key,
     required this.isMobile,
+    required this.cargas,
   });
 
   @override
@@ -15,7 +19,7 @@ class DashboardMainContent extends StatelessWidget {
     if (isMobile) {
       return Column(
         children: [
-          _buildPlaceholderCard('Calendario de Cargas', 400),
+          DashboardCalendar(cargas: cargas),
           const SizedBox(height: 24),
           _buildPlaceholderCard('Panel de Incidencias Críticas', 300),
         ],
@@ -27,7 +31,7 @@ class DashboardMainContent extends StatelessWidget {
       children: [
         Expanded(
           flex: 70,
-          child: _buildPlaceholderCard('Calendario de Cargas', 600),
+          child: DashboardCalendar(cargas: cargas),
         ),
         const SizedBox(width: 24),
         Expanded(
