@@ -60,7 +60,6 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   }
 
   Future<void> _loadInitialData() async {
-    await _transportistaProvider.fetchEquipoKpis();
     await _transportistaProvider.loadInitialEquipo(limit: _pageSize);
     if (!mounted) return;
     setState(() {

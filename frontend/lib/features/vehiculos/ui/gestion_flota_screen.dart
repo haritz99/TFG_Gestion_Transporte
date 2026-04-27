@@ -30,23 +30,21 @@ class _GestionFlotaScreenBody extends StatefulWidget {
 class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   static const int _pageSize = AppConstants.paginationPageSize;
 
-  final List<VehiculoModel> _vehiculos = [];
+  VehiculoProvider get _vehiculoProvider => context.read<VehiculoProvider>();
+
   bool _firstLoad = true;
-  bool _isLoadingPage = false;
-  bool _hasMore = true;
-  String? _lastDocId;
   String _selectedStatus = 'Todos';
 
-  List<VehiculoModel> get _vehiculosFiltrados {
+  List<VehiculoModel> _filterVehiculos(List<VehiculoModel> source) {
     switch (_selectedStatus) {
       case 'Asignado':
-        return _vehiculos.where((v) => v.estado == 'asignado').toList();
+        return source.where((v) => v.estado == 'asignado').toList();
       case 'Disponible':
-        return _vehiculos.where((v) => v.estado == 'disponible').toList();
+        return source.where((v) => v.estado == 'disponible').toList();
       case 'Mantenimiento':
-        return _vehiculos.where((v) => v.estado == 'mantenimiento').toList();
+        return source.where((v) => v.estado == 'mantenimiento').toList();
       default:
-        return _vehiculos;
+        return source;
     }
   }
 
@@ -60,42 +58,10 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   }
 
   Future<void> _loadInitialData() async {
-    final provider = context.read<VehiculoProvider>();
-    await provider.fetchKpis();
-    await _loadNextPage(reset: true);
+    await _vehiculoProvider.loadInitialVehiculos(limit: _pageSize);
     if (!mounted) return;
     setState(() {
       _firstLoad = false;
-    });
-  }
-
-  Future<void> _loadNextPage({bool reset = false}) async {
-    if (_isLoadingPage) return;
-    if (!reset && !_hasMore) return;
-
-    setState(() {
-      _isLoadingPage = true;
-    });
-
-    final provider = context.read<VehiculoProvider>();
-    final response = await provider.fetchVehiculosPage(
-      limit: _pageSize,
-      lastDocId: reset ? null : _lastDocId,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      if (reset) {
-        _vehiculos
-          ..clear()
-          ..addAll(response.items);
-      } else {
-        _vehiculos.addAll(response.items);
-      }
-      _lastDocId = response.lastDocId;
-      _hasMore = response.hasMore;
-      _isLoadingPage = false;
     });
   }
 
@@ -105,7 +71,8 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   }
 
   void _promptDeleteVehiculo(String matricula) {
-    final vehiculo = _vehiculos.firstWhere((v) => v.matricula == matricula);
+    final provider = context.read<VehiculoProvider>();
+    final vehiculo = provider.vehiculos.firstWhere((v) => v.matricula == matricula);
     final conductor = vehiculo.transportistaNombre ?? '';
 
     showCupertinoDialog(
@@ -126,7 +93,7 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     final transportistaProvider = context.read<TransportistaProvider>();
     final isNew = matricula == null;
 
-    final vehiculoActual = isNew ? null : _vehiculos.firstWhere((v) => v.matricula == matricula);
+    final vehiculoActual = isNew ? null : vehiculoProvider.vehiculos.firstWhere((v) => v.matricula == matricula);
 
     await transportistaProvider.fetchTransportistasDisponibles();
     final conductores = transportistaProvider.getConductoresDropdown();
@@ -150,18 +117,6 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
                   if (!ctx.mounted) return;
 
                   Navigator.of(ctx).pop();
-
-                  if (isNew) {
-                    await _loadInitialData();
-                    return;
-                  }
-
-                  final index = _vehiculos.indexWhere((item) => item.matricula == saved.matricula);
-                  if (index != -1) {
-                    setState(() {
-                      _vehiculos[index] = saved;
-                    });
-                  }
                 },
               ),
             ),
@@ -187,16 +142,12 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Vehículo eliminado correctamente')),
     );
-
-    setState(() {
-      _vehiculos.removeWhere((item) => item.matricula == matricula);
-    });
   }
 
   Future<void> _handleDesktopPageChanged(int firstRowIndex) async {
-    final filteredCount = _vehiculosFiltrados.length;
-    if (firstRowIndex + _pageSize > filteredCount && _hasMore) {
-      await _loadNextPage();
+    final filteredCount = _vehiculoProvider.vehiculos.length;
+    if (firstRowIndex + _pageSize > filteredCount && _vehiculoProvider.hasMore) {
+      await _vehiculoProvider.loadNextPage(limit: _pageSize);
     }
   }
 
@@ -208,7 +159,8 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final rows = _vehiculosFiltrados.map((v) {
+    final filtered = _filterVehiculos(provider.vehiculos);
+    final rows = filtered.map((v) {
       return FleetTableRowModel(
         matricula: v.matricula,
         marca: v.marca,
@@ -233,8 +185,8 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         selectedStatus: _selectedStatus,
         statusOptions: const ['Todos', 'Asignado', 'Disponible', 'Mantenimiento'],
         rows: rows,
-        hasMore: _hasMore,
-        isLoadingMore: _isLoadingPage,
+        hasMore: provider.hasMore,
+        isLoadingMore: provider.isLoadingPage,
         onStatusChanged: (status) {
           setState(() {
             _selectedStatus = status;
@@ -243,7 +195,7 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         onAddVehiculo: () => _promptVehiculoForm(null),
         onDeleteVehiculo: _promptDeleteVehiculo,
         onEditVehiculo: _promptVehiculoForm,
-        onMobileLoadMore: _loadNextPage,
+        onMobileLoadMore: () => provider.loadNextPage(limit: _pageSize),
         onDesktopPageChanged: _handleDesktopPageChanged,
       ),
     );

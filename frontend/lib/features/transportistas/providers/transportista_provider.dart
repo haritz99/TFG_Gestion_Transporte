@@ -28,6 +28,9 @@ class TransportistaProvider extends ChangeNotifier {
   bool _isLoadingPage = false;
   String? _lastDocId;
 
+  DateTime? _lastFetchTime;
+  final Duration _ttl = const Duration(minutes: 5);
+
   TransportistaProvider({
     required AuthTokenProvider tokenProvider,
     TransportistaService? service,
@@ -41,6 +44,11 @@ class TransportistaProvider extends ChangeNotifier {
   List<UserModel> get transportistasDisponibles => _transportistasDisponibles;
   bool get hasMore => _hasMore;
   bool get isLoadingPage => _isLoadingPage;
+
+  bool get shouldReload {
+    if (_lastFetchTime == null) return true;
+    return DateTime.now().difference(_lastFetchTime!) > _ttl;
+  }
 
   int? get totalEquipo => _totalEquipo;
   int? get enRuta => _enRuta;
@@ -84,11 +92,14 @@ class TransportistaProvider extends ChangeNotifier {
   Future<void> loadInitialEquipo({
     int limit = AppConstants.paginationPageSize,
   }) async {
+    if (!shouldReload && _transportistas.isNotEmpty) return;
     _transportistas = [];
     _lastDocId = null;
     _hasMore = true;
     notifyListeners();
+    await fetchEquipoKpis();
     await loadNextPage(limit: limit, reset: true);
+    _lastFetchTime = DateTime.now();
   }
 
   Future<void> loadNextPage({
@@ -106,6 +117,7 @@ class TransportistaProvider extends ChangeNotifier {
 
       if (reset) {
         _transportistas = [...page.items];
+        //_lastFetchTime = DateTime.now();
       } else {
         _transportistas = [..._transportistas, ...page.items];
       }

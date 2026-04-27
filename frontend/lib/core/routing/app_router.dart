@@ -11,6 +11,16 @@ class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+  static Page<void> fadeTransitionPage(GoRouterState state, Widget child) {
+    return CustomTransitionPage(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 200),
+      transitionsBuilder: (context, animation, _, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+  }
+
   static GoRouter router(AuthProvider authProvider) => GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/panel',
@@ -47,11 +57,13 @@ class AppRouter {
           ),
           GoRoute(
             path: '/flota',
-            builder: (context, state) => const GestionFlotaScreen(),
+            //builder: (context, state) => const GestionFlotaScreen(),
+            pageBuilder: (context, state) => fadeTransitionPage(state, const GestionFlotaScreen()),
           ),
           GoRoute(
             path: '/equipo',
-            builder: (context, state) => const GestionEquipoScreen(),
+            //builder: (context, state) => const GestionEquipoScreen(),
+            pageBuilder: (context, state) => fadeTransitionPage(state, const GestionEquipoScreen()),
           ),
           GoRoute(
             path: '/incidencias',

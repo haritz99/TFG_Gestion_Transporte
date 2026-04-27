@@ -21,7 +21,7 @@ class DashboardCalendar extends StatefulWidget {
 
 class _DashboardCalendarState extends State<DashboardCalendar> {
   final CalendarController _calendarController = CalendarController();
-  CalendarView _currentView = CalendarView.month;
+  CalendarView _currentView = CalendarView.week;
 
   @override
   Widget build(BuildContext context) {
