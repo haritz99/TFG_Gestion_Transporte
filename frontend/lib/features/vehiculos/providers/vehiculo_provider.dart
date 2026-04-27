@@ -18,6 +18,14 @@ class VehiculoProvider extends ChangeNotifier {
   int? _disponibles;
   int? _enMantenimiento;
 
+  List<VehiculoModel> _vehiculos = [];
+  bool _hasMore = true;
+  bool _isLoadingPage = false;
+  String? _lastDocId;
+
+  DateTime? _lastFetchTime;
+  final Duration _ttl = const Duration(minutes: 5);
+
   VehiculoProvider({
     required AuthTokenProvider tokenProvider,
     VehiculoService? service,
@@ -31,6 +39,15 @@ class VehiculoProvider extends ChangeNotifier {
   int? get asignados => _asignados;
   int? get disponibles => _disponibles;
   int? get enMantenimiento => _enMantenimiento;
+
+  List<VehiculoModel> get vehiculos => _vehiculos;
+  bool get hasMore => _hasMore;
+  bool get isLoadingPage => _isLoadingPage;
+
+  bool get shouldReload {
+    if (_lastFetchTime == null) return true;
+    return DateTime.now().difference(_lastFetchTime!) > _ttl;
+  }
 
   Future<PaginatedResponse<VehiculoModel>> fetchVehiculosPage({int limit = AppConstants.paginationPageSize, String? lastDocId,}) async {
     try {
@@ -54,6 +71,59 @@ class VehiculoProvider extends ChangeNotifier {
       _errorMessage = "Error al obtener KPIs: $e";
       notifyListeners();
     }
+  }
+
+  Future<void> loadInitialVehiculos({
+    int limit = AppConstants.paginationPageSize,
+  }) async {
+    if (!shouldReload && _vehiculos.isNotEmpty) return;
+    _vehiculos = [];
+    _lastDocId = null;
+    _hasMore = true;
+    notifyListeners();
+    await fetchKpis();
+    await loadNextPage(limit: limit, reset: true);
+    _lastFetchTime = DateTime.now();
+  }
+
+  Future<void> loadNextPage({
+    int limit = AppConstants.paginationPageSize,
+    bool reset = false,
+  }) async {
+    if (_isLoadingPage) return;
+    if (!reset && !_hasMore) return;
+
+    _isLoadingPage = true;
+    notifyListeners();
+
+    try {
+      final page = await fetchVehiculosPage(limit: limit, lastDocId: reset ? null : _lastDocId);
+
+      if (reset) {
+        _vehiculos = [...page.items];
+      } else {
+        _vehiculos = [..._vehiculos, ...page.items];
+      }
+
+      _lastDocId = page.lastDocId;
+      _hasMore = page.hasMore;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingPage = false;
+      notifyListeners();
+    }
+  }
+
+  void _upsertVehiculo(VehiculoModel item) {
+    final index = _vehiculos.indexWhere((v) => v.matricula == item.matricula);
+    if (index == -1) {
+      _vehiculos = [item, ..._vehiculos];
+    } else {
+      _vehiculos[index] = item;
+      _vehiculos = [..._vehiculos];
+    }
+    notifyListeners();
   }
 
   Future<void> asignaVehiculo(String matricula, String transportistaId) async {
@@ -88,6 +158,7 @@ class VehiculoProvider extends ChangeNotifier {
         vehiculoData: vehiculoData,
       );
       await fetchKpis();
+      _upsertVehiculo(model);
       return model;
     } catch (e) {
       _errorMessage = "Error al insertar vehiculo";
@@ -119,6 +190,7 @@ class VehiculoProvider extends ChangeNotifier {
         vehiculoData: vehiculo,
       );
       await fetchKpis();
+      _upsertVehiculo(updated);
       return updated;
     } catch (e) {
       _errorMessage = "Error al actualizar vehiculo";
@@ -128,7 +200,6 @@ class VehiculoProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 
   Future<void> eliminarVehiculo(String matricula) async {
     _isLoading = true;
@@ -141,6 +212,7 @@ class VehiculoProvider extends ChangeNotifier {
         token: token,
         matricula: matricula,
       );
+      _vehiculos = _vehiculos.where((v) => v.matricula != matricula).toList(growable: false);
       await fetchKpis();
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
