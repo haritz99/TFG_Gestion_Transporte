@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/dashboard_provider.dart';
-import '../../cargas/providers/carga_provider.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/dashboard_kpi_grid.dart';
@@ -25,7 +24,6 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DashboardProvider>();
-    final cargaProvider = context.watch<CargaProvider>();
 
     return LayoutBuilder(builder: (context, constraints) {
       final isMobile = constraints.maxWidth < 900;
@@ -63,7 +61,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 18),
                 DashboardKpiGrid(isMobile: isMobile, provider: provider),
                 const SizedBox(height: 18),
-                DashboardMainContent(cargas: cargaProvider.cargas, isMobile: isMobile),
+                DashboardMainContent(cargas: provider.cargas, isMobile: isMobile),
               ],
             ),
           ),

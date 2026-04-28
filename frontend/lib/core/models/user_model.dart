@@ -1,3 +1,5 @@
+import 'model_utils.dart';
+
 class UserModel {
   final String uid;
   final String nombre;
@@ -35,17 +37,6 @@ class UserModel {
         ? rawRol.whereType<String>().toList()
         : (rawRol is String && rawRol.isNotEmpty ? [rawRol] : <String>[]);
 
-    // Esto se usa porque firebase y fastapi usan Dates diferentes
-    DateTime? parseDateTime(dynamic value) {
-      if (value == null) return null;
-      if (value is DateTime) return value;
-      if (value is String) return DateTime.tryParse(value);
-      if (value.runtimeType.toString() == 'Timestamp') {
-        return value.toDate();
-      }
-      return null;
-    }
-
     return UserModel(
       uid: uid,
       nombre: map['nombre'] ?? '',
@@ -58,8 +49,8 @@ class UserModel {
       estado: map['estado'] ?? '',
       vehiculoId: map['vehiculoId'],
       cargaId: map['cargaId'],
-      createdAt: parseDateTime(map['createdAt']),
-      updatedAt: parseDateTime(map['updatedAt']),
+      createdAt: ModelUtils.parseDateTime(map['createdAt']),
+      updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
   }
 
