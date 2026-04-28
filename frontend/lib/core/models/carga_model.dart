@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'model_utils.dart';
 
 class CargaModel {
   final String id;
@@ -55,21 +56,17 @@ class CargaModel {
       ancho: map['ancho'] != null ? (map['ancho'] as num).toDouble() : null,
       alto: map['alto'] != null ? (map['alto'] as num).toDouble() : null,
       estado: map['estado'] ?? 'pendiente',
-      fechaCarga: map['fechaCarga'] != null
-          ? (map['fechaCarga'] as Timestamp).toDate()
-          : DateTime.now(),
-      fechaDescarga: map['fechaDescarga'] != null
-          ? (map['fechaDescarga'] as Timestamp).toDate()
-          : DateTime.now().add(const Duration(days: 1)),
+      fechaCarga: ModelUtils.parseDateTime(map['fechaCarga']) ?? DateTime.now(),
+      fechaDescarga: ModelUtils.parseDateTime(map['fechaDescarga']) ??
+          DateTime.now().add(const Duration(days: 1)),
       transportistaId: map['transportistaId'],
       pedidoId: map['pedidoId'],
       vehiculoId: map['vehiculoId'],
       rutaId: map['rutaId'],
       companyId: map['companyId'],
       clienteId: map['clienteId'],
-      fechaCreacion: map['fechaCreacion'] != null
-          ? (map['fechaCreacion'] as Timestamp).toDate()
-          : DateTime.now(),
+      fechaCreacion: ModelUtils.parseDateTime(map['fechaCreacion'] ?? map['createdAt']) ??
+          DateTime.now(),
     );
   }
 

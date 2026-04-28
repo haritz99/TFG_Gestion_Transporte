@@ -23,6 +23,8 @@ class PedidoSchema(FirestoreSchema):
     estado: EstadoPedido = Field(default=EstadoPedido.PLANIFICADO)
     clienteId: str = Field(..., min_length=1) 
     companyId: Optional[str] = Field(default=None, min_length=1)
+    createdAt: Optional[datetime.datetime] = None
+    updatedAt: Optional[datetime.datetime] = None
 
     @model_validator(mode='after')
     def validar_fechas_pedido(self) -> 'PedidoSchema':

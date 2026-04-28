@@ -25,7 +25,7 @@ class DashboardKpiGrid extends StatelessWidget {
       childAspectRatio: isMobile ? 1.0 : 1.75,
       children: [
         DashboardKpiCard(
-          label: 'Cargas Activas',
+          label: 'Cargas asignadas',
           value: provider.cargasAsignadas.toString(),
         ),
         DashboardKpiCard(

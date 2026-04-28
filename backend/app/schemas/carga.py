@@ -38,6 +38,8 @@ class CargaSchema(FirestoreSchema):
     rutaId: Optional[str] = None
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
+    createdAt: Optional[datetime.datetime] = None
+    updatedAt: Optional[datetime.datetime] = None
 
     def validar_contra_pedido(self, pedido: 'PedidoSchema'):
         """
