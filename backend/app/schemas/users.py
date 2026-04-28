@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal, Optional, TypeVar, Generic
 from datetime import datetime
 from fastapi import HTTPException
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, BaseModel
 
 from .base import FirestoreSchema
 
@@ -58,8 +58,9 @@ class UserCountSchema(FirestoreSchema):
     en_ruta: int
     inactivos: int
 
-class UserCreateResponseSchema(FirestoreSchema):
-    user: UserSchema
+T = TypeVar("T", bound=FirestoreSchema)
+class UserCreateResponseSchema(BaseModel, Generic[T]):
+    user: T
     temp_password: Optional[str] = None
     password_reset_link: Optional[str] = None
 

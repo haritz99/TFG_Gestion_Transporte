@@ -4,11 +4,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..schemas.external_user import ClienteSchema
 from ..services.pedidos_service import fetch_pedidos
 from ..services.cargas_service import fetch_cargas
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
-from ..schemas.cliente import ClienteSchema
 from ..schemas.pedido import EstadoPedido
 
 router = APIRouter(prefix="/clientes", tags=["clientes"], dependencies=[Depends(get_current_encargado)])

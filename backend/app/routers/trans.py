@@ -3,6 +3,7 @@ from typing import Any
 from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema, UserCreateResponseSchema
 from ..dependencies.auth import get_current_encargado
 from ..services.trans_service import TransService, get_trans_service
+from ..services.register_service import RegisterService, get_register_service
 
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
 
@@ -42,7 +43,7 @@ async def get_trans(uid: str, current_user: dict[str, Any] = Depends(get_current
 async def create_trans(
     user_data: UserSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: TransService = Depends(get_trans_service)
+    service: RegisterService = Depends(get_register_service)
 ):
     company_id = current_user.get("companyId")
     return service.create_trans(user_data=user_data, company_id=company_id)
