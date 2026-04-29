@@ -50,18 +50,24 @@ class _DashboardPageState extends State<DashboardPage> {
           color: AppColors.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 24,
-              vertical: isMobile ? 12 : 24,
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const DashboardHeader(),
-                const SizedBox(height: 18),
-                DashboardKpiGrid(isMobile: isMobile, provider: provider),
-                const SizedBox(height: 18),
-                DashboardMainContent(cargas: provider.cargas, isMobile: isMobile),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 12 : 24,
+                    vertical: isMobile ? 12 : 18,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DashboardKpiGrid(isMobile: isMobile, provider: provider),
+                      const SizedBox(height: 18),
+                      DashboardMainContent(cargas: provider.cargas, isMobile: isMobile),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
