@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from ..crud.user_crud import UserCRUD
 from ..schemas.users import UserSchema, UserCreateResponseSchema
-from ..schemas.external_user import ClienteSchema, SubcontratadoSchema
+from ..schemas.external_user import ExternalUserSchema
 from firebase_admin import auth as firebase_auth
 
 
@@ -67,72 +67,52 @@ class RegisterService:
                     pass
             raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-    def create_cliente(self, cliente_data: ClienteSchema, company_id: str) -> UserCreateResponseSchema[ClienteSchema]:
+    def create_external_user(self, user_data: ExternalUserSchema, company_id: str, rol: str) -> UserCreateResponseSchema[ExternalUserSchema]:
+        """
+        Crea un usuario externo (cliente o subcontratado) con datos iniciales.
+        """
         uid = None
         try:
             uid, temp_password, reset_link = self.create_firebase_auth_user(
-                email=cliente_data.email,
-                rol=["cliente"],
+                email=user_data.email,
+                rol=[rol],
                 company_id=company_id,
             )
 
             now = datetime.now(timezone.utc)
-            cliente_dict = cliente_data.model_dump()
-            cliente_dict["uid"] = uid
-            cliente_dict["companyId"] = company_id
-            cliente_dict["createdAt"] = now
-            cliente_dict["updatedAt"] = now
+            user_dict = user_data.model_dump(exclude_unset=True)
+            user_dict["uid"] = uid
+            user_dict["rol"] = [rol]
+            user_dict["companyId"] = company_id
+            user_dict["datosCompletos"] = False
+            user_dict["createdAt"] = now
+            user_dict["updatedAt"] = now
 
-            UserCRUD.create_cliente(uid, cliente_dict)
-            created_cliente = ClienteSchema(**cliente_dict)
+            if rol == "cliente":
+                UserCRUD.create_cliente(uid, user_dict)
+            elif rol == "subcontratado":
+                UserCRUD.create_subcontratado(uid, user_dict)
+            else:
+                raise ValueError(f"Rol no válido para usuario externo: {rol}")
+
+            created_user = ExternalUserSchema(**user_dict)
 
             return UserCreateResponseSchema(
-                user=created_cliente,
+                user=created_user,
                 temp_password=temp_password,
                 password_reset_link=reset_link,
             )
         except firebase_auth.EmailAlreadyExistsError:
             raise HTTPException(status_code=400, detail="El email ya está registrado en el sistema")
-        except Exception:
+        except Exception as e:
             if uid is not None:
                 try:
                     firebase_auth.delete_user(uid)
                 except Exception:
                     pass
-            raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-    def create_subcontratado(self, subcontratado_data: SubcontratadoSchema, company_id: str) -> UserCreateResponseSchema[SubcontratadoSchema]:
-        uid = None
-        try:
-            uid, temp_password, reset_link = self.create_firebase_auth_user(
-                email=subcontratado_data.email,
-                rol=["subcontratado"],
-                company_id=company_id,
-            )
-            now = datetime.now(timezone.utc)
-            subcontratado_dict = subcontratado_data.model_dump()
-            subcontratado_dict["uid"] = uid
-            subcontratado_dict["companyId"] = company_id
-            subcontratado_dict["createdAt"] = now
-            subcontratado_dict["updatedAt"] = now
-
-            UserCRUD.create_subcontratado(uid, subcontratado_dict)
-            created_subcontratado = SubcontratadoSchema(**subcontratado_dict)
-
-            return UserCreateResponseSchema(
-                user=created_subcontratado,
-                temp_password=temp_password,
-                password_reset_link=reset_link,
-            )
-        except firebase_auth.EmailAlreadyExistsError:
-            raise HTTPException(status_code=400, detail="El email ya está registrado en el sistema")
-        except Exception:
-            if uid is not None:
-                try:
-                    firebase_auth.delete_user(uid)
-                except Exception:
-                    pass
-            raise HTTPException(status_code=500, detail="Error interno del servidor")
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
 
 def get_register_service() -> RegisterService:
     return RegisterService()

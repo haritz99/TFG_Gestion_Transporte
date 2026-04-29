@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:provider/provider.dart';
+import '../../../../core/token_provider.dart';
+import '../../providers/invite_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import 'invite_modal.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -63,7 +66,16 @@ class DashboardHeader extends StatelessWidget {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Mostrar Invite Modal
+                  final tokenProvider = context.read<AuthTokenProvider>();
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
+                      create: (_) => InviteProvider(
+                        tokenProvider: tokenProvider,
+                      ),
+                      child: const InviteModal(),
+                    ),
+                  );
                 },
                 icon: const Icon(
                   Icons.person_add,

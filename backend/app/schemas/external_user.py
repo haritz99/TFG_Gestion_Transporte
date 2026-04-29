@@ -12,7 +12,9 @@ from pydantic import BaseModel
 class ExternalUserSchema(FirestoreSchema):
     uid: Optional[str] = None
     email: str = Field(..., min_length=3)
+    rol: Optional[List[str]] = Field(default_factory=list)
     companyId: Optional[str] = None
+    datosCompletos: bool = Field(default=False)
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
 
