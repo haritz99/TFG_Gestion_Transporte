@@ -11,36 +11,46 @@ class VehiculoCRUD:
 
         return query.limit(limit).stream()
 
-    def get_count(self, company_id: str):
+    @staticmethod
+    def get_count(company_id: str):
         return db.collection("vehiculos").where("companyId", "==", company_id).count().get()
 
-    def get_count_by_estado(self, company_id: str, estado: str):
+    @staticmethod
+    def get_count_by_estado(company_id: str, estado: str):
         return db.collection("vehiculos").where("companyId", "==", company_id).where("estado", "==", estado).count().get()
 
-    def get_by_id(self, matricula: str):
+    @staticmethod
+    def get_by_id(matricula: str):
         return db.collection("vehiculos").document(matricula.upper()).get()
 
-    def get_user_by_id(self, uid: str):
+    @staticmethod
+    def get_user_by_id(uid: str):
         return db.collection("users").document(uid).get()
 
-    def get_batch(self):
+    @staticmethod
+    def get_batch():
         return db.batch()
 
-    def commit_batch(self, batch):
+    @staticmethod
+    def commit_batch(batch):
         batch.commit()
 
-    def set_vehiculo(self, batch, matricula: str, vehiculo_data: dict):
+    @staticmethod
+    def set_vehiculo(batch, matricula: str, vehiculo_data: dict):
         doc_ref = db.collection("vehiculos").document(matricula.upper())
         batch.set(doc_ref, vehiculo_data)
 
-    def update_vehiculo(self, batch, matricula: str, vehiculo_data: dict):
+    @staticmethod
+    def update_vehiculo(batch, matricula: str, vehiculo_data: dict):
         doc_ref = db.collection("vehiculos").document(matricula.upper())
         batch.update(doc_ref, vehiculo_data)
 
-    def delete_vehiculo(self, batch, matricula: str):
+    @staticmethod
+    def delete_vehiculo(batch, matricula: str):
         doc_ref = db.collection("vehiculos").document(matricula.upper())
         batch.delete(doc_ref)
 
-    def update_user_vehiculo_id(self, batch, user_id: str, vehiculo_id: str | None):
+    @staticmethod
+    def update_user_vehiculo_id(batch, user_id: str, vehiculo_id: str | None):
         user_ref = db.collection("users").document(user_id)
         batch.update(user_ref, {"vehiculoId": vehiculo_id})

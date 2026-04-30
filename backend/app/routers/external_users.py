@@ -4,16 +4,29 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..schemas.external_user import ClienteSchema, ExternalUserSchema
+from ..schemas.users import UserCreateResponseSchema
+from ..services.register_service import RegisterService, get_register_service
 from ..services.pedidos_service import fetch_pedidos
 from ..services.cargas_service import fetch_cargas
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
-from ..schemas.cliente import ClienteSchema
 from ..schemas.pedido import EstadoPedido
 
-router = APIRouter(prefix="/clientes", tags=["clientes"], dependencies=[Depends(get_current_encargado)])
+router = APIRouter(prefix="/ext", tags=["external_users"], dependencies=[Depends(get_current_encargado)])
 
-@router.get("/", response_model=list[ClienteSchema])
+
+@router.post("/", response_model=UserCreateResponseSchema[ExternalUserSchema])
+def create_external_user(
+    user_data: ExternalUserSchema,
+    rol: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: RegisterService = Depends(get_register_service),
+) -> UserCreateResponseSchema[ExternalUserSchema]:
+    company_id = current_user.get("companyId")
+    return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol)
+
+@router.get("/cli", response_model=list[ClienteSchema])
 def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):
     company_id = current_user.get("companyId")
     clientes_ref = db.collection("clientes")
@@ -29,18 +42,7 @@ def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):
 
     return clientes
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ClienteSchema)
-def create_cliente(cliente: ClienteSchema, current_user: dict[str, Any] = Depends(get_current_encargado)):
-    cliente.companyId = current_user.get("companyId")
-    doc_ref = db.collection("clientes").document()
-    cliente.id = doc_ref.id
-
-    nuevo_cliente_dict = cliente.model_dump()
-    doc_ref.set(nuevo_cliente_dict)
-
-    return cliente
-
-@router.delete("/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/cli/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
     company_id = current_user.get("companyId")
     cliente_ref = db.collection("clientes").document(cliente_id)
