@@ -45,10 +45,10 @@ class TransCRUD:
 
     @staticmethod
     def get_vehiculo(vehiculo_id: str) -> DocumentSnapshot:
-        vehiculo_ref = db.collection("vehiculo").document(vehiculo_id)
+        vehiculo_ref = db.collection("vehiculos").document(vehiculo_id)
         return vehiculo_ref.get()
 
     @staticmethod
     def update_vehiculo(vehiculo_id: str, data: dict) -> None:
-        vehiculo_ref = db.collection("vehiculo").document(vehiculo_id)
+        vehiculo_ref = db.collection("vehiculos").document(vehiculo_id)
         vehiculo_ref.update(data)

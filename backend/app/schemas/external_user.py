@@ -25,7 +25,7 @@ class ClienteSchema(ExternalUserSchema):
     cif: str = Field(..., min_length=9, max_length=9)           # Ej: B12345678
     telefono: str = Field(..., min_length=9)
     personaContacto: str = Field(..., min_length=1)             # Responsable en carga
-    direccionFiscal: DireccionSchema = None                     # Sede legal
+    direccionFiscal: DireccionSchema                            # Sede legal
     direccionCarga: Optional[DireccionSchema] = None            # Dónde se recoge la mercanía
 
     @classmethod
@@ -33,7 +33,7 @@ class ClienteSchema(ExternalUserSchema):
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Cliente no encontrado")
         data = doc.to_dict()
-        data["id"] = doc.id
+        data["uid"] = doc.id
         if company_id != data.get("companyId"):
             raise HTTPException(status_code=403, detail="No autorizado para obtener este cliente")
         return cls(**data)
@@ -46,7 +46,7 @@ class SubcontratadoSchema(ExternalUserSchema):
     telefono: str = Field(..., min_length=9)
     numeroAutorizacion: str = Field(..., min_length=1)          # Nº LOTT obligatorio
     razonSocial: Optional[str] = None                          # Si opera como empresa, no autónomo
-    direccion: DireccionSchema = None
+    direccion: DireccionSchema
 
 
 class DireccionSchema(BaseModel):
