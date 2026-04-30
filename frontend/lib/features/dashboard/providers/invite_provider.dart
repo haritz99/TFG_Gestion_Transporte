@@ -43,21 +43,38 @@ class InviteProvider extends ChangeNotifier {
   Future<bool> sendInviteEmail(String email, String rol) async {
     if (_createResponse == null) return false;
 
-    final tempPassword = _createResponse!['temp_password'];
-    final resetLink = _createResponse!['password_reset_link'];
+    final String? tempPassword = _createResponse!['temp_password'] as String?;
+    final String? resetLink = _createResponse!['password_reset_link'] as String?;
     final roleName = rol == 'cliente' ? 'Cargador' : 'Subcontratado';
+    final body = StringBuffer()
+      ..writeln('Hola,')
+      ..writeln()
+      ..writeln('Has sido invitado a la plataforma como $roleName.')
+      ..writeln();
+
+    if (tempPassword != null && tempPassword.isNotEmpty) {
+      body
+        ..writeln('Tu contraseña temporal es: $tempPassword')
+        ..writeln();
+    }
+
+    if (resetLink != null && resetLink.isNotEmpty) {
+      body
+        ..writeln(
+          'Por favor, entra en el siguiente enlace para completar tu registro y cambiar tu contraseña:',
+        )
+        ..writeln(resetLink)
+        ..writeln();
+    }
+
+    body.write('Un saludo.');
 
     final mailUri = Uri(
       scheme: 'mailto',
       path: email,
       queryParameters: {
         'subject': 'Invitación a la plataforma de transporte',
-        'body': 'Hola,\n\n'
-            'Has sido invitado a la plataforma como $roleName.\n\n'
-            'Tu contraseña temporal es: $tempPassword\n\n'
-            'Por favor, entra en el siguiente enlace para completar tu registro y cambiar tu contraseña:\n'
-            '$resetLink\n\n'
-            'Un saludo.',
+        'body': body.toString(),
       },
     );
 
