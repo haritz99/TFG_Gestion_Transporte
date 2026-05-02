@@ -172,12 +172,13 @@ class VehiculoService:
             self.crud.update_user_vehiculo_id(batch, uid, matr.upper())
             self.crud.commit_batch(batch)
 
-            return VehiculoSchema(
-                **vehiculo.model_dump(),
-                transportistaId=uid,
-                transportistaNombre=transportista_nombre,
-                estado="asignado",
-            )
+            vehiculo_data = vehiculo.model_dump()
+            vehiculo_data.update({
+                "transportistaId": uid,
+                "transportistaNombre": transportista_nombre,
+                "estado": "asignado",
+            })
+            return VehiculoSchema(**vehiculo_data)
         except HTTPException:
             raise
         except Exception:

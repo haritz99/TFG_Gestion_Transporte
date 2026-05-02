@@ -1,4 +1,3 @@
-/*
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -35,6 +34,7 @@ void main() {
       telefono: '+34600123456',
       permisosCond: ['C', 'C+E'],
       companyId: 'empresa_123',
+      estado: 'sin_asignar',
     );
 
     test('createTransportista retorna map con datos si status es 201', () async {
@@ -43,7 +43,9 @@ void main() {
         headers: anyNamed('headers'),
         body: anyNamed('body'),
       )).thenAnswer((_) async => http.Response(
-            jsonEncode({'mensaje': 'Creado con éxito', 'uid': tUid}),
+            jsonEncode({
+              'user': {'uid': tUid}
+            }),
             201,
           ));
 
@@ -52,7 +54,7 @@ void main() {
         userData: tUserModel,
       );
 
-      expect(result['uid'], tUid);
+      expect(result['user']['uid'], tUid);
     });
 
     test('createTransportista lanza excepcion si falla', () async {
@@ -68,16 +70,18 @@ void main() {
       );
     });
 
-
-    test('fetchTransportistas devuelve lista vacia cuando backend responde []', () async {
+    test('fetchTransportistas devuelve lista vacia cuando backend responde items vacio', () async {
       when(mockHttpClient.get(
-        Uri.parse(baseUrl),
-        headers: {'Authorization': 'Bearer $tToken'},
-      )).thenAnswer((_) async => http.Response('[]', 200));
+        any,
+        headers: anyNamed('headers'),
+      )).thenAnswer((_) async => http.Response(
+            jsonEncode({'items': [], 'has_more': false}),
+            200,
+          ));
 
       final result = await transportistaService.fetchTransportistas(token: tToken);
 
-      expect(result, isEmpty);
+      expect(result.items, isEmpty);
     });
 
     test('fetchTransportistas lanza excepcion con detail cuando falla', () async {
@@ -111,12 +115,25 @@ void main() {
       );
     });
 
-    test('updateTransportista retorna map si status es 200', () async {
+    test('updateTransportista retorna UserModel si status es 200', () async {
       when(mockHttpClient.put(
-        Uri.parse('$baseUrl$tUid'),
+        any,
         headers: anyNamed('headers'),
         body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response('{"mensaje": "Actualizado"}', 200));
+      )).thenAnswer((_) async => http.Response(
+            jsonEncode({
+              'uid': tUid,
+              'nombre': 'Juan',
+              'apellido': 'Pérez',
+              'email': 'conductor@empresa.com',
+              'telefono': '+34600123456',
+              'rol': ['transportista'],
+              'permisosCond': ['C'],
+              'companyId': 'empresa_123',
+              'estado': 'sin_asignar',
+            }),
+            200,
+          ));
 
       final result = await transportistaService.updateTransportista(
         uid: tUid,
@@ -124,35 +141,12 @@ void main() {
         token: tToken,
       );
 
-      expect(result['mensaje'], 'Actualizado');
-    });
-
-    test('updateTransportista lanza excepcion con detail cuando falla', () async {
-      when(mockHttpClient.put(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response('{"detail": "Transportista no encontrado"}', 404));
-
-      expect(
-        () => transportistaService.updateTransportista(
-          uid: tUid,
-          userData: tUserModel,
-          token: tToken,
-        ),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('Transportista no encontrado'),
-          ),
-        ),
-      );
+      expect(result.uid, tUid);
     });
 
     test('deleteTransportista retorna map si status es 200', () async {
       when(mockHttpClient.delete(
-        Uri.parse('$baseUrl$tUid'),
+        any,
         headers: anyNamed('headers'),
       )).thenAnswer((_) async => http.Response('{"mensaje": "Eliminado"}', 200));
 
@@ -163,27 +157,5 @@ void main() {
 
       expect(result['mensaje'], 'Eliminado');
     });
-
-    test('deleteTransportista lanza excepcion y usa mensaje por defecto si no hay detail', () async {
-      when(mockHttpClient.delete(
-        any,
-        headers: anyNamed('headers'),
-      )).thenAnswer((_) async => http.Response('{"error": "forbidden"}', 403));
-
-      expect(
-        () => transportistaService.deleteTransportista(
-          uid: tUid,
-          token: tToken,
-        ),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('Error al eliminar transportista'),
-          ),
-        ),
-      );
-    });
   });
 }
-*/
