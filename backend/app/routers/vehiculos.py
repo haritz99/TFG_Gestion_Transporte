@@ -1,81 +1,81 @@
 from typing import Any
+from fastapi import APIRouter, Depends, Query, status
 
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, Field
-
-from ..schemas import VehiculoPaginatedSchema, VehiculoSchema
 from ..dependencies.auth import get_current_encargado
-from ..schemas.vehiculos import VehiculoCountSchema
-from ..services.vehiculo_service import VehiculoService, get_vehiculo_service
+from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
+from ..schemas.vehiculos import VehiculoCountSchema, VehiculoAssignSchema
+from ..services.vehiculo_service import VehiculoService
 
-
-router = APIRouter(prefix="/vehi", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
-
-
-class VehiculoAssignSchema(BaseModel):
-    matr: str = Field(..., min_length=3)
-    uid: str = Field(..., min_length=1)
+router = APIRouter(prefix="/vehiculos", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
 
 
 @router.get("/", response_model=VehiculoPaginatedSchema)
-async def get_all_vehiculos(
+def get_vehiculos(
     limit: int = 8,
-    last_doc_id: str | None = None,
+    lastDocId: str = Query(None),
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoPaginatedSchema:
-    return service.get_all(current_user["companyId"], limit, last_doc_id)
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.get_all(company_id, limit=limit, last_doc_id=lastDocId)
+
 
 @router.get("/count", response_model=VehiculoCountSchema)
-async def get_count_vehiculos(
+def get_vehiculos_count(
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoCountSchema:
-    return service.get_count(current_user["companyId"])
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.get_count(company_id)
 
 
 @router.get("/{matr}", response_model=VehiculoSchema)
-async def get_vehiculo(
+def get_vehiculo(
     matr: str,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoSchema:
-    return service.get_by_id(matr, current_user["companyId"])
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.get_by_id(matr.upper(), company_id)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=VehiculoSchema)
-async def create_vehiculo(
+@router.post("/", response_model=VehiculoSchema, status_code=status.HTTP_201_CREATED)
+def create_vehiculo(
     vehiculo_data: VehiculoSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoSchema:
-    return service.create(vehiculo_data, current_user["companyId"])
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.create(vehiculo_data, company_id)
 
 
 @router.put("/{matr}", response_model=VehiculoSchema)
-async def update_vehiculo(
+def update_vehiculo(
     matr: str,
     vehiculo_data: VehiculoSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoSchema:
-    return service.update(matr, vehiculo_data, current_user["companyId"])
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.update(matr.upper(), vehiculo_data, company_id)
 
 
 @router.delete("/{matr}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_vehiculo(
+def delete_vehiculo(
     matr: str,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
+    service: VehiculoService = Depends(VehiculoService),
 ):
-    return service.delete(matr, current_user["companyId"])
+    company_id = current_user.get("companyId")
+    service.delete(matr.upper(), company_id)
+    return None
 
 
-@router.patch("/assign", response_model=VehiculoSchema)
-async def asignar_vehiculo_a_transportista(
+@router.post("/assign", response_model=VehiculoSchema)
+def assign_vehiculo(
     data: VehiculoAssignSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(get_vehiculo_service),
-) -> VehiculoSchema:
-    return service.assign(data.matr, data.uid, current_user["companyId"])
-
+    service: VehiculoService = Depends(VehiculoService),
+):
+    company_id = current_user.get("companyId")
+    return service.assign(data.matricula.upper(), data.uid, company_id)

@@ -82,3 +82,8 @@ class VehiculoCountSchema(FirestoreSchema):
     enMantenimiento: int
     disponibles: int
     totalVehiculos: int
+
+class VehiculoAssignSchema(FirestoreSchema):
+    matricula: str = Field(..., min_length=3)
+    uid: str = Field(..., min_length=1)
+

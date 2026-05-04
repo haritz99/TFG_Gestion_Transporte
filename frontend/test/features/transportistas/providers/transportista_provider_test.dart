@@ -1,9 +1,10 @@
-/*
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:gestion_transporte/core/models/user_model.dart';
+import 'package:gestion_transporte/core/token_provider.dart';
+import 'package:gestion_transporte/core/models/paginated_response.dart';
 import 'package:gestion_transporte/features/auth/auth_service.dart';
 import 'package:gestion_transporte/features/transportistas/data/transportista_service.dart';
 import 'package:gestion_transporte/features/transportistas/providers/transportista_provider.dart';
@@ -15,6 +16,7 @@ void main() {
   late MockAuthService mockAuthService;
   late MockTransportistaService mockService;
   late TransportistaProvider provider;
+  late AuthTokenProvider tokenProvider;
 
   const token = 'test_token';
 
@@ -27,37 +29,41 @@ void main() {
     rol: ['transportista'],
     permisosCond: ['C', 'C+E'],
     companyId: 'empresa_123',
+    estado: 'Sin Asignar',
   );
 
   setUp(() {
     mockAuthService = MockAuthService();
     mockService = MockTransportistaService();
-    provider = TransportistaProvider(authService: mockAuthService, service: mockService);
+    tokenProvider = AuthTokenProvider(mockAuthService);
+    provider = TransportistaProvider(tokenProvider: tokenProvider, service: mockService);
   });
 
-  group('TransportistaProvider.fetchTransportistas', () {
+  group('TransportistaProvider.loadNextPage', () {
     test('devuelve lista y actualiza cache local', () async {
       when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
+      when(mockService.fetchTransportistas(
+        token: token,
+        limit: anyNamed('limit'),
+        lastDocId: anyNamed('lastDocId'),
+      )).thenAnswer((_) async => PaginatedResponse(items: [tUser], hasMore: false, lastDocId: 'u1'));
 
-      final result = await provider.fetchTransportistas();
+      await provider.loadNextPage(reset: true);
 
-      expect(result.length, 1);
       expect(provider.transportistas.length, 1);
       expect(provider.errorMessage, isNull);
-      expect(provider.isLoading, false);
+      expect(provider.isLoadingPage, false);
     });
 
-    test('devuelve vacio con error si no hay token', () async {
+    test('captura error si no hay token', () async {
       when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => null);
       when(mockAuthService.getIdToken(forceRefresh: true)).thenAnswer((_) async => null);
 
-      final result = await provider.fetchTransportistas();
+      await provider.loadNextPage(reset: true);
 
-      expect(result, isEmpty);
       expect(provider.transportistas, isEmpty);
       expect(provider.errorMessage, contains('No se pudo obtener un token valido'));
-      expect(provider.isLoading, false);
+      expect(provider.isLoadingPage, false);
     });
   });
 
@@ -68,12 +74,22 @@ void main() {
         token: token,
         userData: anyNamed('userData'),
       )).thenAnswer((_) async => {
-            'uid': 'u1',
+            'user': {
+              'uid': 'u1',
+              'nombre': 'Juan',
+              'apellido': 'Perez',
+              'email': 'juan@empresa.com',
+              'telefono': '+34600111222',
+              'rol': ['transportista'],
+              'permisosCond': ['C'],
+              'companyId': 'empresa_123',
+              'estado': 'Sin Asignar',
+            },
             'temp_password': 'Temp123!',
             'password_reset_link': 'https://reset.example/link',
           });
 
-      final ok = await provider.createTransportista(
+      final created = await provider.createTransportista(
         nombre: 'Juan',
         apellido: 'Perez',
         email: 'juan@empresa.com',
@@ -81,20 +97,20 @@ void main() {
         permisosCond: ['C'],
       );
 
-      expect(ok, true);
+      expect(created, isNotNull);
       expect(provider.createResponse, isNotNull);
       expect(provider.errorMessage, isNull);
       expect(provider.isLoading, false);
     });
 
-    test('devuelve false y error si falla create', () async {
+    test('devuelve null y captura error si falla create', () async {
       when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
       when(mockService.createTransportista(
         token: token,
         userData: anyNamed('userData'),
       )).thenThrow(Exception('Email ya existe'));
 
-      final ok = await provider.createTransportista(
+      final created = await provider.createTransportista(
         nombre: 'Juan',
         apellido: 'Perez',
         email: 'juan@empresa.com',
@@ -102,65 +118,23 @@ void main() {
         permisosCond: ['C'],
       );
 
-      expect(ok, false);
+      expect(created, isNull);
       expect(provider.errorMessage, contains('Email ya existe'));
-      expect(provider.createResponse, isNull);
       expect(provider.isLoading, false);
-    });
-
-    test('devuelve false si no hay token y no llama al servicio', () async {
-      when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => null);
-      when(mockAuthService.getIdToken(forceRefresh: true)).thenAnswer((_) async => null);
-
-      final ok = await provider.createTransportista(
-        nombre: 'Juan',
-        apellido: 'Perez',
-        email: 'juan@empresa.com',
-        telefono: '+34600111222',
-        permisosCond: ['C'],
-      );
-
-      expect(ok, false);
-      expect(provider.errorMessage, contains('No se pudo obtener un token valido'));
-      verifyNever(mockService.createTransportista(
-        token: anyNamed('token'),
-        userData: anyNamed('userData'),
-      ));
     });
   });
 
-  group('TransportistaProvider.update/delete/sendCredentialsEmail', () {
-    test('update modifica transportista en lista local', () async {
+  group('TransportistaProvider.update/delete', () {
+    test('update lanza error y captura mensaje si falla el servicio', () async {
       when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
-      await provider.fetchTransportistas();
 
-      when(mockService.updateTransportista(
-        uid: 'u1',
+      // Mock inicial para tener transportista en la lista
+      when(mockService.fetchTransportistas(
         token: token,
-        userData: anyNamed('userData'),
-      )).thenAnswer((_) async => {'message': 'ok'});
-
-      final ok = await provider.updateTransportista(
-        uid: 'u1',
-        nombre: 'Juan Carlos',
-        apellido: 'Perez',
-        email: 'juan@empresa.com',
-        telefono: '+34600111222',
-        rol: ['transportista'],
-        permisosCond: ['C', 'C+E'],
-        vehiculoId: 'VEH-001',
-      );
-
-      expect(ok, true);
-      expect(provider.transportistas.first.nombre, 'Juan Carlos');
-      expect(provider.transportistas.first.vehiculoId, 'VEH-001');
-    });
-
-    test('update devuelve false y mantiene lista si falla el servicio', () async {
-      when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
-      await provider.fetchTransportistas();
+        limit: anyNamed('limit'),
+        lastDocId: anyNamed('lastDocId'),
+      )).thenAnswer((_) async => PaginatedResponse(items: [tUser], hasMore: false, lastDocId: 'u1'));
+      await provider.loadNextPage(reset: true);
 
       when(mockService.updateTransportista(
         uid: 'u1',
@@ -168,7 +142,7 @@ void main() {
         userData: anyNamed('userData'),
       )).thenThrow(Exception('No autorizado'));
 
-      final ok = await provider.updateTransportista(
+      final updated = await provider.updateTransportista(
         uid: 'u1',
         nombre: 'Juan Carlos',
         apellido: 'Perez',
@@ -176,57 +150,24 @@ void main() {
         telefono: '+34600111222',
         rol: ['transportista'],
         permisosCond: ['C', 'C+E'],
+        estado: 'Sin Asignar',
       );
 
-      expect(ok, false);
+      expect(updated, isNull);
       expect(provider.errorMessage, contains('No autorizado'));
       expect(provider.transportistas.first.nombre, 'Juan');
       expect(provider.isLoading, false);
     });
 
-    test('update devuelve true aunque uid no exista en cache local', () async {
-      when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
-      await provider.fetchTransportistas();
-
-      when(mockService.updateTransportista(
-        uid: 'u2',
-        token: token,
-        userData: anyNamed('userData'),
-      )).thenAnswer((_) async => {'message': 'ok'});
-
-      final ok = await provider.updateTransportista(
-        uid: 'u2',
-        nombre: 'Nuevo',
-        apellido: 'Apellido',
-        email: 'nuevo@empresa.com',
-        telefono: '+34600111999',
-        rol: ['transportista'],
-        permisosCond: ['C'],
-      );
-
-      expect(ok, true);
-      expect(provider.transportistas.length, 1);
-      expect(provider.transportistas.first.uid, 'u1');
-    });
-
-    test('delete elimina elemento de lista local', () async {
-      when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
-      await provider.fetchTransportistas();
-
-      when(mockService.deleteTransportista(uid: 'u1', token: token)).thenAnswer((_) async => {'message': 'ok'});
-
-      final ok = await provider.deleteTransportista('u1');
-
-      expect(ok, true);
-      expect(provider.transportistas, isEmpty);
-    });
-
     test('delete devuelve false y mantiene lista si falla el servicio', () async {
       when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => token);
-      when(mockService.fetchTransportistas(token: token)).thenAnswer((_) async => [tUser]);
-      await provider.fetchTransportistas();
+
+      when(mockService.fetchTransportistas(
+        token: token,
+        limit: anyNamed('limit'),
+        lastDocId: anyNamed('lastDocId'),
+      )).thenAnswer((_) async => PaginatedResponse(items: [tUser], hasMore: false, lastDocId: 'u1'));
+      await provider.loadNextPage(reset: true);
 
       when(mockService.deleteTransportista(uid: 'u1', token: token)).thenThrow(Exception('Error backend'));
 
@@ -238,17 +179,6 @@ void main() {
       expect(provider.isLoading, false);
     });
 
-    test('delete devuelve false si no hay token y no llama al servicio', () async {
-      when(mockAuthService.getIdToken(forceRefresh: false)).thenAnswer((_) async => null);
-      when(mockAuthService.getIdToken(forceRefresh: true)).thenAnswer((_) async => null);
-
-      final ok = await provider.deleteTransportista('u1');
-
-      expect(ok, false);
-      expect(provider.errorMessage, contains('No se pudo obtener un token valido'));
-      verifyNever(mockService.deleteTransportista(uid: anyNamed('uid'), token: anyNamed('token')));
-    });
-
     test('sendCredentialsEmail devuelve false si no hay respuesta previa', () async {
       final ok = await provider.sendCredentialsEmail();
 
@@ -257,4 +187,3 @@ void main() {
     });
   });
 }
-*/

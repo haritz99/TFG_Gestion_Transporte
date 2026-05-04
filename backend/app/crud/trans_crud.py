@@ -3,8 +3,7 @@ from ..firebase_config import db
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
 
 class TransCRUD:
-    @staticmethod
-    def get_all(company_id: str, solodis: bool, limit: int = 8, last_doc_id: str | None = None):
+    def get_all(self, company_id: str, solodis: bool, limit: int = 8, last_doc_id: str | None = None, user_crud: UserCRUD = None):
         query = (
             db.collection("users")
             .where("companyId", "==", company_id)
@@ -15,15 +14,14 @@ class TransCRUD:
         if solodis:
             query = query.where("vehiculoId", "==", None)
 
-        if last_doc_id:
-            last_doc = UserCRUD.get_by_id(uid = last_doc_id)
+        if last_doc_id and user_crud:
+            last_doc = user_crud.get_by_id(uid = last_doc_id)
             if last_doc.exists:
                 query = query.start_after(last_doc)
 
         return query.limit(limit).stream()
 
-    @staticmethod
-    def get_count(company_id: str):
+    def get_count(self, company_id: str):
         users_ref = db.collection("users")
         query_ref = (
             users_ref
@@ -32,8 +30,7 @@ class TransCRUD:
         )
         return query_ref.count().get()
 
-    @staticmethod
-    def get_count_by_estado(company_id: str, estado: str):
+    def get_count_by_estado(self, company_id: str, estado: str):
         users_ref = db.collection("users")
         query_ref = (
             users_ref
@@ -43,12 +40,10 @@ class TransCRUD:
         )
         return query_ref.count().get()
 
-    @staticmethod
-    def get_vehiculo(vehiculo_id: str) -> DocumentSnapshot:
+    def get_vehiculo(self, vehiculo_id: str) -> DocumentSnapshot:
         vehiculo_ref = db.collection("vehiculos").document(vehiculo_id)
         return vehiculo_ref.get()
 
-    @staticmethod
-    def update_vehiculo(vehiculo_id: str, data: dict) -> None:
+    def update_vehiculo(self, vehiculo_id: str, data: dict) -> None:
         vehiculo_ref = db.collection("vehiculos").document(vehiculo_id)
         vehiculo_ref.update(data)

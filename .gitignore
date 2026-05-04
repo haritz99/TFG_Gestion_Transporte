@@ -44,4 +44,5 @@ DASHBOARD_TEMP_PLAN.md
 frontend/lib/features/dashboard/invite_feature_plan.md
 diagrams
 .github/copilot-instructions.md
+backend/.coverage
 

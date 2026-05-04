@@ -1,6 +1,5 @@
 from typing import Any
-
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
 from ..schemas.vehiculos import VehiculoCountSchema
@@ -15,8 +14,8 @@ def _build_transportista_name(user_data: dict[str, Any]) -> str:
 
 
 class VehiculoService:
-    def __init__(self):
-        self.crud = VehiculoCRUD()
+    def __init__(self, crud: VehiculoCRUD = Depends(VehiculoCRUD)):
+        self.crud = crud
 
     def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
         try:
@@ -183,7 +182,3 @@ class VehiculoService:
             raise
         except Exception:
             raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-
-def get_vehiculo_service() -> VehiculoService:
-    return VehiculoService()
