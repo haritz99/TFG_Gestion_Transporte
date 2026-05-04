@@ -26,6 +26,12 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
         working-directory: ./frontend
 
+      - name: Create .env Mock for Flutter
+        run: |
+          touch .env
+          echo "API_URL=http://localhost:8000" > .env
+        working-directory: ./frontend
+
       - name: Run Tests
         run: flutter test --coverage
         working-directory: ./frontend
@@ -47,10 +53,12 @@ jobs:
         
       - name: Create Firebase Config Mock
         run: |
-          echo "{}" > backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
-          
-      - name: Run Tests with pytest
-        run: pytest backend/app/tests/ --cov=backend/app
-        env:
-          FIREBASE_CREDENTIALS: backend/gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
+          echo "{}" > gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
+        working-directory: ./backend
 
+      - name: Run Tests with pytest
+        run: pytest app/tests/ --cov=app
+        working-directory: ./backend
+        env:
+          PYTHONPATH: .
+          FIREBASE_CREDENTIALS: gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
