@@ -5,23 +5,21 @@ from app.services.trans_service import TransService
 from app.schemas.users import UserSchema
 
 @pytest.fixture
-def mock_user_crud():
-    with patch('app.services.trans_service.UserCRUD') as mock:
-        yield mock
+def mock_trans_crud():
+    return MagicMock(name="TransCRUD")
 
 @pytest.fixture
-def mock_trans_crud():
-    with patch('app.services.trans_service.TransCRUD') as mock:
-        yield mock
+def mock_user_crud():
+    return MagicMock(name="UserCRUD")
+
+@pytest.fixture
+def service(mock_trans_crud, mock_user_crud):
+    return TransService(crud=mock_trans_crud, user_crud=mock_user_crud)
 
 @pytest.fixture
 def mock_auth():
-    with patch('app.services.trans_service.firebase_auth') as mock:
-        yield mock
-
-@pytest.fixture
-def service():
-    return TransService()
+    with patch("app.services.trans_service.firebase_auth") as m:
+        yield m
 
 def test_trans_service_get_trans_ok(service, mock_user_crud):
     mock_doc = MagicMock()

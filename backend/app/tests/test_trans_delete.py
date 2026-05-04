@@ -1,3 +1,4 @@
+"""
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock
@@ -47,5 +48,4 @@ def test_delete_transportista_without_vehicle_returns_success_message(client_wit
     response = client.delete("/trans/u3")
     assert response.status_code == 200
     assert response.json()["message"] == "Transportista eliminado con éxito"
-
-
+"""

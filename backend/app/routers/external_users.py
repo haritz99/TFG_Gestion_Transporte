@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..schemas.external_user import ClienteSchema, ExternalUserSchema
 from ..schemas.users import UserCreateResponseSchema
 from ..services.register_service import RegisterService, get_register_service
-from ..services.pedidos_service import fetch_pedidos
-from ..services.cargas_service import fetch_cargas
+from ..services.pedidos_service import PedidosService
+from ..services.cargas_service import CargasService
 from ..dependencies.auth import get_current_encargado
 from ..firebase_config import db
 from ..schemas.pedido import EstadoPedido
@@ -43,7 +43,12 @@ def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):
     return clientes
 
 @router.delete("/cli/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_current_encargado)):
+def delete_cliente(
+    cliente_id: str, 
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    pedidos_service: PedidosService = Depends(PedidosService),
+    cargas_service: CargasService = Depends(CargasService)
+):
     company_id = current_user.get("companyId")
     cliente_ref = db.collection("clientes").document(cliente_id)
     cliente_doc = cliente_ref.get()
@@ -55,7 +60,7 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
         raise HTTPException(status_code=403, detail="No autorizado para eliminar este cliente")
 
     # Verificar si el cliente tiene pedidos activos
-    pedidos_del_cliente = fetch_pedidos(company_id=company_id, cliente_id=cliente_id)
+    pedidos_del_cliente = pedidos_service.fetch_pedidos(company_id=company_id, cliente_id=cliente_id)
     todos_los_pedidos_del_cliente_ids = []
     
     for p in pedidos_del_cliente:
@@ -75,7 +80,7 @@ def delete_cliente(cliente_id: str, current_user: dict[str, Any] = Depends(get_c
     batch = db.batch()
     for pedido_id in todos_los_pedidos_del_cliente_ids:
         # 1. Borrar todas las cargas asociadas al pedido
-        cargas_asociadas = fetch_cargas(company_id=company_id, pedido_id=pedido_id)
+        cargas_asociadas = cargas_service.fetch_cargas(company_id=company_id, pedido_id=pedido_id)
         for carga in cargas_asociadas:
             if carga.id:
                 carga_ref = db.collection("cargas").document(carga.id)

@@ -1,18 +1,16 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from fastapi import HTTPException
 from app.services.vehiculo_service import VehiculoService
 from app.schemas.vehiculos import VehiculoSchema
 
 @pytest.fixture
 def mock_crud():
-    with patch('app.services.vehiculo_service.VehiculoCRUD') as mock:
-        yield mock.return_value
+    return MagicMock()
 
 @pytest.fixture
 def service(mock_crud):
-    # Ya inyectamos el mock mediante el parche
-    return VehiculoService()
+    return VehiculoService(crud=mock_crud)
 
 def test_vehiculo_service_get_by_id_existe(service, mock_crud):
     mock_doc = MagicMock()
