@@ -6,7 +6,8 @@ class UserCRUD:
         doc_ref = db.collection("users").document(uid)
         return doc_ref.get()
 
-    def create(self, uid: str, user_dict: dict) -> None:
+    @staticmethod
+    def create(uid: str, user_dict: dict) -> None:
         doc_ref = db.collection("users").document(uid)
         doc_ref.set(user_dict)
 

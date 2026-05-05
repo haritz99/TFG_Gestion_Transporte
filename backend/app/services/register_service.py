@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 import secrets
 import string
 from datetime import datetime, timezone
@@ -10,6 +10,9 @@ from firebase_admin import auth as firebase_auth
 
 
 class RegisterService:
+    def __init__(self, crud: UserCRUD = Depends(UserCRUD)):
+        self._crud = crud
+
     @staticmethod
     def generate_temp_password(length: int = 12) -> str:
         characters = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -48,7 +51,7 @@ class RegisterService:
             user_dict["createdAt"] = now
             user_dict["updatedAt"] = now
 
-            UserCRUD.create(uid, user_dict)
+            self._crud.create(uid, user_dict)
 
             created_user = UserSchema(**user_dict)
 
@@ -89,9 +92,9 @@ class RegisterService:
             user_dict["updatedAt"] = now
 
             if rol == "cliente":
-                UserCRUD.create_cliente(uid, user_dict)
+                self._crud.create_cliente(uid, user_dict)
             elif rol == "subcontratado":
-                UserCRUD.create_subcontratado(uid, user_dict)
+                self._crud.create_subcontratado(uid, user_dict)
             else:
                 raise ValueError(f"Rol no válido para usuario externo: {rol}")
 

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..schemas.external_user import ClienteSchema, ExternalUserSchema
 from ..schemas.users import UserCreateResponseSchema
-from ..services.register_service import RegisterService, get_register_service
+from ..services.register_service import RegisterService
 from ..services.pedidos_service import PedidosService
 from ..services.cargas_service import CargasService
 from ..dependencies.auth import get_current_encargado
@@ -21,7 +21,7 @@ def create_external_user(
     user_data: ExternalUserSchema,
     rol: str,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: RegisterService = Depends(get_register_service),
+    service: RegisterService = Depends(RegisterService),
 ) -> UserCreateResponseSchema[ExternalUserSchema]:
     company_id = current_user.get("companyId")
     return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol)

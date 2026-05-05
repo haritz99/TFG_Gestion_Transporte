@@ -23,7 +23,16 @@ class _InviteModalState extends State<InviteModal> {
 
       try {
         await provider.createUser(_email, _rol);
-        await provider.sendInviteEmail(_email, _rol);
+        if (provider.isCreated) {
+          final success = await provider.sendInviteEmail(_email, _rol);
+          if (mounted && success) {
+            Navigator.of(context).pop();
+          } else if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo abrir la aplicación de correo')),
+            );
+          }
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -37,7 +46,6 @@ class _InviteModalState extends State<InviteModal> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<InviteProvider>();
-    final isCreated = provider.isCreated;
     final isLoading = provider.isLoading;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 900;
@@ -203,4 +211,3 @@ class _InviteModalState extends State<InviteModal> {
     );
   }
 }
-
