@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from ..dependencies.auth import get_current_encargado
 from ..schemas.carga import EstadoCarga
-from ..services import cargas_service
+from ..services.cargas_service import CargasService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -18,7 +18,8 @@ class DashboardSummary(BaseModel):
 
 
 @router.get("/summary", response_model=DashboardSummary)
-def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_encargado)):
+def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_encargado),
+                            cargas_service = Depends(CargasService)):
     try:
         company_id = current_user.get("companyId")
 

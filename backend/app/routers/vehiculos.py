@@ -6,7 +6,7 @@ from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
 from ..schemas.vehiculos import VehiculoCountSchema, VehiculoAssignSchema
 from ..services.vehiculo_service import VehiculoService
 
-router = APIRouter(prefix="/vehiculos", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
+router = APIRouter(prefix="/vehi", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
 
 
 @router.get("/", response_model=VehiculoPaginatedSchema)

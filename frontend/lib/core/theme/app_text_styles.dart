@@ -28,6 +28,13 @@ class AppTextStyles {
     color: AppColors.mutedText,
   );
 
+  static const TextStyle bodySm = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    color: AppColors.bodyText,
+  );
+
   static const TextStyle kpiValue = TextStyle(
     fontFamily: fontFamily,
     fontSize: 26,

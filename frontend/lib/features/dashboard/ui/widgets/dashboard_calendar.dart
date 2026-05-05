@@ -8,7 +8,6 @@ import '../models/carga_data_source.dart';
 class DashboardCalendar extends StatefulWidget {
   final List<CargaModel> cargas;
   final Function(DateTime)? onDateSelected;
-
   const DashboardCalendar({
     super.key,
     required this.cargas,
@@ -21,8 +20,8 @@ class DashboardCalendar extends StatefulWidget {
 
 class _DashboardCalendarState extends State<DashboardCalendar> {
   final CalendarController _calendarController = CalendarController();
-  CalendarView _currentView = CalendarView.week;
-
+  CalendarView _currentView = CalendarView.schedule;
+  final int _appointmentDisplayCount = 6;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -45,7 +44,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
           _buildHeader(),
           const SizedBox(height: 20),
           SizedBox(
-            height: 600,
+            height: 700,
             child: SfCalendar(
               controller: _calendarController,
               view: _currentView,
@@ -60,14 +59,28 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
                 borderRadius: BorderRadius.circular(4),
               ),
               monthViewSettings: MonthViewSettings(
-                appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
-                showAgenda: false,
+                appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
+                appointmentDisplayCount: _appointmentDisplayCount, // Maximo 6 botones para mostrar cargas
+                showAgenda: true,
                 dayFormat: 'EEE',
+                agendaItemHeight: 130,
+                agendaStyle: const AgendaStyle(
+                  appointmentTextStyle: TextStyle(fontSize: 12),
+                ),
               ),
-              timeSlotViewSettings: const TimeSlotViewSettings(
-                startHour: 6, // 6AM
-                endHour: 22,  // 22PM
-                timeFormat: 'H:mm',
+              scheduleViewSettings: ScheduleViewSettings(
+                appointmentItemHeight: 130,
+                hideEmptyScheduleWeek: false,
+                dayHeaderSettings: const DayHeaderSettings(
+                  dayTextStyle: TextStyle(fontWeight: FontWeight.bold, color: AppColors.bodyText),
+                  dateTextStyle: TextStyle(fontWeight: FontWeight.bold, color: AppColors.bodyText),
+                ),
+                monthHeaderSettings: MonthHeaderSettings(
+                  height: 50,
+                  textAlign: TextAlign.center,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.05),
+                  monthTextStyle: AppTextStyles.headingMd.copyWith(fontSize: 18, color: AppColors.bodyText),
+                ),
               ),
               appointmentBuilder: _appointmentBuilder,
               onSelectionChanged: (details) {
@@ -105,7 +118,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
           children: [
             _buildViewToggleButton('Mes', CalendarView.month),
             const SizedBox(width: 8),
-            _buildViewToggleButton('Semana', CalendarView.week),
+            _buildViewToggleButton('Semana', CalendarView.schedule),
           ],
         )
       ],
@@ -144,41 +157,91 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
 
   Widget _appointmentBuilder(BuildContext context, CalendarAppointmentDetails details) {
     if (details.appointments.isEmpty) return const SizedBox();
-
     final CargaModel carga = details.appointments.first;
     final Color eventColor = CargaDataSource.getColorByEstado(carga.estado);
 
+    if (_currentView == CalendarView.month && details.bounds.width < 50) {
+      // Aqui solo el botón para ver que hay cargas (sin info.)
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+        decoration: BoxDecoration(
+          color: eventColor,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      );
+    }
+
+    // Vista Schedule
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: eventColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: eventColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              carga.pedidoId != null ? 'Ped: #${carga.pedidoId} - ${carga.id}' : 'Sin Asignar',
-              style: TextStyle(
-                color: eventColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '#${carga.pedidoId} - ${carga.id}',
+                    style: AppTextStyles.bodySm.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.bodyText,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Origen: ${carga.origen} - Destino: ${carga.destino}',
+                    style: AppTextStyles.bodySm,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Hora de carga: ${carga.fechaCarga.hour.toString().padLeft(2, '0')}:${carga.fechaCarga.minute.toString().padLeft(2, '0')} - Hora de descarga: ${carga.fechaDescarga.hour.toString().padLeft(2, '0')}:${carga.fechaDescarga.minute.toString().padLeft(2, '0')}',
+                    style: AppTextStyles.bodySm,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Vehículo: ${carga.vehiculoId ?? ""}',
+                    style: AppTextStyles.bodySm,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Conductor: ${carga.transportistaId ?? ""}',
+                    style: AppTextStyles.bodySm,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: eventColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                carga.estado.toUpperCase(),
+                style: TextStyle(
+                  color: eventColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
