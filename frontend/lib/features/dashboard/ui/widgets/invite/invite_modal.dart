@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../providers/invite_provider.dart';
+import './guest_list.dart';
 
 class InviteModal extends StatefulWidget {
   const InviteModal({super.key});
@@ -14,6 +15,14 @@ class _InviteModalState extends State<InviteModal> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _rol = 'cliente';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<InviteProvider>().getGuests();
+    });
+  }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -134,40 +143,20 @@ class _InviteModalState extends State<InviteModal> {
                           enabled: !isLoading,
                         ),
                       ),
-                      SizedBox(
+                      DropdownMenu<String>(
                         width: isMobile ? double.infinity : 200,
-                        child: DropdownButtonFormField<String>(
-                          value: _rol,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.person_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'cliente',
-                              child: Text('Cargador'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'subcontratado',
-                              child: Text('Subcontratado'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'encargado',
-                              child: Text('Encargado'),
-                            ),
-                          ],
-                          onChanged: isLoading
-                              ? null
-                              : (value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      _rol = value;
-                                    });
-                                  }
-                                },
-                        ),
+                        initialSelection: _rol,
+                        leadingIcon: const Icon(Icons.person_outline),
+                        menuHeight: 300,
+                        dropdownMenuEntries: const [
+                          DropdownMenuEntry(value: 'cliente', label: 'Cargador'),
+                          DropdownMenuEntry(value: 'subcontratado', label: 'Subcontratado'),
+                        ],
+                        onSelected: isLoading
+                            ? null
+                            : (value) {
+                          if (value != null) setState(() => _rol = value);
+                        },
                       ),
                       SizedBox(
                         width: isMobile ? double.infinity : null,
@@ -201,7 +190,8 @@ class _InviteModalState extends State<InviteModal> {
                     ],
                   ),
                   const SizedBox(height: 32),
-
+                  const Divider(height: 1, thickness: 1, color: Colors.grey),
+                  const GuestList()
                 ],
               ),
             ),

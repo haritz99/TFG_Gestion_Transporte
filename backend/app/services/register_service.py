@@ -1,9 +1,10 @@
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, status
 import secrets
 import string
 from datetime import datetime, timezone
 
 from ..crud.user_crud import UserCRUD
+from ..dependencies.auth import normalize_roles
 from ..schemas.users import UserSchema, UserCreateResponseSchema
 from ..schemas.external_user import ExternalUserSchema
 from firebase_admin import auth as firebase_auth
@@ -116,6 +117,44 @@ class RegisterService:
             if isinstance(e, HTTPException):
                 raise e
             raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
+
+    # Funcion de custom_claims para los usuarios cuando se registran
+    def initialize_custom_claims(self, current_user, company_id, rol):
+        uid = current_user.get("uid")
+        if not isinstance(uid, str) or not uid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token sin uid válido",
+            )
+
+        company_id = company_id.strip()
+        if not company_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="companyId es obligatorio",
+            )
+
+        roles = normalize_roles(rol)
+        if not roles:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Se requiere al menos un rol",
+            )
+
+        claims = {"rol": roles, "companyId": company_id}
+
+        try:
+            firebase_auth.set_custom_user_claims(uid, claims)
+            return {
+                "message": "Custom claims inicializados correctamente.",
+                "uid": uid,
+                "claims": claims,
+            }
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No se pudieron inicializar los custom claims",
+            )
 
 def get_register_service() -> RegisterService:
     return RegisterService()

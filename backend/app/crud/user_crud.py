@@ -24,3 +24,15 @@ class UserCRUD:
 
     def create_subcontratado(self, uid: str, subcontratado_dict: dict) -> None:
         db.collection("subcontratados").document(uid).set(subcontratado_dict)
+
+    @staticmethod
+    def get_all_external_users(company_id: str) -> list[DocumentSnapshot]:
+        """
+        Obtiene todos los clientes y subcontratados de una compañía.
+        """
+        clientes = db.collection("clientes").where("companyId", "==", company_id).stream()
+        subcontratados = db.collection("subcontratados").where("companyId", "==", company_id).stream()
+
+        # Combinamos ambos streams en una lista
+        all_users = list(clientes) + list(subcontratados)
+        return all_users

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..schemas.external_user import ClienteSchema, ExternalUserSchema
 from ..schemas.users import UserCreateResponseSchema
+from ..services.external_user_service import ExternalUserService
 from ..services.register_service import RegisterService
 from ..services.pedidos_service import PedidosService
 from ..services.cargas_service import CargasService
@@ -25,6 +26,17 @@ def create_external_user(
 ) -> UserCreateResponseSchema[ExternalUserSchema]:
     company_id = current_user.get("companyId")
     return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol)
+
+@router.get("/", response_model=list[ExternalUserSchema])
+def fetch_external_users(
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: ExternalUserService = Depends(ExternalUserService),
+) -> list[ExternalUserSchema]:
+    """
+    Obtiene la lista de todos los colaboradores (clientes y subcontratados).
+    """
+    company_id = current_user.get("companyId")
+    return service.fetch_external_users(company_id=company_id)
 
 @router.get("/cli", response_model=list[ClienteSchema])
 def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):

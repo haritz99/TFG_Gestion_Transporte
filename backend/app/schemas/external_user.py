@@ -6,10 +6,12 @@ from fastapi import HTTPException
 from pydantic import Field
 
 from .base import FirestoreSchema
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ExternalUserSchema(FirestoreSchema):
+    model_config = ConfigDict(extra='allow')
+
     uid: Optional[str] = None
     email: str = Field(..., min_length=3)
     rol: Optional[List[str]] = Field(default_factory=list)
@@ -39,7 +41,7 @@ class ClienteSchema(ExternalUserSchema):
         return cls(**data)
 
 class SubcontratadoSchema(ExternalUserSchema):
-    nombre: str = Field(..., min_length=1)
+    nombreComercial: str = Field(..., min_length=1)
     apellido: str = Field(..., min_length=1)
     cargasCedidas: List[str] = Field(default_factory=list)
     nif: str = Field(..., min_length=9, max_length=9)
