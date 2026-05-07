@@ -33,13 +33,11 @@ class AuthService {
     final cliDoc = await _firestore.collection('clientes').doc(uid).get();
     if (cliDoc.exists) {
       final data = cliDoc.data()!;
-      print("Data: $data");
       return ExternalUserModel.fromMap(data, cliDoc.id);
     }
     final subDoc = await _firestore.collection('subcontratados').doc(uid).get();
     if (subDoc.exists) {
       final data = subDoc.data()!;
-      print("Data: $data");
       return ExternalUserModel.fromMap(data, subDoc.id);
     }
     throw Exception('No se ha encontrado el usuario');
@@ -130,6 +128,23 @@ class AuthService {
       email: email,
       password: password,
     );
+  }
+
+  Future<ExternalUserModel> updateExternalProfile(String uid, Map<String, dynamic> data) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/ext/profile/$uid');
+    final token = await getIdToken();
+    final response = await _client.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar el perfil de usuario');
+    }
+    return ExternalUserModel.fromMap(jsonDecode(response.body), uid);
   }
 
   Future<void> signOut() async {

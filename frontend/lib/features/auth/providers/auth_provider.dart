@@ -37,18 +37,13 @@ class AuthProvider extends ChangeNotifier {
         ]);
 
         _user = results[0] as UserModel?;
-        print("User: $_user");
         _idToken = results[1] as String?;
         if (_user == null) {
-          print("No se ha encontrado user, busco external user");
           _externalUser = await _authService.getExternalUserData(firebaseUser.uid)
               .catchError((e) {
-            print("Error obteniendo external user: $e");
             return null;
           });
-          print("ExternalUser en provider: $_externalUser".toString());
         }
-
       } else {
         _user = null;
         _externalUser = null;
@@ -139,6 +134,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fulfillExternalUserProfile(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _externalUser = await _authService.updateExternalProfile(_externalUser!.uid, data);
+      await _onAuthStateChanged(FirebaseAuth.instance.currentUser);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> signOut() async {
     await _authService.signOut();

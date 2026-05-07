@@ -4,7 +4,7 @@ class ExternalUserModel {
   final String uid;
   final String email;
   final String nombre;
-  final String rol;
+  final List<String> rol;
   final bool datosCompletos;
   final DateTime? createdAt;
 
@@ -21,6 +21,11 @@ class ExternalUserModel {
     DateTime? date;
     final createdAtValue = map['createdAt'];
 
+    final rawRol = map['rol'];
+    final List<String> normalizedRol = rawRol is List
+        ? List<String>.from(rawRol)
+        : [rawRol];
+
     if (createdAtValue != null) {
       if (createdAtValue is String) {
         date = DateTime.tryParse(createdAtValue);
@@ -33,16 +38,9 @@ class ExternalUserModel {
       uid: id,
       email: map['email'] ?? '',
       nombre: map['nombreComercial'] ?? 'Sin nombre',
-      rol: (map['rol'] is List && (map['rol'] as List).isNotEmpty)
-          ? (map['rol'] as List).first
-          : 'invitado',
+      rol: normalizedRol,
       datosCompletos: map['datosCompletos'] ?? false,
       createdAt: date,
     );
-  }
-
-  @override
-  String toString() {
-    return 'ExternalUserModel(uid: $uid, email: $email, nombre: $nombre, rol: $rol, datosCompletos: $datosCompletos, createdAt: $createdAt)';
   }
 }

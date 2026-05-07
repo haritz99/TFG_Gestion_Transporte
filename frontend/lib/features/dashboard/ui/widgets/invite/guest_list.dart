@@ -47,7 +47,7 @@ class GuestList extends StatelessWidget {
                 ),
               if (isMobile) ...[
                 const SizedBox(height: 4),
-                _buildRoleBadge(guest.rol),
+                _buildRoleBadge(guest.rol[0]),
               ],
             ],
           ),
@@ -57,7 +57,7 @@ class GuestList extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (!isMobile) ...[
-                  _buildRoleBadge(guest.rol),
+                  _buildRoleBadge(guest.rol[0]),
                   const SizedBox(width: 8),
                 ],
                 if (guest.datosCompletos == false)
@@ -65,7 +65,7 @@ class GuestList extends StatelessWidget {
                   message: 'Enviar email de invitación',
                   child: IconButton(
                     icon: const Icon(Icons.email_outlined, size: 20),
-                    onPressed: () => inviteProvider.sendInviteEmail(guest.email, guest.rol),
+                    onPressed: () => inviteProvider.sendInviteEmail(guest.email, guest.rol[0]),
                     color: Colors.grey.shade600,
                   )
                 ),

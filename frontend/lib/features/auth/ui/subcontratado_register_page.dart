@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
 
 class SubcontratadoRegisterPage extends StatefulWidget {
   const SubcontratadoRegisterPage({super.key});
@@ -42,8 +45,20 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        // TODO: Llamará al provider
-        // await provider.completarDatosSubcontratado(...);
+        final provider = context.read<AuthProvider>();
+        final data = {
+          'nombre': _nombreComercialCtr.text,
+          'razonSocial': _razonSocialCtr.text,
+          'nif': _nifCtr.text,
+          'telefono': _telefonoCtr.text,
+          'numeroAutorizacion': _numAutorizacionCtr.text,
+          'calle': _calleCtr.text,
+          'ciudad': _ciudadCtr.text,
+          'provincia': _provinciaCtr.text,
+          'codigoPostal': _codigoPostalCtr.text,
+          'pais': _paisCtr.text,
+        };
+        await provider.fulfillExternalUserProfile(data);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));

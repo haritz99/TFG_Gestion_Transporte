@@ -6,6 +6,14 @@ class UserCRUD:
         doc_ref = db.collection("users").document(uid)
         return doc_ref.get()
 
+    def get_cliente_by_id(self, uid: str) -> DocumentSnapshot:
+        doc_ref = db.collection("clientes").document(uid)
+        return doc_ref.get()
+
+    def get_subcontratado_by_id(self, uid: str) -> DocumentSnapshot:
+        doc_ref = db.collection("subcontratados").document(uid)
+        return doc_ref.get()
+
     @staticmethod
     def create(uid: str, user_dict: dict) -> None:
         doc_ref = db.collection("users").document(uid)
@@ -24,6 +32,12 @@ class UserCRUD:
 
     def create_subcontratado(self, uid: str, subcontratado_dict: dict) -> None:
         db.collection("subcontratados").document(uid).set(subcontratado_dict)
+
+    def update_cliente(self, uid: str, cliente_dict: dict) -> None:
+        db.collection("clientes").document(uid).update(cliente_dict)
+
+    def update_subcontratado(self, uid: str, cliente_dict: dict) -> None:
+        db.collection("subcontratados").document(uid).update(cliente_dict)
 
     @staticmethod
     def get_all_external_users(company_id: str) -> list[DocumentSnapshot]:

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:gestion_transporte/core/theme/app_text_styles.dart';
+
+import '../providers/auth_provider.dart';
 
 class ClienteRegisterPage extends StatefulWidget {
   const ClienteRegisterPage({super.key});
@@ -39,12 +43,19 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        // TODO: Llamará al provider para actualizar los datos
-        // final provider = context.read<AuthProvider>();
-        // await provider.completarDatosCliente(
-        //   nombreComercial: _nombreComercialCtr.text.trim(),
-        //   nif: _nifCtr.text.trim(), ...
-        // );
+        final provider = context.read<AuthProvider>();
+        final data = {
+          'nombre': _nombreComercialCtr.text,
+          'nif': _nifCtr.text,
+          'telefono': _telefonoCtr.text,
+          'personaContacto': _personaContactoCtr.text,
+          'calle': _calleCtr.text,
+          'ciudad': _ciudadCtr.text,
+          'provincia': _provinciaCtr.text,
+          'codigoPostal': _codigoPostalCtr.text,
+          'pais': _paisCtr.text,
+        };
+        await provider.fulfillExternalUserProfile(data);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -61,7 +72,8 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
       children: [
         Text(
           isRequired ? '$label *' : label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
+          //style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
+          style: AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.w600)
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -100,7 +112,7 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
                 children: [
                   const Text(
                     'Aún te quedan datos por rellenar para entrar en la aplicación!',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                    style: AppTextStyles.headingLg,
                   ),
                   const SizedBox(height: 32),
 
@@ -119,7 +131,7 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
                   _buildInput('Persona de Contacto', 'Ej. Carlos Ruiz', Icons.person_outline, _personaContactoCtr),
                   const SizedBox(height: 32),
 
-                  const Text('Dirección Fiscal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Dirección Fiscal', style: AppTextStyles.headingMd),
                   const SizedBox(height: 16),
 
                   _buildInput('Calle y número', 'Dirección completa', Icons.location_on_outlined, _calleCtr),

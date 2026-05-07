@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from fastapi import HTTPException, Depends
+from datetime import datetime, timezone
 from firebase_admin import auth as firebase_auth
 from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema
 from ..crud.trans_crud import TransCRUD
@@ -102,8 +103,6 @@ class TransService:
         update_data = user_data.model_dump(exclude_unset=True)
         update_data.pop("companyId", None)
         update_data.pop("rol", None)
-
-        from datetime import datetime, timezone
         update_data["updatedAt"] = datetime.now(timezone.utc)
 
         new_email = update_data.get("email")
