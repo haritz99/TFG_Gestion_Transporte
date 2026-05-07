@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/models/carga_model.dart';
-import '../../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 import '../data/carga_service.dart';
 
 class CargaProvider extends ChangeNotifier {

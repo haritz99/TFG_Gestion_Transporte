@@ -6,10 +6,13 @@ from fastapi import HTTPException
 from pydantic import Field
 
 from .base import FirestoreSchema
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ExternalUserSchema(FirestoreSchema):
+    """Estos son los datos que crea el encargado cuando da de alta (solo email y rol)"""
+    model_config = ConfigDict(extra='allow')
+
     uid: Optional[str] = None
     email: str = Field(..., min_length=3)
     rol: Optional[List[str]] = Field(default_factory=list)
@@ -19,10 +22,10 @@ class ExternalUserSchema(FirestoreSchema):
     updatedAt: Optional[datetime] = None
 
 class ClienteSchema(ExternalUserSchema):
+    """Estos son los datos que rellena el cargador cuando entra en la aplicación por primera vez."""
     nombreComercial: str = Field(..., min_length=1)
     pedidos: List[str] = Field(default_factory=list)
-    companyId: Optional[str] = Field(default=None, min_length=1)
-    cif: str = Field(..., min_length=9, max_length=9)           # Ej: B12345678
+    nif: str = Field(..., min_length=9, max_length=9)           # Ej: B12345678
     telefono: str = Field(..., min_length=9)
     personaContacto: str = Field(..., min_length=1)             # Responsable en carga
     direccionFiscal: DireccionSchema                            # Sede legal
@@ -39,8 +42,8 @@ class ClienteSchema(ExternalUserSchema):
         return cls(**data)
 
 class SubcontratadoSchema(ExternalUserSchema):
-    nombre: str = Field(..., min_length=1)
-    apellido: str = Field(..., min_length=1)
+    """Estos son los datos que rellena el subcontratado cuando entra en la aplicación por primera vez."""
+    nombreComercial: str = Field(..., min_length=1)
     cargasCedidas: List[str] = Field(default_factory=list)
     nif: str = Field(..., min_length=9, max_length=9)
     telefono: str = Field(..., min_length=9)

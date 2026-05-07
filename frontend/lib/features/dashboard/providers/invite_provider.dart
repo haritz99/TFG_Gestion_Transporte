@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/token_provider.dart';
+import '../../../core/models/external_user_model.dart';
+import '../../auth/providers/token_provider.dart';
 import '../data/invite_service.dart';
 
 class InviteProvider extends ChangeNotifier {
   bool isLoading = false;
   bool isCreated = false;
+  List<ExternalUserModel> _guests = [];
   String? tempPassword;
   String? resetLink;
   final InviteService _service;
@@ -17,7 +19,7 @@ class InviteProvider extends ChangeNotifier {
   }) : _service = service ?? InviteService(tokenProvider);
 
   Map<String, dynamic>? get createResponse => _createResponse;
-
+  List<ExternalUserModel> get guests => _guests;
 
   Future<void> createUser(String email, String rol) async {
     isLoading = true;
@@ -83,6 +85,19 @@ class InviteProvider extends ChangeNotifier {
       return opened;
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<void> getGuests() async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      _guests = await _service.fetchGuests();
+    } catch (e) {
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 }

@@ -41,7 +41,7 @@ designs/
 skills/
 DASHBOARD_DEV_PLAN.md
 DASHBOARD_TEMP_PLAN.md
-frontend/lib/features/dashboard/invite_feature_plan.md
+frontend/lib/features/dashboard/ui/widgets/invite/invite_feature_plan.md
 diagrams
 .github/copilot-instructions.md
 

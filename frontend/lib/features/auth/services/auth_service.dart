@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../../core/config/api_config.dart';
+import '../../../../core/config/api_config.dart';
+import '../../../core/models/external_user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -26,6 +27,20 @@ class AuthService {
       return UserModel.fromMap(doc.data()!, uid);
     }
     return null;
+  }
+
+  Future<ExternalUserModel?> getExternalUserData(String uid) async {
+    final cliDoc = await _firestore.collection('clientes').doc(uid).get();
+    if (cliDoc.exists) {
+      final data = cliDoc.data()!;
+      return ExternalUserModel.fromMap(data, cliDoc.id);
+    }
+    final subDoc = await _firestore.collection('subcontratados').doc(uid).get();
+    if (subDoc.exists) {
+      final data = subDoc.data()!;
+      return ExternalUserModel.fromMap(data, subDoc.id);
+    }
+    throw Exception('No se ha encontrado el usuario');
   }
 
   Future<UserCredential> register(
@@ -113,6 +128,23 @@ class AuthService {
       email: email,
       password: password,
     );
+  }
+
+  Future<ExternalUserModel> updateExternalProfile(String uid, Map<String, dynamic> data) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/ext/profile/$uid');
+    final token = await getIdToken();
+    final response = await _client.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar el perfil de usuario');
+    }
+    return ExternalUserModel.fromMap(jsonDecode(response.body), uid);
   }
 
   Future<void> signOut() async {

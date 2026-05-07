@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 import '../data/dashboard_service.dart';
 import '../../../core/models/carga_model.dart';
 import '../../cargas/data/carga_service.dart';

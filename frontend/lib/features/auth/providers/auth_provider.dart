@@ -2,18 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gestion_transporte/core/models/external_user_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
-import 'auth_service.dart';
-import 'register_company.dart';
+import '../services/auth_service.dart';
+import '../services/register_company.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   final RegisterCompanyService _registerCompanyService = RegisterCompanyService();
   UserModel? _user;
+  ExternalUserModel? _externalUser;
   bool _isLoading = false;
   String? _idToken;
 
   UserModel? get user => _user;
+  ExternalUserModel? get externalUser => _externalUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _idToken != null;
   String? get idToken => _idToken;
@@ -23,6 +26,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
+    _isLoading = true;
+    notifyListeners();
+
     try {
       if (firebaseUser != null) {
         final results = await Future.wait([
@@ -32,15 +38,25 @@ class AuthProvider extends ChangeNotifier {
 
         _user = results[0] as UserModel?;
         _idToken = results[1] as String?;
+        if (_user == null) {
+          _externalUser = await _authService.getExternalUserData(firebaseUser.uid)
+              .catchError((e) {
+            return null;
+          });
+        }
       } else {
         _user = null;
+        _externalUser = null;
         _idToken = null;
       }
     } catch (_) {
       _user = null;
+      _externalUser = null;
       _idToken = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> signIn(String email, String password) async {
@@ -65,7 +81,7 @@ class AuthProvider extends ChangeNotifier {
     final deadline = DateTime.now().add(timeout);
 
     while (DateTime.now().isBefore(deadline)) {
-      if (_idToken != null && _user != null) {
+      if (_idToken != null && (_user != null || _externalUser != null)) {
         return;
       }
       await Future<void>.delayed(const Duration(milliseconds: 80));
@@ -118,10 +134,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fulfillExternalUserProfile(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _externalUser = await _authService.updateExternalProfile(_externalUser!.uid, data);
+      await _onAuthStateChanged(FirebaseAuth.instance.currentUser);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> signOut() async {
     await _authService.signOut();
     _user = null;
+    _externalUser = null;
     _idToken = null;
     notifyListeners();
   }

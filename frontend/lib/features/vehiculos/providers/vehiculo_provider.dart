@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/models/paginated_response.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 import '../data/vehiculo_service.dart';
 
 class VehiculoProvider extends ChangeNotifier {
