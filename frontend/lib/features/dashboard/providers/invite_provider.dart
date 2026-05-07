@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/external_user_model.dart';
-import '../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 import '../data/invite_service.dart';
 
 class InviteProvider extends ChangeNotifier {

@@ -4,9 +4,9 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/token_provider.dart';
-import 'features/auth/auth_provider.dart';
-import 'features/auth/auth_service.dart';
+import 'features/auth/providers/token_provider.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/services/auth_service.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/cargas/providers/carga_provider.dart';
 import 'features/transportistas/providers/transportista_provider.dart';

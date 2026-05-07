@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ExternalUserModel {
   final String uid;
   final String email;
@@ -22,6 +24,8 @@ class ExternalUserModel {
     if (createdAtValue != null) {
       if (createdAtValue is String) {
         date = DateTime.tryParse(createdAtValue);
+      } else if (createdAtValue is Timestamp) {
+        date = createdAtValue.toDate();
       }
     }
 
@@ -35,5 +39,10 @@ class ExternalUserModel {
       datosCompletos: map['datosCompletos'] ?? false,
       createdAt: date,
     );
+  }
+
+  @override
+  String toString() {
+    return 'ExternalUserModel(uid: $uid, email: $email, nombre: $nombre, rol: $rol, datosCompletos: $datosCompletos, createdAt: $createdAt)';
   }
 }

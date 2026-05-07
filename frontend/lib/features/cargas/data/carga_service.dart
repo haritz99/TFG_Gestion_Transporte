@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../../../core/models/carga_model.dart';
-import '../../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 import '../../../core/config/api_config.dart';
 
 class CargaService {

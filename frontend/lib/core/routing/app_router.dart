@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/auth/ui/subcontratado_register_page.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/ui/cliente_register_page.dart';
 import '../../features/dashboard/ui/dashboard_page.dart';
 import '../../features/vehiculos/ui/gestion_flota_screen.dart';
-import '../../features/auth/auth_provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/ui/login_page.dart';
 import 'navigation-ui/app_navigation_shell.dart';
 
@@ -23,18 +25,58 @@ class AppRouter {
 
   static GoRouter router(AuthProvider authProvider) => GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/panel',
+    initialLocation: '/login',
     refreshListenable: authProvider,
     redirect: (context, state) {
+      if (authProvider.isLoading) return null;
       final bool isAuthenticated = authProvider.isAuthenticated;
       final bool isLoggingIn = state.matchedLocation == '/login';
-
       if (!isAuthenticated) {
-        return '/login';
+        return isLoggingIn ? null : '/login';
       }
 
-      if (isAuthenticated && isLoggingIn) {
-        return '/panel';
+      final user = authProvider.user;
+      final externalUser = authProvider.externalUser;
+
+
+      if (user == null && externalUser == null) {
+        return isLoggingIn ? null : '/login';
+      }
+
+      print("User: $user, ExternalUser: $externalUser");
+      // Lógica para usuario interno
+      if (user != null) {
+        if (isLoggingIn) {
+          if (user.rol.contains('encargado')) {
+            return '/panel';
+          }
+          else if (user.rol.contains('transportista')) {
+            return '/panel';  // TODO: Cambiar cuando haya panel propio
+          }
+        }
+      }
+
+      // Lógica para usuario externo
+      if (externalUser != null) {
+        if (!externalUser.datosCompletos) {
+          if (externalUser.rol.contains('cliente') && state.matchedLocation != '/cargador_register') {
+            return '/cargador_register';
+          } else if (externalUser.rol.contains('subcontratado') && state.matchedLocation != '/subcontratado_register') {
+            return '/subcontratado_register';
+          }
+          return null;
+        } else {
+          // Si tiene datos completos y está en el login o en el propio registro
+          if (isLoggingIn || state.matchedLocation.contains('_register')) {
+            if (externalUser.rol.contains('cliente')) {
+              return '/panel';    // TODO: Cambiar por panel cliente
+            }
+            else if (externalUser.rol.contains('subcontratado')) {
+              return '/panel';    // TODO: Cambiar por panel sub
+            }
+          }
+          return null;
+        }
       }
 
       return null;
@@ -44,6 +86,16 @@ class AppRouter {
         path: '/login',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/subcontratado_register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SubcontratadoRegisterPage(),
+      ),
+      GoRoute(
+        path: '/cargador_register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ClienteRegisterPage(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

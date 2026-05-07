@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../core/config/api_config.dart';
 import '../../../core/models/external_user_model.dart';
-import '../../../core/token_provider.dart';
+import '../../auth/providers/token_provider.dart';
 
 class InviteResponse {
   final String? tempPassword;

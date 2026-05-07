@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_transporte/core/token_provider.dart';
-import 'package:gestion_transporte/features/auth/auth_service.dart';
+import 'package:gestion_transporte/features/auth/providers/token_provider.dart';
+import 'package:gestion_transporte/features/auth/services/auth_service.dart';
 import 'package:provider/provider.dart';
-import 'package:gestion_transporte/features/auth/auth_provider.dart';
+import 'package:gestion_transporte/features/auth/providers/auth_provider.dart';
 import 'package:gestion_transporte/core/services/voice_service.dart';
 import 'package:gestion_transporte/core/services/api_service.dart';
 import 'package:gestion_transporte/features/auth/ui/login_page.dart';
