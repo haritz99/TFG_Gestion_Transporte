@@ -45,7 +45,7 @@ frontend/lib/features/dashboard/ui/widgets/invite/invite_feature_plan.md
 diagrams
 .github/copilot-instructions.md
 
-
+.coverage
 backend/.coverage
 backend/.coveragerc
 
