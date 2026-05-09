@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_encargado
 from ..dependencies.pedido_valido import get_pedido_from_carga
-from ..schemas.carga import CargaSchema, EstadoCarga
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from ..schemas.pedido import PedidoSchema
 from ..services.cargas_service import CargasService
 
@@ -44,12 +44,21 @@ def get_carga_by_id(carga_id: str,
                     service: CargasService = Depends(CargasService)) -> CargaSchema:
     return service.get_carga_by_id(carga_id, current_user.get("companyId"))
 
+@router.get("/tipos", response_model=list[TipoCargaSchema])
+def get_tipos_carga(
+        cliente_id: str,
+        current_user: dict[str, Any] = Depends(get_current_encargado),
+        service: CargasService = Depends(CargasService)):
+    return service.get_tipos_carga(current_user.get("company_id"), cliente_id)
+
+"""
 @router.post("/", response_model=CargaSchema, status_code=status.HTTP_201_CREATED)
 def create_carga(carga: CargaSchema,
                  pedido_schema: PedidoSchema = Depends(get_pedido_from_carga),
                  current_user: dict[str, Any] = Depends(get_current_encargado),
                  service: CargasService = Depends(CargasService)):
     return service.create_carga(carga, pedido_schema, current_user.get("companyId"))
+"""
 
 @router.post("/assign", response_model=CargaSchema)
 def assign_carga_transportista(

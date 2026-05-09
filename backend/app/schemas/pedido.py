@@ -41,3 +41,21 @@ class PedidoSchema(FirestoreSchema):
         if company_id != data.get("companyId"):
             raise HTTPException(status_code=403, detail="No autorizado para usar este pedido")
         return cls(**data)
+
+class AsignacionCargaSchema(FirestoreSchema):
+    tipoCargaId: str = Field(..., min_length=1)
+    transportistaId: Optional[str] = None
+    vehiculoId: Optional[str] = None
+
+class CreatePedidoSchema(FirestoreSchema):
+    descripcion: str = Field(..., min_length=1)
+    clienteId: str = Field(..., min_length=1)
+    fechaCarga: datetime.datetime = Field(...)
+    fechaDescarga: datetime.datetime = Field(...)
+    cargas: list[AsignacionCargaSchema] = Field(..., min_length=1)
+
+    @model_validator(mode='after')
+    def validar_fechas(self) -> 'CreatePedidoSchema':
+        if self.fechaDescarga <= self.fechaCarga:
+            raise ValueError('La fecha de descarga debe ser posterior a la fecha de carga.')
+        return self

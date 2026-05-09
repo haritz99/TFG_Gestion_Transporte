@@ -34,7 +34,7 @@ class CargaDataSource extends CalendarDataSource {
   @override
   Color getColor(int index) {
     final carga = _getCargaData(index);
-    return getColorByEstado(carga.estado);
+    return getColorByEstado(carga.estado.toString());
   }
 
   CargaModel _getCargaData(int index) {

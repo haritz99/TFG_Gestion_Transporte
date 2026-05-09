@@ -2,9 +2,10 @@ import datetime
 import pytz
 from typing import Optional, List
 from fastapi import HTTPException, Depends
-from ..schemas.carga import CargaSchema, EstadoCarga
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from app.crud.cargas_crud import CargasCRUD
-from app.schemas.pedido import PedidoSchema
+from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
+
 
 class CargasService:
     def __init__(self, crud: CargasCRUD = Depends(CargasCRUD)):
@@ -16,6 +17,10 @@ class CargasService:
         
         docs = self._crud.get_todas_las_cargas(company_id, cliente_id, pedido_id, transportista_id, estado.value if estado else None, dt_inicio, dt_fin)
         return [CargaSchema.from_firestore(doc, company_id) for doc in docs]
+
+    def get_tipos_carga(self, company_id: str, cliente_id: str):
+        docs = self._crud.get_tipos_cargas(company_id, cliente_id)
+        return [TipoCargaSchema.from_firestore(doc, company_id) for doc in docs]
 
     def calculate_asignados(self, company_id: str):
         result = self._crud.get_cargas_count(company_id, EstadoCarga.ASIGNADO.value)
@@ -37,13 +42,8 @@ class CargasService:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
         return CargaSchema.from_firestore(doc, company_id)
 
-    def create_carga(self, carga: CargaSchema, pedido_schema: PedidoSchema, company_id: str) -> CargaSchema:
+    def create_carga(self, carga: CargaSchema, pedido_schema: CreatePedidoSchema, company_id: str) -> CargaSchema:
         carga.companyId = company_id
-        try:
-            carga.validar_contra_pedido(pedido_schema)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-            
         carga.clienteId = pedido_schema.clienteId
         
         carga_id = self._crud.create_carga_doc(carga.model_dump())

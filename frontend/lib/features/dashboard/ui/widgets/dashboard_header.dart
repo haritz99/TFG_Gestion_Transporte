@@ -6,6 +6,7 @@ import '../../providers/invite_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'invite/invite_modal.dart';
+import 'nuevo_pedido/form_builder.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -50,7 +51,18 @@ class DashboardHeader extends StatelessWidget {
           Row(
             children: [
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  final tokenProvider = context.read<AuthTokenProvider>();
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
+                      create: (_) => InviteProvider(
+                        tokenProvider: tokenProvider,
+                      ),
+                      child: const FormBuilderPedido(),
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.add),
                 label: const Text('Nuevo Pedido'),
                 style: ElevatedButton.styleFrom(

@@ -41,6 +41,8 @@ class VehiculoProvider extends ChangeNotifier {
   int? get enMantenimiento => _enMantenimiento;
 
   List<VehiculoModel> get vehiculos => _vehiculos;
+  List<VehiculoModel> get vehiculosDisponibles =>
+      _vehiculos.where((v) => v.estado == 'disponible').toList();   // esta hardcodeado, tengo que cambiarlo...
   bool get hasMore => _hasMore;
   bool get isLoadingPage => _isLoadingPage;
 
