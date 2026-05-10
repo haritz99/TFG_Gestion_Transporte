@@ -43,7 +43,9 @@ class CargaService {
   Future<List<TipoCargaModel>> fetchTiposCarga(String cargadorId) async {
     final token = await tokenProvider.getRequiredToken();
 
-    final uri = Uri.parse('$_baseUrl/tipos');
+    final uri = Uri.parse('$_baseUrl/tipos').replace(queryParameters: {
+      'cliente_id': cargadorId,
+    });
 
     final response = await http.get(
       uri,
@@ -60,4 +62,3 @@ class CargaService {
     return data.map((e) => TipoCargaModel.fromMap(e, e['id'])).toList();
   }
 }
-

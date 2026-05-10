@@ -61,12 +61,26 @@ class PedidoProvider extends ChangeNotifier {
   }
 
   void asignarConductor(int unidadIdx, UserModel? conductor) {
-    _cargasDelPedido?.asignaciones[unidadIdx].conductor = conductor;
+    // No permite que el mismo conductor este asignado a dos cargas
+    if (_cargasDelPedido == null) return;
+    for (int i = 0; i < _cargasDelPedido!.asignaciones.length; i++) {
+      if (i != unidadIdx && _cargasDelPedido!.asignaciones[i].conductor?.uid == conductor?.uid) {
+        _cargasDelPedido!.asignaciones[i].conductor = null;
+      }
+    }
+    _cargasDelPedido!.asignaciones[unidadIdx].conductor = conductor;
     notifyListeners();
   }
 
   void asignarVehiculo(int unidadIdx, VehiculoModel? vehiculo) {
-    _cargasDelPedido?.asignaciones[unidadIdx].vehiculo = vehiculo;
+    // No permite que el mismo vehiculo este asignado a dos cargas
+    if (_cargasDelPedido == null) return;
+    for (int i = 0; i < _cargasDelPedido!.asignaciones.length; i++) {
+      if (i != unidadIdx && _cargasDelPedido!.asignaciones[i].vehiculo?.matricula == vehiculo?.matricula) {
+        _cargasDelPedido!.asignaciones[i].vehiculo = null;
+      }
+    }
+    _cargasDelPedido!.asignaciones[unidadIdx].vehiculo = vehiculo;
     notifyListeners();
   }
 

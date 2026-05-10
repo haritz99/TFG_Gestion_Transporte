@@ -76,8 +76,8 @@ class CargaSchema(CargaBaseSchema):
 
     @model_validator(mode='after')
     def validar_estado_pendiente(self) -> 'CargaSchema':
-        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId or self.vehiculoId):
-            raise ValueError('Una carga con transportista o vehículo ya asignado no puede seguir en estado pendiente.')
+        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId and self.vehiculoId):
+            raise ValueError('Una carga con transportista y vehículo ya asignado no puede seguir en estado pendiente.')
         return self
 
     @classmethod

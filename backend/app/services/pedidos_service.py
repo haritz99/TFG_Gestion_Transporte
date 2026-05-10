@@ -3,7 +3,7 @@ from typing import Optional, List
 from fastapi import HTTPException, Depends
 
 from ..crud.cargas_crud import CargasCRUD
-from ..schemas.carga import TipoCargaSchema, CargaSchema
+from ..schemas.carga import TipoCargaSchema, CargaSchema, EstadoCarga
 from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from app.crud.pedidos_crud import PedidosCRUD
 from app.services.cargas_service import CargasService
@@ -37,6 +37,11 @@ class PedidosService:
             tipo_doc = self._cargas_crud.get_tipo_carga_by_id(asig.tipoCargaId)
             tipo = TipoCargaSchema.from_firestore(tipo_doc, company_id)
 
+            if asig.transportistaId and asig.vehiculoId:
+                estado = EstadoCarga.ASIGNADO
+            else:
+                estado = EstadoCarga.PENDIENTE
+
             carga = CargaSchema(
                 origen=tipo.origen,
                 destino=tipo.destino,
@@ -48,7 +53,11 @@ class PedidosService:
                 fechaDescarga=pedido.fechaDescarga,
                 transportistaId=asig.transportistaId,
                 vehiculoId=asig.vehiculoId,
+                pedidoId=pedido.id,
+                estado=estado,
             )
+            carga.id = self._cargas_crud.create_carga_doc(carga.model_dump(exclude={'id'}))
+
 
     def delete_pedido(self, pedido_id: str, company_id: str):
         doc = self._crud.get_pedido_doc(pedido_id)

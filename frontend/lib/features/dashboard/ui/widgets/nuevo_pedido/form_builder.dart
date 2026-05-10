@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/cargas/providers/carga_provider.dart';
+import 'package:gestion_transporte/features/cargas/providers/pedido_provider.dart';
+import 'package:gestion_transporte/features/transportistas/providers/transportista_provider.dart';
+import 'package:gestion_transporte/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../../../core/models/external_user_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/features/dashboard/providers/invite_provider.dart';
@@ -14,6 +19,10 @@ class FormBuilderPedido extends StatefulWidget {
 class _FormBuilderPedidoState extends State<FormBuilderPedido> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  ExternalUserModel? _clienteSeleccionado;
+  String _descripcion = '';
+  DateTime? _fechaCarga;
+  DateTime? _fechaDescarga;
   final GlobalKey<NuevoPedidoFormState> _pedidoFormKey = GlobalKey<NuevoPedidoFormState>();
   final GlobalKey<SeleccionarCargasFormState> _cargasFormKey = GlobalKey<SeleccionarCargasFormState>();
 
@@ -30,9 +39,27 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
     _pageController.dispose();
     super.dispose();
   }
-  void _onSiguiente() {
+
+  void _onSiguiente() async {
     if (_currentPage == 0) {
       if (_pedidoFormKey.currentState?.validate() ?? false) {
+        final formState = _pedidoFormKey.currentState;
+        final cliente = formState?.selectedCliente;
+        if (cliente != null && formState != null) {
+          _clienteSeleccionado = cliente;
+          _descripcion = formState.descripcion;
+          _fechaCarga = formState.fechaCarga;
+          _fechaDescarga = formState.fechaDescarga;
+          final cargaProvider = context.read<CargaProvider>();
+          final transportistaProvider = context.read<TransportistaProvider>();
+          final vehiculoProvider = context.read<VehiculoProvider>();
+          await Future.wait([
+            cargaProvider.fetchTiposCarga(cliente.uid),
+            transportistaProvider.fetchTransportistasDisponibles(),
+            vehiculoProvider.loadInitialVehiculos(),
+          ]);
+        }
+        if (!mounted) return;
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
@@ -40,9 +67,30 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
         setState(() => _currentPage = 1);
       }
     } else {
-      Navigator.of(context).pop();
+      final pedidoProvider = context.read<PedidoProvider>();
+
+      if (_clienteSeleccionado != null && _fechaCarga != null && _fechaDescarga != null) {
+        final ok = await pedidoProvider.crearPedido(
+          descripcion: _descripcion,
+          clienteId: _clienteSeleccionado!.uid,
+          fechaCarga: _fechaCarga!,
+          fechaDescarga: _fechaDescarga!,
+        );
+        if (!mounted) return;
+        if (ok) {
+          Navigator.of(context).pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(pedidoProvider.errorMessage ?? 'Error al crear el pedido'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
+
   void _onAtras() {
     if (_currentPage > 0) {
       _pageController.previousPage(
@@ -52,6 +100,7 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
       setState(() => _currentPage--);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final clientesProvider = context.watch<InviteProvider>();
@@ -109,7 +158,7 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
             const Text('Nuevo Pedido', style: AppTextStyles.headingLg),
             const SizedBox(height: 4),
             Text(
-              _currentPage == 0 ? 'Registrar nuevo env�o' : 'Seleccionar cargas',
+              _currentPage == 0 ? 'Registrar nuevo envío' : 'Seleccionar cargas',
               style: AppTextStyles.bodyMd,
             ),
           ],

@@ -23,14 +23,17 @@ abstract class CargaBaseModel {
 }
 
 enum EstadoCarga {
-  pendiente,
-  asignado,
-  enTransito,
-  entregado;
+  pendiente('pendiente'),
+  asignado('asignado'),
+  enTransito('en_transito'),
+  entregado('entregado');
+
+  final String value;
+  const EstadoCarga(this.value);
 
   static EstadoCarga fromString(String value) {
     return EstadoCarga.values.firstWhere(
-          (e) => e.name == value,
+          (e) => e.value == value,
       orElse: () => throw ArgumentError('EstadoCarga desconocido: $value'),
     );
   }

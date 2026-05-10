@@ -14,9 +14,14 @@ class NuevoPedidoForm extends StatefulWidget {
 class NuevoPedidoFormState extends State<NuevoPedidoForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _descripcionController = TextEditingController();
-  String? _selectedCliente;
+  ExternalUserModel? _selectedCliente;
   DateTime? _fechaCarga;
   DateTime? _fechaDescarga;
+
+  ExternalUserModel? get selectedCliente => _selectedCliente;
+  String get descripcion => _descripcionController.text;
+  DateTime? get fechaCarga => _fechaCarga;
+  DateTime? get fechaDescarga => _fechaDescarga;
 
   @override
   void dispose() {
@@ -68,12 +73,12 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
           const SizedBox(height: 16),
           Text('Cargador', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold, color: AppColors.titleText)),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<ExternalUserModel>(
             initialValue: _selectedCliente,
             decoration: _inputDecoration('Seleccionar cargador...'),
             style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
             items: widget.clientes.map((cliente) {
-              return DropdownMenuItem(value: cliente.nombre, child: Text(cliente.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText)));
+              return DropdownMenuItem(value: cliente, child: Text(cliente.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText)));
             }).toList(),
             onChanged: (val) => setState(() => _selectedCliente = val),
             validator: (value) => value == null ? 'Requerido' : null,

@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 import datetime
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, BaseModel
 
 from .base import FirestoreSchema
 import enum
@@ -47,15 +47,12 @@ class AsignacionCargaSchema(FirestoreSchema):
     transportistaId: Optional[str] = None
     vehiculoId: Optional[str] = None
 
-class CreatePedidoSchema(FirestoreSchema):
+class CreatePedidoSchema(BaseModel):
+    id: Optional[str] = None
     descripcion: str = Field(..., min_length=1)
     clienteId: str = Field(..., min_length=1)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
     cargas: list[AsignacionCargaSchema] = Field(..., min_length=1)
+    companyId: Optional[str] = Field(default=None, min_length=1)
 
-    @model_validator(mode='after')
-    def validar_fechas(self) -> 'CreatePedidoSchema':
-        if self.fechaDescarga <= self.fechaCarga:
-            raise ValueError('La fecha de descarga debe ser posterior a la fecha de carga.')
-        return self

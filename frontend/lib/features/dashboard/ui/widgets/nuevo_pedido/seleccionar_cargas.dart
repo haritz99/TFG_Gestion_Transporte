@@ -51,9 +51,18 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                 initialValue: _selectedTipo,
                 hint: const Text('Tipo de carga'),
                 decoration: _inputDecoration(),
-                items: cargaProvider.tiposCarga
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c.mercancia)))
-                    .toList(),
+                isExpanded: true,
+                itemHeight: 56,
+                items: cargaProvider.tiposCarga.map((c) => DropdownMenuItem(
+                  value: c,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(c.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText), overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                )).toList(),
                 onChanged: (v) => setState(() => _selectedTipo = v),
               ),
             ),
@@ -81,13 +90,28 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
           ],
         ),
 
+        if (_selectedTipo != null)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Text(_selectedTipo!.descripcion ?? '', style: AppTextStyles.bodySm),
+                const SizedBox(height: 8),
+                Text('${_selectedTipo!.precio}€/ud', style: AppTextStyles.bodySm),
+                const SizedBox(height: 8),
+                Text('Origen: ${_selectedTipo!.origen} - Destino: ${_selectedTipo!.destino}', style: AppTextStyles.bodySm),
+              ],
+            ),
+          ),
+
         const SizedBox(height: 24),
 
         if (seleccion != null)
           ExpansionTile(
             title: Text(
               '${seleccion.tipo.mercancia} · ${seleccion.tipo.precio}€/ud · '
-                  'Subtotal: ${seleccion.subtotal.toStringAsFixed(2)}€',
+                  'Total: ${seleccion.subtotal.toStringAsFixed(2)}€',
             ),
             initiallyExpanded: true,
             children: List.generate(seleccion.cantidad, (unidadIdx) {
@@ -110,12 +134,13 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<UserModel?>(
+                              isExpanded: true,
                               initialValue: asig.conductor,
                               decoration: _inputDecoration().copyWith(labelText: 'Conductor'),
                               items: [
                                 const DropdownMenuItem(value: null, child: Text('Sin asignar')),
                                 ...transportistaProvider.transportistasDisponibles.map((t) =>
-                                    DropdownMenuItem(value: t, child: Text(t.nombre))),
+                                    DropdownMenuItem(value: t, child: Text(t.nombre, overflow: TextOverflow.ellipsis))),
                               ],
                               // Sin cargaIdx
                               onChanged: (v) => context
@@ -126,6 +151,7 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<VehiculoModel?>(
+                              isExpanded: true,
                               initialValue: asig.vehiculo,
                               decoration: _inputDecoration().copyWith(labelText: 'Vehículo'),
                               items: [
@@ -133,7 +159,6 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                                 ...vehiculoProvider.vehiculosDisponibles.map((v) =>
                                     DropdownMenuItem(value: v, child: Text(v.matricula))),
                               ],
-                              // Sin cargaIdx
                               onChanged: (v) => context
                                   .read<PedidoProvider>()
                                   .asignarVehiculo(unidadIdx, v),

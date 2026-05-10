@@ -20,6 +20,7 @@ class CargasService:
 
     def get_tipos_carga(self, company_id: str, cliente_id: str):
         docs = self._crud.get_tipos_cargas(company_id, cliente_id)
+        print("docs: ", docs)
         return [TipoCargaSchema.from_firestore(doc, company_id) for doc in docs]
 
     def calculate_asignados(self, company_id: str):

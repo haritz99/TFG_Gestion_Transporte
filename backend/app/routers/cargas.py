@@ -38,18 +38,22 @@ def get_cargas(
         fecha_fin=fecha_fin
     )
 
-@router.get("/{carga_id}", response_model=CargaSchema)
-def get_carga_by_id(carga_id: str,
-                    current_user: dict[str, Any] = Depends(get_current_encargado),
-                    service: CargasService = Depends(CargasService)) -> CargaSchema:
-    return service.get_carga_by_id(carga_id, current_user.get("companyId"))
-
 @router.get("/tipos", response_model=list[TipoCargaSchema])
 def get_tipos_carga(
         cliente_id: str,
         current_user: dict[str, Any] = Depends(get_current_encargado),
         service: CargasService = Depends(CargasService)):
-    return service.get_tipos_carga(current_user.get("company_id"), cliente_id)
+
+    return service.get_tipos_carga(current_user.get("companyId"), cliente_id)
+
+
+@router.get("/{carga_id}", response_model=CargaSchema)
+def get_carga_by_id(carga_id: str,
+                    current_user: dict[str, Any] = Depends(get_current_encargado),
+                    service: CargasService = Depends(CargasService)) -> CargaSchema:
+
+    return service.get_carga_by_id(carga_id, current_user.get("companyId"))
+
 
 """
 @router.post("/", response_model=CargaSchema, status_code=status.HTTP_201_CREATED)
