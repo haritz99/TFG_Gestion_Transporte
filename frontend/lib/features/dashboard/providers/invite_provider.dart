@@ -43,10 +43,17 @@ class InviteProvider extends ChangeNotifier {
   }
 
   Future<bool> sendInviteEmail(String email, String rol) async {
-    if (_createResponse == null) return false;
+    if (_createResponse == null) {
+      try {
+        final link = await _service.getResetLink(email);
+        _createResponse = {'password_reset_link': link};
+      } catch (e) {
+        debugPrint('Error obteniendo reset link: $e');
+      }
+    }
 
-    final String? tempPassword = _createResponse!['temp_password'] as String?;
-    final String? resetLink = _createResponse!['password_reset_link'] as String?;
+    final String? tempPassword = _createResponse?['temp_password'] as String?;
+    final String? resetLink = _createResponse?['password_reset_link'] as String?;
     final roleName = rol == 'cliente' ? 'Cargador' : 'Subcontratado';
     final body = StringBuffer()
       ..writeln('Hola,')
@@ -93,6 +100,20 @@ class InviteProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _guests = await _service.fetchGuests();
+    } catch (e) {
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteGuest(String uid) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _service.deleteGuest(uid);
+      _guests.removeWhere((guest) => guest.uid == uid);
     } catch (e) {
       rethrow;
     } finally {

@@ -42,10 +42,11 @@ class UserCRUD:
     @staticmethod
     def get_all_external_users(company_id: str) -> list[DocumentSnapshot]:
         """
-        Obtiene todos los clientes y subcontratados de una compañía.
+        Obtiene todos los clientes y subcontratados activos de una compañía.
         """
-        clientes = db.collection("clientes").where("companyId", "==", company_id).stream()
-        subcontratados = db.collection("subcontratados").where("companyId", "==", company_id).stream()
+        clientes = db.collection("clientes").where("companyId", "==", company_id).where("activo", "==", True).stream()
+            
+        subcontratados = db.collection("subcontratados").where("companyId", "==", company_id).where("activo", "==", True).stream()
 
         # Combinamos ambos streams en una lista
         all_users = list(clientes) + list(subcontratados)

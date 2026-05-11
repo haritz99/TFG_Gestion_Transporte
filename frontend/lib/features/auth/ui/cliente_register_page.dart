@@ -45,7 +45,7 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
       try {
         final provider = context.read<AuthProvider>();
         final data = {
-          'nombre': _nombreComercialCtr.text,
+          'nombreComercial': _nombreComercialCtr.text,
           'nif': _nifCtr.text,
           'telefono': _telefonoCtr.text,
           'personaContacto': _personaContactoCtr.text,

@@ -19,6 +19,14 @@ class RegisterService:
         characters = string.ascii_letters + string.digits + "!@#$%^&*"
         return ''.join(secrets.choice(characters) for _ in range(length))
 
+    def generate_reset_link(self, email: str) -> str:
+        try:
+            return firebase_auth.generate_password_reset_link(email)
+        except firebase_auth.UserNotFoundError:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error al generar el enlace: {str(e)}")
+
     def create_firebase_auth_user(self, email: str, rol: list[str], company_id: str) -> tuple[str, str, str | None]:
         temp_password = self.generate_temp_password()
         new_auth_user = firebase_auth.create_user(email=email, password=temp_password)
