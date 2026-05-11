@@ -8,12 +8,14 @@ class CargaProvider extends ChangeNotifier {
 
   List<CargaModel> _cargas = [];
   List<CargaModel> get cargas => _cargas;
+  List<TipoCargaModel> _tiposCarga = [];
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+  List<TipoCargaModel> get tiposCarga => _tiposCarga;
 
   CargaProvider({
     required AuthTokenProvider tokenProvider,
@@ -41,6 +43,23 @@ class CargaProvider extends ChangeNotifier {
     final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
     await fetchCargasDelMes(start, end);
+  }
+
+  Future<void> fetchTiposCarga(String cargadorId) async {
+    if (_isLoading) return;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _tiposCarga = await _service.fetchTiposCarga(cargadorId);
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
 

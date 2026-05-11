@@ -25,16 +25,16 @@ class CargaDataSource extends CalendarDataSource {
   }
 
   static Color getColorByEstado(String estado) {
-    if (estado == 'entregado') return AppColors.calendarEntregado;
-    if (estado == 'asignado') return AppColors.calendarAsignado;
-    if (estado == 'en_ruta' || estado == 'en_transito') return AppColors.calendarEnRuta;
+    if (estado == EstadoCarga.entregado.value) return AppColors.calendarEntregado;
+    if (estado == EstadoCarga.asignado.value) return AppColors.calendarAsignado;
+    if (estado == EstadoCarga.enTransito.value) return AppColors.calendarEnRuta;
     return AppColors.calendarPendiente;
   }
 
   @override
   Color getColor(int index) {
     final carga = _getCargaData(index);
-    return getColorByEstado(carga.estado);
+    return getColorByEstado(carga.estado.value);
   }
 
   CargaModel _getCargaData(int index) {

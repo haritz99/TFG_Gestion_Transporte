@@ -20,6 +20,14 @@ class CargasCRUD:
     def get_carga_doc(self, carga_id: str):
         return db.collection("cargas").document(carga_id).get()
 
+    def get_tipos_cargas(self, company_id: str, cliente_id: str) -> list:
+        return (db.collection("tipos_carga")
+                .where("companyId", "==", company_id)
+                .where("clienteId", "==", cliente_id)).get()
+
+    def get_tipo_carga_by_id(self, tipo_id: str) -> list:
+        return db.collection("tipos_carga").document(tipo_id).get()
+
     def create_carga_doc(self, payload: dict) -> str:
         doc_ref = db.collection("cargas").document()
         payload["id"] = doc_ref.id

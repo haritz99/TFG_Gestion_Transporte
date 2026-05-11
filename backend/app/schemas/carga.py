@@ -19,29 +19,32 @@ class EstadoCarga(str, enum.Enum):
     ENTREGADO = 'entregado'
 
 
-class CargaSchema(FirestoreSchema):
-    id: Optional[str] = None
+class CargaBaseSchema(FirestoreSchema):
     origen: str = Field(..., min_length=1)
     destino: str = Field(..., min_length=1)
-    mercancia: str = Field(..., min_length=1)   #tipo de mercancia
+    mercancia: str = Field(..., min_length=1)
     numBultos: int = Field(..., gt=0)
     peso: float = Field(..., gt=0)
+    precio: float = Field(..., gt=0)
     largo: Optional[float] = Field(default=None, gt=0)
     ancho: Optional[float] = Field(default=None, gt=0)
     alto: Optional[float] = Field(default=None, gt=0)
+
+
+class CargaSchema(CargaBaseSchema):
+    id: Optional[str] = None
     estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
     transportistaId: Optional[str] = None
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
-    rutaId: Optional[str] = None
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
     createdAt: Optional[datetime.datetime] = None
     updatedAt: Optional[datetime.datetime] = None
 
-    def validar_contra_pedido(self, pedido: 'PedidoSchema'):
+    def validar_contra_pedido(self, pedido: PedidoSchema):
         """
         Valida que la carga cumpla con las restricciones de su pedido padre.
         Se debe llamar a este método desde el servicio/router tras obtener el pedido de la base de datos y validarlo con Pydantic.
@@ -73,8 +76,8 @@ class CargaSchema(FirestoreSchema):
 
     @model_validator(mode='after')
     def validar_estado_pendiente(self) -> 'CargaSchema':
-        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId or self.vehiculoId):
-            raise ValueError('Una carga con transportista o vehículo ya asignado no puede seguir en estado pendiente.')
+        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId and self.vehiculoId):
+            raise ValueError('Una carga con transportista y vehículo ya asignado no puede seguir en estado pendiente.')
         return self
 
     @classmethod
@@ -85,4 +88,26 @@ class CargaSchema(FirestoreSchema):
         data["id"] = doc.id
         if company_id != data.get("companyId"):
             raise HTTPException(status_code=403, detail="No autorizado para usar esta carga")
+        return cls(**data)
+
+
+# Tipo de carga que estará prefijada
+class TipoCargaSchema(CargaBaseSchema):
+    id: Optional[str] = None
+    nombre: str = Field(..., min_length=1)
+    descripcion: Optional[str] = None
+    pesoMax: float = Field(..., gt=0)
+    companyId: str = Field(..., min_length=1)
+    clienteId: str = Field(..., min_length=1) # Con qué cargador se prefija (no todos tienen las mismas)
+    createdAt: Optional[datetime.datetime] = None
+    updatedAt: Optional[datetime.datetime] = None
+
+    @classmethod
+    def from_firestore(cls, doc, company_id):
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Tipo de carga no encontrado")
+        data = doc.to_dict()
+        data["id"] = doc.id
+        if company_id != data.get("companyId"):
+            raise HTTPException(status_code=403, detail="No autorizado para usar este tipo de carga")
         return cls(**data)

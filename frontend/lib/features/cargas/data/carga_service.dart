@@ -39,5 +39,26 @@ class CargaService {
       throw Exception('Error al cargar las cargas');
     }
   }
-}
 
+  Future<List<TipoCargaModel>> fetchTiposCarga(String cargadorId) async {
+    final token = await tokenProvider.getRequiredToken();
+
+    final uri = Uri.parse('$_baseUrl/tipos').replace(queryParameters: {
+      'cliente_id': cargadorId,
+    });
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al obtener tipos de carga: ${response.statusCode}');
+    }
+
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((e) => TipoCargaModel.fromMap(e, e['id'])).toList();
+  }
+}

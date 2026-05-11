@@ -158,7 +158,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
   Widget _appointmentBuilder(BuildContext context, CalendarAppointmentDetails details) {
     if (details.appointments.isEmpty) return const SizedBox();
     final CargaModel carga = details.appointments.first;
-    final Color eventColor = CargaDataSource.getColorByEstado(carga.estado);
+    final Color eventColor = CargaDataSource.getColorByEstado(carga.estado.value);
 
     if (_currentView == CalendarView.month && details.bounds.width < 50) {
       // Aqui solo el botón para ver que hay cargas (sin info.)
@@ -232,7 +232,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                carga.estado.toUpperCase(),
+                carga.estado.value.toUpperCase(),
                 style: TextStyle(
                   color: eventColor,
                   fontSize: 10,

@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import HTTPException
 import datetime
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, BaseModel
 
 from .base import FirestoreSchema
 import enum
@@ -41,3 +41,18 @@ class PedidoSchema(FirestoreSchema):
         if company_id != data.get("companyId"):
             raise HTTPException(status_code=403, detail="No autorizado para usar este pedido")
         return cls(**data)
+
+class AsignacionCargaSchema(FirestoreSchema):
+    tipoCargaId: str = Field(..., min_length=1)
+    transportistaId: Optional[str] = None
+    vehiculoId: Optional[str] = None
+
+class CreatePedidoSchema(BaseModel):
+    id: Optional[str] = None
+    descripcion: str = Field(..., min_length=1)
+    clienteId: str = Field(..., min_length=1)
+    fechaCarga: datetime.datetime = Field(...)
+    fechaDescarga: datetime.datetime = Field(...)
+    cargas: list[AsignacionCargaSchema] = Field(..., min_length=1)
+    companyId: Optional[str] = Field(default=None, min_length=1)
+

@@ -1,13 +1,19 @@
 import datetime
 from typing import Optional, List
 from fastapi import HTTPException, Depends
-from ..schemas.pedido import PedidoSchema
+
+from ..crud.cargas_crud import CargasCRUD
+from ..schemas.carga import TipoCargaSchema, CargaSchema, EstadoCarga
+from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from app.crud.pedidos_crud import PedidosCRUD
 from app.services.cargas_service import CargasService
 
 class PedidosService:
-    def __init__(self, crud: PedidosCRUD = Depends(PedidosCRUD), cargas_service: CargasService = Depends(CargasService)):
+    def __init__(self, crud: PedidosCRUD = Depends(PedidosCRUD),
+                 cargas_crud: CargasCRUD = Depends(CargasCRUD),
+                 cargas_service: CargasService = Depends(CargasService)):
         self._crud = crud
+        self._cargas_crud = cargas_crud
         self._cargas_service = cargas_service
 
     def fetch_pedidos(self, company_id: str, cliente_id: Optional[str] = None, estado: Optional[str] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[PedidoSchema]:
@@ -23,10 +29,40 @@ class PedidosService:
             raise HTTPException(status_code=404, detail="Pedido no encontrado")
         return PedidoSchema.from_firestore(doc, company_id)
 
-    def create_pedido(self, pedido: PedidoSchema, company_id: str) -> PedidoSchema:
+    def create_pedido(self, pedido: CreatePedidoSchema, company_id: str):
         pedido.companyId = company_id
-        pedido.id = self._crud.create_pedido_doc(pedido.model_dump())
-        return pedido
+        pedido.id = self._crud.create_pedido_doc(pedido.model_dump(exclude={'cargas', 'id'}))
+
+        for asig in pedido.cargas:
+            tipo_doc = self._cargas_crud.get_tipo_carga_by_id(asig.tipoCargaId)
+            tipo = TipoCargaSchema.from_firestore(tipo_doc, company_id)
+
+            if asig.transportistaId and asig.vehiculoId:
+                estado = EstadoCarga.ASIGNADO
+            else:
+                estado = EstadoCarga.PENDIENTE
+
+            carga = CargaSchema(
+                origen=tipo.origen,
+                destino=tipo.destino,
+                mercancia=tipo.mercancia,
+                numBultos=tipo.numBultos,
+                peso=tipo.peso,
+                precio=tipo.precio,
+                largo=tipo.largo,
+                ancho=tipo.ancho,
+                alto=tipo.alto,
+                fechaCarga=pedido.fechaCarga,
+                fechaDescarga=pedido.fechaDescarga,
+                transportistaId=asig.transportistaId,
+                vehiculoId=asig.vehiculoId,
+                pedidoId=pedido.id,
+                clienteId=pedido.clienteId,
+                estado=estado,
+                companyId=company_id
+            )
+            carga.id = self._cargas_crud.create_carga_doc(carga.model_dump(exclude={'id'}))
+
 
     def delete_pedido(self, pedido_id: str, company_id: str):
         doc = self._crud.get_pedido_doc(pedido_id)
