@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:gestion_transporte/features/auth/providers/auth_provider.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
@@ -22,6 +24,21 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
   String get descripcion => _descripcionController.text;
   DateTime? get fechaCarga => _fechaCarga;
   DateTime? get fechaDescarga => _fechaDescarga;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = context.read<AuthProvider>().user;
+    if (user != null && user.rol.contains('cliente')) {
+      _selectedCliente = ExternalUserModel(
+        uid: user.uid,
+        nombre: user.nombre,
+        rol: user.rol,
+        datosCompletos: true,
+        email: user.email,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -73,16 +90,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
           const SizedBox(height: 16),
           Text('Cargador', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold, color: AppColors.titleText)),
           const SizedBox(height: 8),
-          DropdownButtonFormField<ExternalUserModel>(
-            initialValue: _selectedCliente,
-            decoration: _inputDecoration('Seleccionar cargador...'),
-            style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
-            items: widget.clientes.map((cliente) {
-              return DropdownMenuItem(value: cliente, child: Text(cliente.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText)));
-            }).toList(),
-            onChanged: (val) => setState(() => _selectedCliente = val),
-            validator: (value) => value == null ? 'Requerido' : null,
-          ),
+          _buildCargadorDropDown(widget.clientes),
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -125,6 +133,34 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
     );
   }
 
+  Widget _buildCargadorDropDown(List<ExternalUserModel> clientes) {
+    final user = context.watch<AuthProvider>().externalUser;
+    final isCargador = user?.rol.contains('cliente') ?? false;
+
+    if (isCargador) {
+      return TextFormField(
+        initialValue: user?.nombre,
+        enabled: false,
+        decoration: _inputDecoration(''),
+        style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
+      );
+    }
+
+    return DropdownButtonFormField<ExternalUserModel>(
+      initialValue: _selectedCliente,
+      decoration: _inputDecoration('Seleccionar cargador...'),
+      style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
+      items: widget.clientes.map((cliente) {
+        return DropdownMenuItem(
+          value: cliente,
+          child: Text(cliente.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText)),
+        );
+      }).toList(),
+      onChanged: (val) => setState(() => _selectedCliente = val),
+      validator: (value) => value == null ? 'Requerido' : null,
+    );
+  }
+
   Widget _buildDatesColumn(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,6 +171,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       ],
     );
   }
+
   Widget _buildCargaDate(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
