@@ -59,7 +59,9 @@ class PedidosService:
                 pedidoId=pedido.id,
                 clienteId=pedido.clienteId,
                 estado=estado,
-                companyId=company_id
+                companyId=company_id,
+                createdAt=datetime.datetime.now(),
+                updatedAt=datetime.datetime.now()
             )
             carga.id = self._cargas_crud.create_carga_doc(carga.model_dump(exclude={'id'}))
 

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/models/carga_model.dart';
 import '../../../../../core/models/user_model.dart';
 import '../../../../../core/models/vehiculo_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
-import '../../../../cargas/providers/carga_provider.dart';
 import '../../../../cargas/providers/pedido_provider.dart';
 import '../../../../transportistas/providers/transportista_provider.dart';
 import '../../../../vehiculos/providers/vehiculo_provider.dart';
@@ -17,23 +15,10 @@ class SeleccionarCargasForm extends StatefulWidget {
 }
 
 class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
-  TipoCargaModel? _selectedTipo;
-  int _cantidad = 1;
-
   bool validate() => context.read<PedidoProvider>().cargasDelPedido != null;
-
-  void _addCarga() {
-    if (_selectedTipo == null) return;
-    context.read<PedidoProvider>().anadirCarga(_selectedTipo!, _cantidad);
-    setState(() {
-      _selectedTipo = null;
-      _cantidad = 1;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    final cargaProvider = context.watch<CargaProvider>();
     final pedidoProvider = context.watch<PedidoProvider>();
     final vehiculoProvider = context.watch<VehiculoProvider>();
     final transportistaProvider = context.watch<TransportistaProvider>();
@@ -43,69 +28,6 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: DropdownButtonFormField<TipoCargaModel>(
-                initialValue: _selectedTipo,
-                hint: const Text('Tipo de carga'),
-                decoration: _inputDecoration(),
-                isExpanded: true,
-                itemHeight: 56,
-                items: cargaProvider.tiposCarga.map((c) => DropdownMenuItem(
-                  value: c,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(c.nombre, style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText), overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
-                )).toList(),
-                onChanged: (v) => setState(() => _selectedTipo = v),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 80,
-              child: TextFormField(
-                key: ValueKey(_cantidad),
-                initialValue: _cantidad.toString(),
-                keyboardType: TextInputType.number,
-                decoration: _inputDecoration().copyWith(labelText: 'Cant.'),
-                onChanged: (v) => setState(() => _cantidad = int.tryParse(v) ?? 1),
-              ),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: _selectedTipo != null ? _addCarga : null,
-              child: const Text('Añadir', style: AppTextStyles.buttonSmall),
-            ),
-          ],
-        ),
-
-        if (_selectedTipo != null)
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                Text(_selectedTipo!.descripcion ?? '', style: AppTextStyles.bodySm),
-                const SizedBox(height: 8),
-                Text('${_selectedTipo!.precio}€/ud', style: AppTextStyles.bodySm),
-                const SizedBox(height: 8),
-                Text('Origen: ${_selectedTipo!.origen} - Destino: ${_selectedTipo!.destino}', style: AppTextStyles.bodySm),
-              ],
-            ),
-          ),
-
-        const SizedBox(height: 24),
 
         if (seleccion != null)
           ExpansionTile(
