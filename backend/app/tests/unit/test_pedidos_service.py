@@ -162,9 +162,9 @@ def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_cru
     # Verificar que los campos críticos que antes fallaban están presentes
     assert carga_guardada["clienteId"] == "cli1"
     assert carga_guardada["companyId"] == "comp1"
-    assert carga_guardada["largo"] == 1.2
-    assert carga_guardada["ancho"] == 0.8
-    assert carga_guardada["alto"] == 1.0
+    assert carga_guardada["largo"] == pytest.approx(1.2)
+    assert carga_guardada["ancho"] == pytest.approx(0.8)
+    assert carga_guardada["alto"] == pytest.approx(1.0)
     assert carga_guardada["pedidoId"] == "new_p_id"
 
 def test_pedidos_service_delete_pedido_ok(service, mock_pedidos_crud, mock_cargas_service, valid_pedido_dict):
