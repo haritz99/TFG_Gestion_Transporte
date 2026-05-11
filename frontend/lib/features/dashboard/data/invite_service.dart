@@ -57,6 +57,27 @@ class InviteService {
 	Future<InviteResponse> createSubcontratado(String email) async =>
 		createExternalUser(email: email, rol: 'subcontratado');
 
+	Future<String> getResetLink(String email) async {
+		final token = await _tokenProvider.getRequiredToken();
+		final uri = Uri.parse('${ApiConfig.baseUrl}/ext/reset-link?email=$email');
+
+		final response = await _client.post(
+			uri,
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer $token',
+			},
+		);
+
+		if (response.statusCode == 200) {
+			final Map<String, dynamic> data = jsonDecode(response.body);
+			return data['password_reset_link'].toString();
+		} else {
+			final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+			throw Exception(errorData['detail'] ?? 'Error al obtener enlace de reset');
+		}
+	}
+
 	Future<List<ExternalUserModel>> fetchGuests() async {
 		final token = await _tokenProvider.getRequiredToken();
 		final uri = Uri.parse('${ApiConfig.baseUrl}/ext/');
@@ -76,6 +97,28 @@ class InviteService {
 			}).toList();
 		} else {
 			throw Exception('Error al obtener invitados: ${response.statusCode}');
+		}
+	}
+
+	Future<void> deleteGuest(String uid) async {
+		final token = await _tokenProvider.getRequiredToken();
+		final uri = Uri.parse('${ApiConfig.baseUrl}/ext/$uid');
+
+		final response = await _client.delete(
+			uri,
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer $token',
+			},
+		);
+
+		if (response.statusCode != 204 && response.statusCode != 200) {
+      if (response.body.isNotEmpty) {
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(errorData['detail'] ?? 'Error al dar de baja al usuario');
+      } else {
+        throw Exception('Error al dar de baja al usuario: ${response.statusCode}');
+      }
 		}
 	}
 }

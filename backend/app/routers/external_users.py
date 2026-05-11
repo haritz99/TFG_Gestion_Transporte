@@ -20,6 +20,18 @@ def create_external_user(
     company_id = current_user.get("companyId")
     return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol)
 
+@router.post("/reset-link", response_model=dict[str, str])
+def get_reset_link(
+    email: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: RegisterService = Depends(RegisterService),
+) -> dict[str, str]:
+    """
+    Genera un nuevo enlace de restablecimiento de contraseña para un usuario existente.
+    """
+    link = service.generate_reset_link(email)
+    return {"password_reset_link": link}
+
 @router.get("/", response_model=list[ExternalUserSchema])
 def fetch_external_users(
     current_user: dict[str, Any] = Depends(get_current_encargado),
@@ -59,6 +71,17 @@ def update_external_user_profile(
     return service.update_external_user_profile(uid, payload, current_user)
 
 
+
+@router.delete("/{uid}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_external_user(
+    uid: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: ExternalUserService = Depends(ExternalUserService)
+):
+    """
+    Realiza un soft delete de un cliente o subcontratado.
+    """
+    return service.soft_delete_external_user(uid, current_user.get("companyId"))
 
 @router.delete("/cli/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_cliente(

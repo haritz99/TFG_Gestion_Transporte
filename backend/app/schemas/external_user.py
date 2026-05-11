@@ -18,6 +18,7 @@ class ExternalUserSchema(FirestoreSchema):
     rol: Optional[List[str]] = Field(default_factory=list)
     companyId: Optional[str] = None
     datosCompletos: bool = Field(default=False)
+    activo: bool = Field(default=True)
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../core/models/external_user_model.dart';
 import '../../../providers/invite_provider.dart';
 
 class GuestList extends StatelessWidget {
@@ -65,7 +66,7 @@ class GuestList extends StatelessWidget {
                   message: 'Enviar email de invitación',
                   child: IconButton(
                     icon: const Icon(Icons.email_outlined, size: 20),
-                    onPressed: () => inviteProvider.sendInviteEmail(guest.email, guest.rol[0]),
+                    onPressed: () async => await inviteProvider.sendInviteEmail(guest.email, guest.rol[0]),
                     color: Colors.grey.shade600,
                   )
                 ),
@@ -73,7 +74,7 @@ class GuestList extends StatelessWidget {
                   message: 'Dar de baja',
                   child: IconButton(
                     icon: const Icon(Icons.person_remove_outlined, size: 20),
-                    onPressed: () {},
+                    onPressed: () => _confirmDelete(context, inviteProvider, guest),
                     color: Colors.grey.shade600,
                   ),
                 )
@@ -83,6 +84,44 @@ class GuestList extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, InviteProvider provider, ExternalUserModel guest) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Dar de baja usuario'),
+        content: Text('¿Estás seguro de que quieres dar de baja a ${guest.nombre}? Ya no podrá acceder a la plataforma.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Dar de baja', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await provider.deleteGuest(guest.uid);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Usuario dado de baja correctamente')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildRoleBadge(String rol) {

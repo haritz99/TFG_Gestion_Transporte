@@ -6,6 +6,7 @@ class ExternalUserModel {
   final String nombre;
   final List<String> rol;
   final bool datosCompletos;
+  final bool activo;
   final DateTime? createdAt;
 
   ExternalUserModel({
@@ -14,6 +15,7 @@ class ExternalUserModel {
     required this.nombre,
     required this.rol,
     required this.datosCompletos,
+    this.activo = true,
     this.createdAt,
   });
 
@@ -22,9 +24,9 @@ class ExternalUserModel {
     final createdAtValue = map['createdAt'];
 
     final rawRol = map['rol'];
-    final List<String> normalizedRol = rawRol is List
-        ? List<String>.from(rawRol)
-        : [rawRol];
+    final List<String> normalizedRol = rawRol == null
+        ? <String>[]
+        : (rawRol is List ? List<String>.from(rawRol) : [rawRol.toString()]);
 
     if (createdAtValue != null) {
       if (createdAtValue is String) {
@@ -40,7 +42,19 @@ class ExternalUserModel {
       nombre: map['nombreComercial'] ?? 'Sin nombre',
       rol: normalizedRol,
       datosCompletos: map['datosCompletos'] ?? false,
+      activo: map['activo'] ?? true,
       createdAt: date,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'email': email,
+      'nombreComercial': nombre,
+      'rol': rol,
+      'datosCompletos': datosCompletos,
+      'activo': activo,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+    };
   }
 }

@@ -47,7 +47,7 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
       try {
         final provider = context.read<AuthProvider>();
         final data = {
-          'nombre': _nombreComercialCtr.text,
+          'nombreComercial': _nombreComercialCtr.text,
           'razonSocial': _razonSocialCtr.text,
           'nif': _nifCtr.text,
           'telefono': _telefonoCtr.text,
