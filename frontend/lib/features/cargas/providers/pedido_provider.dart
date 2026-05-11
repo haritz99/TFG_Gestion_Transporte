@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/carga_model.dart';
+import '../../../core/models/external_user_model.dart';
 import '../../../core/models/pedido_model.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/models/vehiculo_model.dart';
@@ -23,8 +24,9 @@ class CargasSeleccionadas {
 class AsignacionCarga {
   UserModel? conductor;
   VehiculoModel? vehiculo;
+  DateTime? fechaLimite;
 
-  AsignacionCarga({this.conductor, this.vehiculo});
+  AsignacionCarga({this.conductor, this.vehiculo, this.fechaLimite});
 }
 
 
@@ -45,10 +47,26 @@ class PedidoProvider extends ChangeNotifier {
 
   double get precioTotal => _cargasDelPedido?.subtotal ?? 0.0;
 
+  Map<String, dynamic> _datosTemporalPedido = {};
+  Map<String, dynamic> get datosTemporalPedido => _datosTemporalPedido;
+
   PedidoProvider({
     required AuthTokenProvider tokenProvider,
     PedidoService? service,
   }) : _service = service ?? PedidoService(tokenProvider);
+
+  void actualizarDatosTemporales({
+    String? descripcion,
+    ExternalUserModel? cliente,
+    DateTime? fechaCarga,
+    DateTime? fechaDescarga,
+  }) {
+    if (descripcion != null) _datosTemporalPedido['descripcion'] = descripcion;
+    if (cliente != null) _datosTemporalPedido['cliente'] = cliente;
+    if (fechaCarga != null) _datosTemporalPedido['fechaCarga'] = fechaCarga;
+    if (fechaDescarga != null) _datosTemporalPedido['fechaDescarga'] = fechaDescarga;
+    notifyListeners();
+  }
 
   void anadirCarga(TipoCargaModel tipo, int cantidad) {
     _cargasDelPedido = CargasSeleccionadas(tipo: tipo, cantidad: cantidad);
@@ -84,6 +102,12 @@ class PedidoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void asignarFechaLimite(int unidadIdx, DateTime fecha) {
+    if (_cargasDelPedido == null) return;
+    _cargasDelPedido!.asignaciones[unidadIdx].fechaLimite = fecha;
+    notifyListeners();
+  }
+
   Future<bool> crearPedido({
     required String descripcion,
     required String clienteId,
@@ -102,6 +126,7 @@ class PedidoProvider extends ChangeNotifier {
         'tipoCargaId': _cargasDelPedido!.tipo.id,
         'transportistaId': asig.conductor?.uid,
         'vehiculoId': asig.vehiculo?.matricula,
+        if (asig.fechaLimite != null) 'fechaDescarga': asig.fechaLimite!.toIso8601String(),
       }).toList();
 
       await _service.crearPedido(
@@ -125,5 +150,6 @@ class PedidoProvider extends ChangeNotifier {
 
   void _resetForm() {
     _cargasDelPedido = null;
+    _datosTemporalPedido = {};
   }
 }

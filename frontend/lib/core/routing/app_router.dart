@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/auth/ui/subcontratado_register_page.dart';
+import 'package:gestion_transporte/features/home/ui/cargador_home_screen.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
@@ -43,7 +44,6 @@ class AppRouter {
         return isLoggingIn ? null : '/login';
       }
 
-      print("User: $user, ExternalUser: $externalUser");
       // Lógica para usuario interno
       if (user != null) {
         if (isLoggingIn) {
@@ -69,7 +69,7 @@ class AppRouter {
           // Si tiene datos completos y está en el login o en el propio registro
           if (isLoggingIn || state.matchedLocation.contains('_register')) {
             if (externalUser.rol.contains('cliente')) {
-              return '/panel';    // TODO: Cambiar por panel cliente
+              return '/cargador_home';
             }
             else if (externalUser.rol.contains('subcontratado')) {
               return '/panel';    // TODO: Cambiar por panel sub
@@ -96,6 +96,11 @@ class AppRouter {
         path: '/cargador_register',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ClienteRegisterPage(),
+      ),
+      GoRoute(
+        path: '/cargador_home',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CargadorHomeScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

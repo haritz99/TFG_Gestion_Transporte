@@ -8,6 +8,7 @@ import '../../../../../core/models/external_user_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/features/dashboard/providers/invite_provider.dart';
+import '../../../../auth/providers/auth_provider.dart';
 import 'nuevo_pedido.dart';
 import 'seleccionar_cargas.dart';
 
@@ -30,7 +31,10 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<InviteProvider>().getGuests();
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        context.read<InviteProvider>().getGuests();
+      }
     });
   }
 
@@ -175,6 +179,9 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
   }
 
   Widget _buildActions(BuildContext context) {
+    final pedidoProvider = context.watch<PedidoProvider>();
+    final canNext = pedidoProvider.cargasDelPedido != null;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -199,7 +206,7 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
-          onPressed: _onSiguiente,
+          onPressed: canNext ? _onSiguiente : null,
           child: Text(_currentPage == 0 ? 'Siguiente' : 'Finalizar',
               style: AppTextStyles.buttonSmall),
         ),

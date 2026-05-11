@@ -1,4 +1,5 @@
 from ..firebase_config import db
+from google.cloud import firestore
 
 class CargasCRUD:
     def get_todas_las_cargas(self, company_id: str, cliente_id=None, pedido_id=None, transportista_id=None, estado=None, dt_inicio=None, dt_fin=None):
@@ -29,10 +30,28 @@ class CargasCRUD:
         return db.collection("tipos_carga").document(tipo_id).get()
 
     def create_carga_doc(self, payload: dict) -> str:
-        doc_ref = db.collection("cargas").document()
-        payload["id"] = doc_ref.id
-        doc_ref.set(payload)
-        return doc_ref.id
+        # Transacción para asegurar que el contador se actualiza correctamente y no hay duplicados
+        counter_ref = db.collection("counters").document("cargas")
+
+        @firestore.transactional
+        def create_in_transaction(transaction):
+            snapshot = counter_ref.get(transaction=transaction)
+            if snapshot.exists:
+                count = snapshot.get("count") + 1
+            else:
+                count = 1
+
+            transaction.set(counter_ref, {"count": count}, merge=True)
+
+            custom_id = f"CRG-{count:03d}"
+            doc_ref = db.collection("cargas").document(custom_id)
+            payload["id"] = custom_id
+
+            # Usamos set en la transacción para el nuevo documento
+            transaction.set(doc_ref, payload)
+            return custom_id
+
+        return create_in_transaction(db.transaction())
 
     def update_carga_doc(self, carga_id: str, update_data: dict):
         db.collection("cargas").document(carga_id).update(update_data)

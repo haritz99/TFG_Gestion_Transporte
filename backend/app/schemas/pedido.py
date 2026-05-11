@@ -15,7 +15,7 @@ class EstadoPedido(str, enum.Enum):
 
 class PedidoSchema(FirestoreSchema):
     id: Optional[str] = None
-    descripcion: str = Field(..., min_length=1)
+    descripcion: Optional[str] = None
     fechaCarga: datetime.datetime = Field(...)  # Fecha de carga
     fechaDescarga: datetime.datetime = Field(...) # Fecha de descarga maxima
     origenes: List[str] = Field(..., min_length=1)  # Lista de origenes
@@ -46,10 +46,11 @@ class AsignacionCargaSchema(FirestoreSchema):
     tipoCargaId: str = Field(..., min_length=1)
     transportistaId: Optional[str] = None
     vehiculoId: Optional[str] = None
+    fechaDescarga: Optional[datetime.datetime] = None
 
 class CreatePedidoSchema(BaseModel):
     id: Optional[str] = None
-    descripcion: str = Field(..., min_length=1)
+    descripcion: Optional[str] = None
     clienteId: str = Field(..., min_length=1)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
