@@ -49,12 +49,17 @@ class PedidosService:
                 numBultos=tipo.numBultos,
                 peso=tipo.peso,
                 precio=tipo.precio,
+                largo=tipo.largo,
+                ancho=tipo.ancho,
+                alto=tipo.alto,
                 fechaCarga=pedido.fechaCarga,
                 fechaDescarga=pedido.fechaDescarga,
                 transportistaId=asig.transportistaId,
                 vehiculoId=asig.vehiculoId,
                 pedidoId=pedido.id,
+                clienteId=pedido.clienteId,
                 estado=estado,
+                companyId=company_id
             )
             carga.id = self._cargas_crud.create_carga_doc(carga.model_dump(exclude={'id'}))
 
