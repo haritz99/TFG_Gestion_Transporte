@@ -48,4 +48,5 @@ diagrams
 .coverage
 backend/.coverage
 backend/.coveragerc
+cmabios
 

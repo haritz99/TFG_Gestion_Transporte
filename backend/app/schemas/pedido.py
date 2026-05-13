@@ -6,6 +6,10 @@ from pydantic import Field, model_validator, BaseModel
 
 from .base import FirestoreSchema
 import enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .carga import CargaSchema
 
 class EstadoPedido(str, enum.Enum):
     PLANIFICADO = 'planificado'
@@ -23,6 +27,7 @@ class PedidoSchema(FirestoreSchema):
     estado: EstadoPedido = Field(default=EstadoPedido.PLANIFICADO)
     clienteId: str = Field(..., min_length=1) 
     companyId: Optional[str] = Field(default=None, min_length=1)
+    cargas: List['CargaSchema'] = Field(default_factory=list)
     createdAt: Optional[datetime.datetime] = None
     updatedAt: Optional[datetime.datetime] = None
 
@@ -44,8 +49,8 @@ class PedidoSchema(FirestoreSchema):
 
 class AsignacionCargaSchema(FirestoreSchema):
     tipoCargaId: str = Field(..., min_length=1)
-    transportistaId: Optional[str] = None
-    vehiculoId: Optional[str] = None
+    transportistaId: Optional[str] = None   # uid del user conductor asignado
+    vehiculoId: Optional[str] = None    # matricula del vehículo
     fechaDescarga: Optional[datetime.datetime] = None
 
 class CreatePedidoSchema(BaseModel):
@@ -56,4 +61,3 @@ class CreatePedidoSchema(BaseModel):
     fechaDescarga: datetime.datetime = Field(...)
     cargas: list[AsignacionCargaSchema] = Field(..., min_length=1)
     companyId: Optional[str] = Field(default=None, min_length=1)
-

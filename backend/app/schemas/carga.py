@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException
 from pydantic import Field, model_validator
 
-from .base import FirestoreSchema
+from .base import FirestoreSchema, BaseModel
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema
@@ -31,16 +31,36 @@ class CargaBaseSchema(FirestoreSchema):
     alto: Optional[float] = Field(default=None, gt=0)
 
 
+class CartaDePorteSnapshotSchema(BaseModel):
+    # Datos del Cargador
+    clienteNombre: str
+    clienteNif: str
+    clienteDireccion: str
+    clienteTelefono: Optional[str] = None
+
+    # Datos del Subcontratado (no siempre aplica)
+    subcontratadoNombre: Optional[str] = None
+    subcontratadoNif: Optional[str] = None
+    subcontratadoDireccion: Optional[str] = None
+    subcontratadoTelefono: Optional[str] = None
+    subcontratadoNumAutorizacion: Optional[str] = None
+
+    # Snapshot de marcas de tiempo
+    congeladoAt: datetime.datetime = Field(default_factory=datetime.datetime.now)
+
+
 class CargaSchema(CargaBaseSchema):
     id: Optional[str] = None
     estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
-    transportistaId: Optional[str] = None
+    conductorId: Optional[str] = None
+    conductorNombre: Optional[str] = None # Desnormalizacion para prevenir n+1
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
+    cartaPorteSnapshot: Optional[CartaDePorteSnapshotSchema] = None
     createdAt: Optional[datetime.datetime] = None
     updatedAt: Optional[datetime.datetime] = None
 
@@ -70,14 +90,14 @@ class CargaSchema(CargaBaseSchema):
     @model_validator(mode='after')
     def validar_asignacion_estado(self) -> 'CargaSchema':
         if self.estado in (EstadoCarga.ASIGNADO, EstadoCarga.EN_TRANSITO, EstadoCarga.ENTREGADO):
-            if not self.transportistaId and not self.vehiculoId:
-                raise ValueError(f'Una carga en estado {self.estado.value} debe tener al menos un transportista o vehículo asignado.')
+            if not self.conductorId and not self.vehiculoId:
+                raise ValueError(f'Una carga en estado {self.estado.value} debe tener al menos un conductor o vehículo asignado.')
         return self
 
     @model_validator(mode='after')
     def validar_estado_pendiente(self) -> 'CargaSchema':
-        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId and self.vehiculoId):
-            raise ValueError('Una carga con transportista y vehículo ya asignado no puede seguir en estado pendiente.')
+        if self.estado == EstadoCarga.PENDIENTE and (self.conductorId and self.vehiculoId):
+            raise ValueError('Una carga con conductor y vehículo ya asignado no puede seguir en estado pendiente.')
         return self
 
     @classmethod

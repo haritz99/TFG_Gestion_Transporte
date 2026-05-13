@@ -3,7 +3,7 @@ from google.cloud import firestore
 
 class CargasCRUD:
     def get_todas_las_cargas(self, company_id: str, cliente_id=None, pedido_id=None, transportista_id=None, estado=None, dt_inicio=None, dt_fin=None):
-        query = db.collection("cargas").where("companyId", "==", company_id)
+        query = db.collection_group("cargas").where("companyId", "==", company_id)
         if cliente_id:
             query = query.where("clienteId", "==", cliente_id)
         if pedido_id:
@@ -19,7 +19,10 @@ class CargasCRUD:
         return query.stream()
 
     def get_carga_doc(self, carga_id: str):
-        return db.collection("cargas").document(carga_id).get()
+        docs = db.collection_group("cargas").where("id", "==", carga_id).get()
+        if docs:
+             return docs[0]
+        return db.collection("cargas").document("not_found").get() # empty doc
 
     def get_tipos_cargas(self, company_id: str, cliente_id: str) -> list:
         return (db.collection("tipos_carga")
@@ -54,19 +57,23 @@ class CargasCRUD:
         return create_in_transaction(db.transaction())
 
     def update_carga_doc(self, carga_id: str, update_data: dict):
-        db.collection("cargas").document(carga_id).update(update_data)
+        docs = db.collection_group("cargas").where("id", "==", carga_id).get()
+        if docs:
+            docs[0].reference.update(update_data)
 
     def delete_carga_doc(self, carga_id: str):
-        db.collection("cargas").document(carga_id).delete()
+        docs = db.collection_group("cargas").where("id", "==", carga_id).get()
+        if docs:
+            docs[0].reference.delete()
 
     def get_trans_doc(self, trans_id: str):
         return db.collection("users").document(trans_id).get()
 
     def get_cargas_count(self, company_id: str, estado: str):
-        return db.collection('cargas').where('companyId', '==', company_id).where('estado', '==', estado).count().get()
+        return db.collection_group('cargas').where('companyId', '==', company_id).where('estado', '==', estado).count().get()
 
     def get_cargas_hoy_count(self, company_id: str, sod, eod, estado=None):
-        query = db.collection('cargas').where('companyId', '==', company_id).where('fechaDescarga', '>=', sod).where('fechaDescarga', '<=', eod).order_by('fechaDescarga')
+        query = db.collection_group('cargas').where('companyId', '==', company_id).where('fechaDescarga', '>=', sod).where('fechaDescarga', '<=', eod).order_by('fechaDescarga')
         if estado:
             query = query.where('estado', '==', estado)
         return query.count().get()

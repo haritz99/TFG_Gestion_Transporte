@@ -31,7 +31,9 @@ class PedidosService:
 
     def create_pedido(self, pedido: CreatePedidoSchema, company_id: str):
         pedido.companyId = company_id
-        pedido.id = self._crud.create_pedido_doc(pedido.model_dump(exclude={'cargas', 'id'}))
+        pedido_payload = pedido.model_dump(exclude={'cargas', 'id'})
+        
+        cargas_payloads = []
 
         for asig in pedido.cargas:
             tipo_doc = self._cargas_crud.get_tipo_carga_by_id(asig.tipoCargaId)
@@ -54,17 +56,21 @@ class PedidosService:
                 alto=tipo.alto,
                 fechaCarga=pedido.fechaCarga,
                 fechaDescarga=pedido.fechaDescarga,
-                transportistaId=asig.transportistaId,
+                conductorId=asig.transportistaId,
                 vehiculoId=asig.vehiculoId,
-                pedidoId=pedido.id,
+                pedidoId=None, # Lo asigno después de manera transaccional
                 clienteId=pedido.clienteId,
                 estado=estado,
                 companyId=company_id,
                 createdAt=datetime.datetime.now(),
                 updatedAt=datetime.datetime.now()
             )
-            carga.id = self._cargas_crud.create_carga_doc(carga.model_dump(exclude={'id'}))
+            cargas_payloads.append(carga.model_dump(exclude={'id'}))
 
+        result = self._crud.create_pedido_con_cargas(pedido_payload, cargas_payloads)
+        pedido.id = result["pedidoId"]
+
+        return result
 
     def delete_pedido(self, pedido_id: str, company_id: str):
         doc = self._crud.get_pedido_doc(pedido_id)
