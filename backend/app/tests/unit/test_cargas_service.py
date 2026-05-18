@@ -243,4 +243,3 @@ def test_cargas_service_update_carga_company_mismatch(service, mock_cargas_crud,
     with pytest.raises(HTTPException) as exc:
         service.update_carga("c1", carga_upd, pedido, "comp1")
     assert exc.value.status_code == 403
-

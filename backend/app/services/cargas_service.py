@@ -25,17 +25,23 @@ class CargasService:
 
     def calculate_asignados(self, company_id: str):
         result = self._crud.get_cargas_count(company_id, EstadoCarga.ASIGNADO.value)
-        return result[0][0].value
+        if result and len(result) > 0 and len(result[0]) > 0:
+            return result[0][0].value
+        return 0
 
     def calculate_sin_asignar(self, company_id: str):
         result = self._crud.get_cargas_count(company_id, EstadoCarga.PENDIENTE.value)
-        return result[0][0].value
+        if result and len(result) > 0 and len(result[0]) > 0:
+            return result[0][0].value
+        return 0
 
     def calculate_cargas_hoy(self, company_id: str, sod: datetime.datetime, eod: datetime.datetime, estado: Optional[EstadoCarga] = None):
         if sod.tzinfo is None: sod = pytz.utc.localize(sod)
         if eod.tzinfo is None: eod = pytz.utc.localize(eod)
         result = self._crud.get_cargas_hoy_count(company_id, sod, eod, estado.value if estado else None)
-        return result[0][0].value
+        if result and len(result) > 0 and len(result[0]) > 0:
+            return result[0][0].value
+        return 0
 
     def get_carga_by_id(self, carga_id: str, company_id: str) -> CargaSchema:
         doc = self._crud.get_carga_doc(carga_id)
@@ -71,7 +77,7 @@ class CargasService:
             
         carga.transportistaId = transportista_id
         update_data = {"transportistaId": transportista_id}
-        
+
         if carga.estado == EstadoCarga.PENDIENTE:
             carga.estado = EstadoCarga.ASIGNADO
             update_data["estado"] = EstadoCarga.ASIGNADO.value

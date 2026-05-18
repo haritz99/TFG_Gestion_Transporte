@@ -1,5 +1,4 @@
 from .carga import CargaSchema
-from .cartas_de_porte import CartaDePorteSchema
 from .incidencias import IncidenciaSchema
 from .rutas import RutaSchema
 from .tareas import TareaSchema
@@ -14,5 +13,4 @@ __all__ = [
     "RutaSchema",
     "IncidenciaSchema",
     "TareaSchema",
-    "CartaDePorteSchema",
 ]

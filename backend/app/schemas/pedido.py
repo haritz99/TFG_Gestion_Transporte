@@ -49,7 +49,8 @@ class PedidoSchema(FirestoreSchema):
 
 class AsignacionCargaSchema(FirestoreSchema):
     tipoCargaId: str = Field(..., min_length=1)
-    transportistaId: Optional[str] = None   # uid del user conductor asignado
+    transportistaId: Optional[str] = None
+    conductorNombre: Optional[str] = None
     vehiculoId: Optional[str] = None    # matricula del vehículo
     fechaDescarga: Optional[datetime.datetime] = None
 
@@ -61,3 +62,6 @@ class CreatePedidoSchema(BaseModel):
     fechaDescarga: datetime.datetime = Field(...)
     cargas: list[AsignacionCargaSchema] = Field(..., min_length=1)
     companyId: Optional[str] = Field(default=None, min_length=1)
+
+from .carga import CargaSchema
+PedidoSchema.model_rebuild()

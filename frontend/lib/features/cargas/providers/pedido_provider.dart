@@ -125,6 +125,7 @@ class PedidoProvider extends ChangeNotifier {
       final cargasPayload = _cargasDelPedido!.asignaciones.map((asig) => {
         'tipoCargaId': _cargasDelPedido!.tipo.id,
         'transportistaId': asig.conductor?.uid,
+        'conductorNombre': asig.conductor != null ? '${asig.conductor!.nombre} ${asig.conductor!.apellido}'.trim() : null,
         'vehiculoId': asig.vehiculo?.matricula,
         if (asig.fechaLimite != null) 'fechaDescarga': asig.fechaLimite!.toIso8601String(),
       }).toList();

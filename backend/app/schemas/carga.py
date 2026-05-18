@@ -46,7 +46,7 @@ class CartaDePorteSnapshotSchema(BaseModel):
     subcontratadoNumAutorizacion: Optional[str] = None
 
     # Snapshot de marcas de tiempo
-    congeladoAt: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    congeladoAt: Optional[datetime.datetime] = None
 
 
 class CargaSchema(CargaBaseSchema):
@@ -54,7 +54,7 @@ class CargaSchema(CargaBaseSchema):
     estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
-    conductorId: Optional[str] = None
+    transportistaId: Optional[str] = None
     conductorNombre: Optional[str] = None # Desnormalizacion para prevenir n+1
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
@@ -90,13 +90,13 @@ class CargaSchema(CargaBaseSchema):
     @model_validator(mode='after')
     def validar_asignacion_estado(self) -> 'CargaSchema':
         if self.estado in (EstadoCarga.ASIGNADO, EstadoCarga.EN_TRANSITO, EstadoCarga.ENTREGADO):
-            if not self.conductorId and not self.vehiculoId:
+            if not self.transportistaId and not self.vehiculoId:
                 raise ValueError(f'Una carga en estado {self.estado.value} debe tener al menos un conductor o vehículo asignado.')
         return self
 
     @model_validator(mode='after')
     def validar_estado_pendiente(self) -> 'CargaSchema':
-        if self.estado == EstadoCarga.PENDIENTE and (self.conductorId and self.vehiculoId):
+        if self.estado == EstadoCarga.PENDIENTE and (self.transportistaId and self.vehiculoId):
             raise ValueError('Una carga con conductor y vehículo ya asignado no puede seguir en estado pendiente.')
         return self
 

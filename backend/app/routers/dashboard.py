@@ -45,6 +45,7 @@ def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_e
             total_entregas_hoy=total_entregas_hoy
         )
     except Exception as e:
+        print("Error fetching dashboard summary: ", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 def calculate_incidencias(company_id: str):
