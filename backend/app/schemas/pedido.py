@@ -52,6 +52,7 @@ class AsignacionCargaSchema(FirestoreSchema):
     transportistaId: Optional[str] = None
     conductorNombre: Optional[str] = None
     vehiculoId: Optional[str] = None    # matricula del vehículo
+    fechaCarga: Optional[datetime.datetime] = None
     fechaDescarga: Optional[datetime.datetime] = None
 
 class CreatePedidoSchema(BaseModel):

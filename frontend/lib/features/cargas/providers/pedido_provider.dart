@@ -24,9 +24,10 @@ class CargasSeleccionadas {
 class AsignacionCarga {
   UserModel? conductor;
   VehiculoModel? vehiculo;
+  DateTime? fechaCarga;
   DateTime? fechaLimite;
 
-  AsignacionCarga({this.conductor, this.vehiculo, this.fechaLimite});
+  AsignacionCarga({this.conductor, this.vehiculo, this.fechaCarga, this.fechaLimite});
 }
 
 
@@ -108,6 +109,12 @@ class PedidoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void asignarFechaCarga(int unidadIdx, DateTime fecha) {
+    if (_cargasDelPedido == null) return;
+    _cargasDelPedido!.asignaciones[unidadIdx].fechaCarga = fecha;
+    notifyListeners();
+  }
+
   Future<bool> crearPedido({
     required String descripcion,
     required String clienteId,
@@ -127,7 +134,8 @@ class PedidoProvider extends ChangeNotifier {
         'transportistaId': asig.conductor?.uid,
         'conductorNombre': asig.conductor != null ? '${asig.conductor!.nombre} ${asig.conductor!.apellido}'.trim() : null,
         'vehiculoId': asig.vehiculo?.matricula,
-        if (asig.fechaLimite != null) 'fechaDescarga': asig.fechaLimite!.toIso8601String(),
+        'fechaCarga': (asig.fechaCarga ?? fechaCarga).toIso8601String(),
+        'fechaDescarga': (asig.fechaLimite ?? fechaDescarga).toIso8601String(),
       }).toList();
 
       await _service.crearPedido(

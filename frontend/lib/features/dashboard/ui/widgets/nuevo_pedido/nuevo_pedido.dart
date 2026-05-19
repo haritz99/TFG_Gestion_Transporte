@@ -205,7 +205,8 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: List.generate(seleccion.cantidad, (index) {
         final asig = seleccion.asignaciones[index];
-        final fechaLimiteSelect = asig.fechaLimite ?? _fechaDescarga ?? DateTime.now();
+        final fCarga = asig.fechaCarga ?? _fechaCarga ?? DateTime.now();
+        final fDescarga = asig.fechaLimite ?? _fechaDescarga ?? DateTime.now();
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -215,40 +216,87 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
               border: Border.all(color: AppColors.border),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${seleccion.tipo.nombre} (Unidad ${index + 1})', style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
-                      Text('Fecha límite de entrega', style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText)),
-                    ],
+                Text(
+                  '${seleccion.tipo.nombre} (Unidad ${index + 1})',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.bodyText,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    if (_fechaCarga == null || _fechaDescarga == null) return;
-                    final pickedDate = await _showCalendarDialog(
-                      context,
-                      initialDate: fechaLimiteSelect,
-                      firstDate: _fechaCarga!,
-                      lastDate: _fechaDescarga!,
-                    );
-                    if (pickedDate != null) {
-                      pedidoProvider.asignarFechaLimite(index, pickedDate);
-                    }
-                  },
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(DateFormat('dd/MM/yyyy HH:mm').format(fechaLimiteSelect)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.bodyText,
-                    side: const BorderSide(color: AppColors.border),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Carga', style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText)),
+                          const SizedBox(height: 4),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final pickedDate = await _showCalendarDialog(
+                                context,
+                                initialDate: fCarga,
+                                firstDate: DateTime.now(),
+                                lastDate: fDescarga,
+                              );
+                              if (pickedDate != null) {
+                                pedidoProvider.asignarFechaCarga(index, pickedDate);
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              side: const BorderSide(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 14),
+                                const SizedBox(width: 4),
+                                Expanded(child: Text(DateFormat('dd/MM HH:mm').format(fCarga), style: AppTextStyles.bodySm)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Descarga', style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText)),
+                          const SizedBox(height: 4),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final pickedDate = await _showCalendarDialog(
+                                context,
+                                initialDate: fDescarga,
+                                firstDate: fCarga,
+                                lastDate: DateTime(2100),
+                              );
+                              if (pickedDate != null) {
+                                pedidoProvider.asignarFechaLimite(index, pickedDate);
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              side: const BorderSide(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 14),
+                                const SizedBox(width: 4),
+                                Expanded(child: Text(DateFormat('dd/MM HH:mm').format(fDescarga), style: AppTextStyles.bodySm)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
