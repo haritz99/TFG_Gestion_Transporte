@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../../../core/models/carga_model.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -22,8 +23,24 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
   final CalendarController _calendarController = CalendarController();
   CalendarView _currentView = CalendarView.schedule;
   final int _appointmentDisplayCount = 6;
+
+  bool _esMismoDia(DateTime d1, DateTime d2) {
+    return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<CargaCalendar> calendarEntries = [];
+    for (final carga in widget.cargas) {
+
+      if (_esMismoDia(carga.fechaCarga, carga.fechaDescarga)) {
+        calendarEntries.add(CargaCalendar(carga: carga, op: Operacion.carga));
+      } else {
+        calendarEntries.add(CargaCalendar(carga: carga, op: Operacion.carga));
+        calendarEntries.add(CargaCalendar(carga: carga, op: Operacion.descarga));
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -49,7 +66,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
               controller: _calendarController,
               view: _currentView,
               firstDayOfWeek: 1,
-              dataSource: CargaDataSource(widget.cargas),
+              dataSource: CargaDataSource(calendarEntries),
               headerHeight: 40,
               cellBorderColor: Colors.grey.withValues(alpha: 0.15),
               todayHighlightColor: AppColors.primary,
@@ -157,8 +174,28 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
 
   Widget _appointmentBuilder(BuildContext context, CalendarAppointmentDetails details) {
     if (details.appointments.isEmpty) return const SizedBox();
-    final CargaModel carga = details.appointments.first;
+    final CargaCalendar entry = details.appointments.first;
+    CargaModel carga = entry.carga;
     final Color eventColor = CargaDataSource.getColorByEstado(carga.estado.value);
+
+    final mismoDia = _esMismoDia(carga.fechaCarga, carga.fechaDescarga);
+
+    final isCarga = entry.op == Operacion.carga;
+    final horaCarga = DateFormat('HH:mm').format(carga.fechaCarga);
+    final horaDescarga = DateFormat('HH:mm').format(carga.fechaDescarga);
+    final fechaDescargaCompleta = DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaDescarga);
+    final fechaCargaCompleta = DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaCarga);
+
+    String fechaText = '';
+    if (mismoDia) {
+      fechaText = 'Carga: $horaCarga - Descarga: $horaDescarga';
+    } else {
+      if (isCarga) {
+        fechaText = 'Hora de carga: $horaCarga - Fecha descarga: $fechaDescargaCompleta';
+      } else {
+        fechaText = 'Hora de descarga: $horaDescarga - Fecha carga: $fechaCargaCompleta';
+      }
+    }
 
     if (_currentView == CalendarView.month && details.bounds.width < 50) {
       // Aqui solo el botón para ver que hay cargas (sin info.)
@@ -208,7 +245,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Hora de carga: ${carga.fechaCarga.hour.toString().padLeft(2, '0')}:${carga.fechaCarga.minute.toString().padLeft(2, '0')} - Hora de descarga: ${carga.fechaDescarga.hour.toString().padLeft(2, '0')}:${carga.fechaDescarga.minute.toString().padLeft(2, '0')}',
+                    fechaText,
                     style: AppTextStyles.bodySm,
                   ),
                   const SizedBox(height: 2),
@@ -218,7 +255,7 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Conductor: ${carga.transportistaId ?? ""}',
+                    'Conductor: ${carga.transportistaNombre ?? ""}',
                     style: AppTextStyles.bodySm,
                   ),
                 ],

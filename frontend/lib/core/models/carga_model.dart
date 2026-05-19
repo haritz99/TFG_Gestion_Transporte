@@ -91,6 +91,7 @@ class CargaModel extends CargaBaseModel {
   final DateTime fechaCarga;
   final DateTime fechaDescarga;
   final String? transportistaId;
+  final String? transportistaNombre;
   final String? pedidoId;
   final String? vehiculoId;
   final String? companyId;
@@ -102,6 +103,7 @@ class CargaModel extends CargaBaseModel {
     required this.fechaCarga,
     required this.fechaDescarga,
     this.transportistaId,
+    this.transportistaNombre,
     this.pedidoId,
     this.vehiculoId,
     this.companyId,

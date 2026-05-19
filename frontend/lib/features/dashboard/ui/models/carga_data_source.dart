@@ -3,24 +3,37 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/carga_model.dart';
 import '../../../../core/theme/app_colors.dart';
 
+enum Operacion { carga, descarga }
+class CargaCalendar {
+  final CargaModel carga;
+  final Operacion op;
+
+  const CargaCalendar({
+    required this.carga,
+    required this.op,
+  });
+
+  DateTime get fecha => op == Operacion.carga ? carga.fechaCarga : carga.fechaDescarga;
+}
+
 class CargaDataSource extends CalendarDataSource {
-  CargaDataSource(List<CargaModel> source) {
+  CargaDataSource(List<CargaCalendar> source) {
     appointments = source;
   }
 
   @override
   DateTime getStartTime(int index) {
-    return _getCargaData(index).fechaCarga;
+    return _getItem(index).fecha;
   }
 
   @override
   DateTime getEndTime(int index) {
-    return _getCargaData(index).fechaDescarga;
+    return _getItem(index).fecha.add(const Duration(minutes: 30));
   }
 
   @override
   String getSubject(int index) {
-    final pedidoId = _getCargaData(index).pedidoId;
+    final pedidoId = _getItem(index).carga.pedidoId;
     return pedidoId != null ? '#$pedidoId' : 'Carga';
   }
 
@@ -33,16 +46,15 @@ class CargaDataSource extends CalendarDataSource {
 
   @override
   Color getColor(int index) {
-    final carga = _getCargaData(index);
-    return getColorByEstado(carga.estado.value);
+    final item = _getItem(index);
+    return getColorByEstado(item.carga.estado.value);
   }
 
-  CargaModel _getCargaData(int index) {
-    final dynamic carga = appointments![index];
-    late final CargaModel cargaData;
-    if (carga is CargaModel) {
-      cargaData = carga;
+  CargaCalendar _getItem(int index) {
+    final dynamic item = appointments![index];
+    if (item is CargaCalendar) {
+      return item;
     }
-    return cargaData;
+    throw ArgumentError('Entrada de calendario inesperada: $item');
   }
 }
