@@ -175,6 +175,30 @@ class CargaModel extends CargaBaseModel {
     );
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'origen': origen,
+      'destino': destino,
+      'mercancia': mercancia,
+      'numBultos': numBultos,
+      'peso': peso,
+      'precio': precio,
+      if (largo != null) 'largo': largo,
+      if (ancho != null) 'ancho': ancho,
+      if (alto != null) 'alto': alto,
+      'estado': estado.value,
+      'fechaCarga': fechaCarga.toIso8601String(),
+      'fechaDescarga': fechaDescarga.toIso8601String(),
+      if (transportistaId != null) 'transportistaId': transportistaId,
+      if (transportistaNombre != null) 'conductorNombre': transportistaNombre,
+      if (pedidoId != null) 'pedidoId': pedidoId,
+      if (vehiculoId != null) 'vehiculoId': vehiculoId,
+      if (companyId != null) 'companyId': companyId,
+      if (clienteId != null) 'clienteId': clienteId,
+    };
+  }
+
   CargaModel copyWith({
     String? id,
     EstadoCarga? estado,

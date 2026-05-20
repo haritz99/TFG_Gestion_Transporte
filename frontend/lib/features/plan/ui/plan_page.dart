@@ -5,9 +5,29 @@ import 'widgets/plan_header.dart';
 import 'widgets/calendario_cargas.dart';
 import 'widgets/panel_asignacion_vehiculo.dart';
 import 'widgets/lista_cargas_panel.dart';
+import '../../transportistas/providers/transportista_provider.dart';
+import '../../vehiculos/providers/vehiculo_provider.dart';
+import 'package:provider/provider.dart';
 
-class PlanificacionScreen extends StatelessWidget {
+class PlanificacionScreen extends StatefulWidget {
   const PlanificacionScreen({super.key});
+
+  @override
+  State<PlanificacionScreen> createState() => _PlanificacionScreenState();
+}
+
+class _PlanificacionScreenState extends State<PlanificacionScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final transportistaProvider = context.read<TransportistaProvider>();
+      final vehiculoProvider = context.read<VehiculoProvider>();
+
+      transportistaProvider.fetchTransportistasDisponibles();
+      vehiculoProvider.loadInitialVehiculos();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

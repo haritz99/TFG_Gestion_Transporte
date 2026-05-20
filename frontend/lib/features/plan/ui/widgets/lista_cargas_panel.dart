@@ -19,6 +19,19 @@ class ListaCargasPanel extends StatelessWidget {
     final pedidos = pedidoProvider.pedidos;
     final todasCargas = cargaProvider.cargas;
 
+    final cargasPendientes = todasCargas.where((c) =>
+      c.estado == EstadoCarga.pendiente &&
+      !planProvider.cargasPlanificadasIds.contains(c.id)
+    ).toList();
+
+    final Map<String, List<CargaModel>> cargasPorPedido = {};
+    for (var c in cargasPendientes) {
+      final pId = c.pedidoId ?? 'sin-pedido';
+      cargasPorPedido.putIfAbsent(pId, () => []).add(c);
+    }
+
+    final uniquePedidoIds = cargasPorPedido.keys.toList();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -42,25 +55,23 @@ class ListaCargasPanel extends StatelessWidget {
           const Divider(height: 1, color: AppColors.border),
           Expanded(
             child: ListView.builder(
-              itemCount: pedidos.length,
+              itemCount: uniquePedidoIds.length,
               itemBuilder: (context, index) {
-                final pedido = pedidos[index];
-                // Cargas de este pedido que están pendientes y no se han planificado aún
-                final cargasPendientes = todasCargas.where((c) =>
-                  c.pedidoId == pedido.id &&
-                  c.estado == EstadoCarga.pendiente &&
-                  !planProvider.cargasPlanificadasIds.contains(c.id)
-                ).toList();
+                final pId = uniquePedidoIds[index];
+                final cargasDelPedido = cargasPorPedido[pId]!;
 
-                if (cargasPendientes.isEmpty) return const SizedBox.shrink();
+                final pedidoOpt = pedidos.where((p) => p.id == pId).firstOrNull;
+                final title = pedidoOpt != null
+                    ? '${pedidoOpt.id?.toUpperCase() ?? ''} - ${pedidoOpt.descripcion}'
+                    : 'Pedido ${pId != 'sin-pedido' && pId.length > 8 ? pId.substring(0, 8).toUpperCase() : pId.toUpperCase()}';
 
                 return ExpansionTile(
                   initiallyExpanded: true,
                   title: Text(
-                    '${pedido.id?.toUpperCase() ?? ''} - ${pedido.descripcion}',
+                    title,
                     style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  children: cargasPendientes.map((carga) => _buildCargaDraggable(context, carga, planProvider)).toList(),
+                  children: cargasDelPedido.map((carga) => _buildCargaDraggable(context, carga, planProvider)).toList(),
                 );
               },
             ),

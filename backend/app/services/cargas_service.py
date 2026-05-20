@@ -108,6 +108,38 @@ class CargasService:
         self._crud.update_carga_doc(carga_id, update_data)
         return carga
 
+    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
+        updated_cargas = []
+        for carga in cargas:
+            doc = self._crud.get_carga_doc(carga.id)
+            if not doc.exists:
+                raise HTTPException(status_code=404, detail=f"Carga {carga.id} no encontrada")
+                
+            carga_data = doc.to_dict()
+            if carga_data.get("companyId") != company_id:
+                raise HTTPException(status_code=403, detail=f"No autorizado para modificar la carga {carga.id}")
+
+            pedido_doc = self._crud.db.collection("pedidos").document(carga.pedidoId).get()
+                
+            from app.schemas.pedido import PedidoSchema
+            pedido_schema = PedidoSchema.from_firestore(pedido_doc, company_id)
+
+            carga.companyId = company_id
+            
+            try:
+                carga.validar_contra_pedido(pedido_schema)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+            carga.clienteId = pedido_schema.clienteId
+            update_data = carga.model_dump(exclude={'id'})
+            
+            self._crud.update_carga_doc(carga.id, update_data)
+            updated_cargas.append(carga)
+            
+        return updated_cargas
+
+
     def delete_carga(self, carga_id: str, company_id: str):
         doc = self._crud.get_carga_doc(carga_id)
         if not doc.exists:

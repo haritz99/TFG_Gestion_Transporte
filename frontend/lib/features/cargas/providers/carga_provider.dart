@@ -10,6 +10,9 @@ class CargaProvider extends ChangeNotifier {
   List<CargaModel> get cargas => _cargas;
   List<TipoCargaModel> _tiposCarga = [];
 
+  final Set<String> _cargasModificadas = {};
+  bool get hayCambiosSinGuardar => _cargasModificadas.isNotEmpty;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -29,6 +32,7 @@ class CargaProvider extends ChangeNotifier {
 
     try {
       _cargas = await _service.getCargasDelMes(start, end);
+      _cargasModificadas.clear();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -69,6 +73,7 @@ class CargaProvider extends ChangeNotifier {
         fechaCarga: start,
         fechaDescarga: end,
       );
+      _cargasModificadas.add(cargaId);
       notifyListeners();
     }
   }
@@ -85,6 +90,7 @@ class CargaProvider extends ChangeNotifier {
         estado: newEstado,
         vehiculoId: matricula,
       );
+      _cargasModificadas.add(cargaId);
       notifyListeners();
     }
   }
@@ -102,6 +108,26 @@ class CargaProvider extends ChangeNotifier {
         transportistaId: conductorId,
         transportistaNombre: nombre,
       );
+      _cargasModificadas.add(cargaId);
+      notifyListeners();
+    }
+  }
+
+  Future<void> guardarCambios() async {
+    if (_cargasModificadas.isEmpty) return;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final cargasAGuardar = _cargas.where((c) => _cargasModificadas.contains(c.id)).toList();
+      await _service.updateCargas(cargasAGuardar);
+      _cargasModificadas.clear();
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }

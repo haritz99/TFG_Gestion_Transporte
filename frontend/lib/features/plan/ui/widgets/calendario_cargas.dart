@@ -29,13 +29,28 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
     final pedidoProvider = context.watch<PedidoProvider>();
     final cargaProvider = context.watch<CargaProvider>();
 
-    final List<CalendarResource> recursos = pedidoProvider.pedidos.map((p) {
+    final Set<String> pedidoIdsMostrados = cargaProvider.cargas
+        .where((c) => c.estado != EstadoCarga.pendiente || planProvider.cargasPlanificadasIds.contains(c.id))
+        .map((c) => c.pedidoId ?? 'sin-pedido')
+        .toSet();
+
+    final List<CalendarResource> recursos = pedidoIdsMostrados.map((pId) {
+      final pInfo = pedidoProvider.pedidos.where((p) => p.id == pId).firstOrNull;
+
+      final displayName = pInfo != null
+          ? '${pInfo.id?.toUpperCase() ?? ''} - ${pInfo.descripcion}'
+          : 'Pedido ${pId != 'sin-pedido' && pId.length > 8 ? pId.substring(0,8).toUpperCase() : pId.toUpperCase()}';
+
       return CalendarResource(
-        id: p.id!,
-        displayName: '${p.id?.toUpperCase()} - ${p.descripcion}',
-        color: AppColors.primary,
+        id: pId,
+        displayName: displayName,
+        color: Colors.transparent,
       );
     }).toList();
+
+    if (recursos.isEmpty) {
+      recursos.add(CalendarResource(id: 'dummy', displayName: 'Sin cargas en progreso', color: Colors.transparent));
+    }
 
     final List<Appointment> appointments = cargaProvider.cargas
         .where((c) => c.estado != EstadoCarga.pendiente || planProvider.cargasPlanificadasIds.contains(c.id))
@@ -62,9 +77,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
           onWillAcceptWithDetails: (details) => true,
           onAcceptWithDetails: (details) {
             final carga = details.data;
-            // Marcar como planificada en el provider de UI
             planProvider.marcarComoPlanificada(carga.id!);
-            // Actualizar fechas en el provider de datos (esto disparará el rebuild)
             cargaProvider.actualizarFechasCarga(
               carga.id!,
               DateTime.now(),
@@ -94,7 +107,6 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
               dataSource: CargasDataSource(appointments, recursos),
               allowDragAndDrop: true,
               onDragStart: (AppointmentDragStartDetails details) {
-                // Guarda seleccion
                 if (details.appointment != null) {
                   final app = details.appointment as Appointment;
                   final carga = cargaProvider.cargas.firstWhere((c) => c.id == app.id);
@@ -104,9 +116,6 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
               onDragEnd: (AppointmentDragEndDetails details) {
                 if (details.appointment != null) {
                   final appointment = details.appointment as Appointment;
-                  // Si no podemos validar el cambio de recurso fácilmente con esta versión de Syncfusion,
-                  // nos centramos en actualizar las fechas. 
-                  // El usuario ya expresó que el eje es principalmente visual y de ayuda.
                   cargaProvider.actualizarFechasCarga(
                     appointment.id as String,
                     details.droppingTime ?? appointment.startTime,
@@ -133,10 +142,10 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
   }
 
   Color _getColorPorEstado(CargaModel carga) {
-    if (carga.estado == EstadoCarga.asignado) return Colors.blue;
-    if (carga.estado == EstadoCarga.enTransito) return Colors.orange;
-    if (carga.estado == EstadoCarga.entregado) return Colors.green;
-    return AppColors.primary;
+    if (carga.estado == EstadoCarga.asignado) return Colors.blue.shade300;
+    if (carga.estado == EstadoCarga.enTransito) return Colors.orange.shade300;
+    if (carga.estado == EstadoCarga.entregado) return Colors.green.shade300;
+    return AppColors.primary.withValues(alpha: 0.6);
   }
 }
 
