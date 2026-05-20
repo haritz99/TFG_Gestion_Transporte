@@ -13,7 +13,7 @@ class DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
+    final today = DateFormat('EEEE, d MMMM yyyy', 'es').format(DateTime.now());
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13.5),

@@ -5,9 +5,12 @@ import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_s
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
 import '../../features/dashboard/ui/dashboard_page.dart';
+import '../../features/plan/ui/plan_page.dart';
 import '../../features/vehiculos/ui/gestion_flota_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/ui/login_page.dart';
+import '../../features/plan/providers/planificacion_provider.dart';
+import 'package:provider/provider.dart';
 import 'navigation-ui/app_navigation_shell.dart';
 
 class AppRouter {
@@ -111,6 +114,16 @@ class AppRouter {
           GoRoute(
             path: '/panel',
             builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/planificacion',
+            pageBuilder: (context, state) => fadeTransitionPage(
+              state,
+              ChangeNotifierProvider(
+                create: (_) => PlanificacionProvider(),
+                child: const PlanificacionScreen(),
+              ),
+            ),
           ),
           GoRoute(
             path: '/flota',

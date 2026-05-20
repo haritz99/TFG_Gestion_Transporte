@@ -61,5 +61,48 @@ class CargaProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-}
 
+  void actualizarFechasCarga(String cargaId, DateTime start, DateTime end) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      _cargas[idx] = _cargas[idx].copyWith(
+        fechaCarga: start,
+        fechaDescarga: end,
+      );
+      notifyListeners();
+    }
+  }
+
+  void asignarVehiculo(String cargaId, String? matricula) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      final old = _cargas[idx];
+      final newEstado = (matricula != null || old.transportistaId != null)
+          ? EstadoCarga.asignado
+          : EstadoCarga.pendiente;
+
+      _cargas[idx] = old.copyWith(
+        estado: newEstado,
+        vehiculoId: matricula,
+      );
+      notifyListeners();
+    }
+  }
+
+  void asignarConductor(String cargaId, String? conductorId, String? nombre) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      final old = _cargas[idx];
+      final newEstado = (conductorId != null || old.vehiculoId != null)
+          ? EstadoCarga.asignado
+          : EstadoCarga.pendiente;
+
+      _cargas[idx] = old.copyWith(
+        estado: newEstado,
+        transportistaId: conductorId,
+        transportistaNombre: nombre,
+      );
+      notifyListeners();
+    }
+  }
+}

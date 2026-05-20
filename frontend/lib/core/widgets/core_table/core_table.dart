@@ -170,7 +170,7 @@ class _CoreTableState<T> extends State<CoreTable<T>> {
     );
 
     return LayoutBuilder(
-      key: ValueKey('desktop_table_${_selectedStatus}'),
+      key: ValueKey('desktop_table_$_selectedStatus'),
       builder: (context, constraints) {
         final tableWidth = constraints.maxWidth > 1350 ? constraints.maxWidth : 1350.0;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
@@ -56,6 +57,15 @@ class App extends StatelessWidget {
               title: F.title,
               theme: AppTheme.light,
               routerConfig: AppRouter.router(authProvider),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('es', ''),
+              ],
+              locale: const Locale('es', ''),
               builder: (context, child) {
                 if (child == null) {
                   return const SizedBox.shrink();

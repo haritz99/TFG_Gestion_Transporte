@@ -51,6 +51,32 @@ class PedidoModel {
       'createdAt': createdAt?.toIso8601String(),
     };
   }
+
+  PedidoModel copyWith({
+    String? id,
+    String? descripcion,
+    DateTime? fechaCarga,
+    DateTime? fechaDescarga,
+    List<String>? origenes,
+    List<String>? destinos,
+    EstadoPedido? estado,
+    String? clienteId,
+    String? companyId,
+    DateTime? createdAt,
+  }) {
+    return PedidoModel(
+      id: id ?? this.id,
+      descripcion: descripcion ?? this.descripcion,
+      fechaCarga: fechaCarga ?? this.fechaCarga,
+      fechaDescarga: fechaDescarga ?? this.fechaDescarga,
+      origenes: origenes ?? this.origenes,
+      destinos: destinos ?? this.destinos,
+      estado: estado ?? this.estado,
+      clienteId: clienteId ?? this.clienteId,
+      companyId: companyId ?? this.companyId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 enum EstadoPedido {
