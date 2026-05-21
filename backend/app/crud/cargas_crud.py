@@ -77,3 +77,12 @@ class CargasCRUD:
         if estado:
             query = query.where('estado', '==', estado)
         return query.count().get()
+
+    def get_carga_ref(self, carga_id: str):
+        docs = db.collection_group("cargas").where("id", "==", carga_id).limit(1).get()
+        if docs:
+            return docs[0].reference
+        return None
+
+    def get_batch(self):
+        return db.batch()
