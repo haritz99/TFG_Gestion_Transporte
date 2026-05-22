@@ -28,7 +28,8 @@ enum EstadoCarga {
   pendiente('pendiente'),
   asignado('asignado'),
   enTransito('en_transito'),
-  entregado('entregado');
+  entregado('entregado'),
+  cedido('cedido');
 
   final String value;
   const EstadoCarga(this.value);

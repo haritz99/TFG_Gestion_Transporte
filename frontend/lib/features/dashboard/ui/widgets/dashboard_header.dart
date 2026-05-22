@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import '../../../auth/providers/token_provider.dart';
-import '../../providers/invite_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'invite/invite_modal.dart';
@@ -52,15 +49,9 @@ class DashboardHeader extends StatelessWidget {
             children: [
               ElevatedButton.icon(
                 onPressed: () {
-                  final tokenProvider = context.read<AuthTokenProvider>();
                   showDialog(
                     context: context,
-                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
-                      create: (_) => InviteProvider(
-                        tokenProvider: tokenProvider,
-                      ),
-                      child: const FormBuilderPedido(),
-                    ),
+                    builder: (ctx) => const FormBuilderPedido(),
                   );
                 },
                 icon: const Icon(Icons.add),
@@ -78,15 +69,9 @@ class DashboardHeader extends StatelessWidget {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  final tokenProvider = context.read<AuthTokenProvider>();
                   showDialog(
                     context: context,
-                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
-                      create: (_) => InviteProvider(
-                        tokenProvider: tokenProvider,
-                      ),
-                      child: const InviteModal(),
-                    ),
+                    builder: (ctx) => const InviteModal(),
                   );
                 },
                 icon: const Icon(

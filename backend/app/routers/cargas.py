@@ -88,6 +88,15 @@ def update_carga(carga_id: str,
                  service: CargasService = Depends(CargasService)):
     return service.update_carga(carga_id, carga, pedido_schema, current_user.get("companyId"))
 
+@router.post("/{carga_id}/subcontratar", response_model=CargaSchema)
+def ceder_carga(
+    carga_id: str,
+    payload: dict,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: CargasService = Depends(CargasService),
+):
+    return service.ceder_carga_subcontratado(carga_id, payload.get('subcontratadoId'), current_user.get("companyId"))
+
 @router.delete("/{carga_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_carga(carga_id: str,
                  current_user: dict[str, Any] = Depends(get_current_encargado),

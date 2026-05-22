@@ -17,6 +17,7 @@ class EstadoCarga(str, enum.Enum):
     ASIGNADO = 'asignado'
     EN_TRANSITO = 'en_transito'
     ENTREGADO = 'entregado'
+    CEDIDO = 'cedido'
 
 
 class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):

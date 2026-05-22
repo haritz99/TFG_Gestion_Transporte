@@ -82,4 +82,23 @@ class CargaService {
       throw Exception('Error al actualizar las cargas: ${response.statusCode} - ${response.body}');
     }
   }
+
+  Future<CargaModel> cederCarga({required String cargaId, required String subcontratadoUid}) async {
+    final token = await tokenProvider.getRequiredToken();
+    final response = await http.post(
+      Uri.parse('$_baseUrl/$cargaId/subcontratar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'subcontratadoId': subcontratadoUid}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al ceder la carga: ${response.statusCode} - ${response.body}');
+    }
+
+    final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
+    return CargaModel.fromMap(data, data['id'] as String);
+  }
 }

@@ -8,8 +8,17 @@ class PlanificacionProvider extends ChangeNotifier {
   CargaModel? _cargaSeleccionada;
   CargaModel? get cargaSeleccionada => _cargaSeleccionada;
 
+  String? _subcontratadoSeleccionadoId;
+  String? get subcontratadoSeleccionadoId => _subcontratadoSeleccionadoId;
+
   void seleccionarCarga(CargaModel? carga) {
     _cargaSeleccionada = carga;
+    _subcontratadoSeleccionadoId = null;
+    notifyListeners();
+  }
+
+  void seleccionarSubcontratado(String? uid) {
+    _subcontratadoSeleccionadoId = uid;
     notifyListeners();
   }
 
@@ -20,6 +29,7 @@ class PlanificacionProvider extends ChangeNotifier {
 
   void limpiarSeleccion() {
     _cargaSeleccionada = null;
+    _subcontratadoSeleccionadoId = null;
     notifyListeners();
   }
 }

@@ -10,6 +10,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/cargas/providers/pedido_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
+import 'features/dashboard/providers/invite_provider.dart';
 import 'features/cargas/providers/carga_provider.dart';
 import 'features/transportistas/providers/transportista_provider.dart';
 import 'features/vehiculos/providers/vehiculo_provider.dart';
@@ -53,6 +54,10 @@ class App extends StatelessWidget {
         ChangeNotifierProxyProvider<AuthTokenProvider, TransportistaProvider>(
           create: (context) => TransportistaProvider(tokenProvider: context.read<AuthTokenProvider>()),
           update: (_, tokenProvider, previous) => previous ?? TransportistaProvider(tokenProvider: tokenProvider),
+        ),
+        ChangeNotifierProxyProvider<AuthTokenProvider, InviteProvider>(
+          create: (context) => InviteProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? InviteProvider(tokenProvider: tokenProvider),
         ),
       ],
       child: Consumer<AuthProvider>(

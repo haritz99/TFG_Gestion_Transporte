@@ -5,13 +5,17 @@ from fastapi import HTTPException, Depends
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from app.crud.cargas_crud import CargasCRUD
 from app.crud.pedidos_crud import PedidosCRUD
+from app.crud.user_crud import UserCRUD
 from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
+from ..schemas.carga import CartaDePorteSnapshotSchema
+from app.schemas.external_user import SubcontratadoSchema
 
 
 class CargasService:
-    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), pedidos_crud: PedidosCRUD = Depends(PedidosCRUD)):
+    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), pedidos_crud: PedidosCRUD = Depends(PedidosCRUD), users_crud: UserCRUD = Depends(UserCRUD)):
         self._crud = crud
         self._pedidos_crud = pedidos_crud
+        self._users_crud = users_crud
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min) if fecha_inicio else None
@@ -145,6 +149,49 @@ class CargasService:
         batch.commit()
 
         return validated
+
+    def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str) -> CargaSchema:
+        doc = self._crud.get_carga_doc(carga_id)
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Carga no encontrada")
+        carga = CargaSchema.from_firestore(doc, company_id)
+        sub_doc = self._users_crud.get_subcontratado_by_id(subcontratado_id)
+        if not sub_doc.exists:
+            raise HTTPException(status_code=404, detail="Subcontratado no encontrado")
+
+        sub_data = sub_doc.to_dict() or {}
+        if sub_data.get("companyId") != company_id:
+            raise HTTPException(status_code=403, detail="No autorizado para ceder esta carga al subcontratado")
+
+        subcontratado = SubcontratadoSchema(**{**sub_data, "uid": sub_doc.id})
+        snapshot = carga.cartaPorteSnapshot
+        update_payload = self._rellenar_snapshot_subcontratado(snapshot, subcontratado)
+
+        self._crud.update_carga_doc(carga_id, update_payload)
+        updated_doc = self._crud.get_carga_doc(carga_id)
+        return CargaSchema.from_firestore(updated_doc, company_id)
+
+    @staticmethod
+    def _rellenar_snapshot_subcontratado(snapshot: CartaDePorteSnapshotSchema, subcontratado: SubcontratadoSchema) -> dict:
+        direccion = subcontratado.direccion
+        direccion_format = f"{direccion.calle}, {direccion.codigoPostal} {direccion.ciudad} ({direccion.provincia})"
+
+        snapshot.subcontratadoNombre = subcontratado.nombreComercial
+        snapshot.subcontratadoNif = subcontratado.nif
+        snapshot.subcontratadoDireccion = direccion_format
+        snapshot.subcontratadoTelefono = subcontratado.telefono
+        snapshot.subcontratadoNumAutorizacion = subcontratado.numeroAutorizacion
+        snapshot.congeladoAt = datetime.datetime.now(datetime.timezone.utc)
+
+        update_payload = {
+            "cartaPorteSnapshot": snapshot.model_dump(),
+            "estado": EstadoCarga.CEDIDO.value,
+            "updatedAt": datetime.datetime.now(datetime.timezone.utc),
+            "transportistaId": None,
+            "conductorNombre": None,
+            "vehiculoId": None,
+        }
+        return update_payload
 
 
     def delete_carga(self, carga_id: str, company_id: str):
