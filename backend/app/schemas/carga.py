@@ -6,7 +6,7 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException
 from pydantic import Field, model_validator
 
-from .base import FirestoreSchema, BaseModel
+from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema
@@ -19,7 +19,7 @@ class EstadoCarga(str, enum.Enum):
     ENTREGADO = 'entregado'
 
 
-class CargaBaseSchema(FirestoreSchema):
+class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
     origen: str = Field(..., min_length=1)
     destino: str = Field(..., min_length=1)
     mercancia: str = Field(..., min_length=1)
@@ -78,12 +78,14 @@ class CargaSchema(CargaBaseSchema):
             raise ValueError(f"El origen '{self.origen}' no existe en los orígenes válidos del pedido.")
         if pedido.destinos and self.destino not in pedido.destinos:
             raise ValueError(f"El destino '{self.destino}' no existe en los destinos válidos del pedido.")
-
-    @model_validator(mode='after')
+    """
+     @model_validator(mode='after')
     def validar_fechas(self) -> 'CargaSchema':
         if self.fechaDescarga <= self.fechaCarga:
             raise ValueError('La fecha de descarga debe ser posterior a la fecha de carga.')
         return self
+    """
+
 
     @model_validator(mode='after')
     def validar_asignacion_estado(self) -> 'CargaSchema':

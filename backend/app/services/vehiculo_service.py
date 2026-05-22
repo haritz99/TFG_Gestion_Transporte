@@ -18,20 +18,15 @@ class VehiculoService:
         self.crud = crud
 
     def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
-        try:
-            # Se trae limit + 1 para saber si es el ultimo o hay que paginar más
-            query = self.crud.get_all(company_id, limit=limit + 1, last_doc_id=last_doc_id)
-            docs = list(query)
+        #try:
+            query_stream = self.crud.get_all(company_id, limit=limit + 1, last_doc_id=last_doc_id)
+            docs = list(query_stream)
 
             has_more = len(docs) > limit
             if has_more:
-                docs = docs[:-1]
+                docs = docs[:limit]
 
-            vehiculos = []
-            for doc in docs:
-                vehiculo = VehiculoSchema.from_firestore(doc, company_id)
-                vehiculos.append(vehiculo)
-
+            vehiculos = [VehiculoSchema.from_firestore(doc, company_id) for doc in docs]
             last_id = docs[-1].id if docs else None
 
             return VehiculoPaginatedSchema(
@@ -39,10 +34,9 @@ class VehiculoService:
                 last_doc_id=last_id,
                 has_more=has_more
             )
-        except HTTPException:
-            raise
-        except Exception:
-            raise HTTPException(status_code=500, detail="Error interno del servidor")
+        #except HTTPException:
+         #   raise
+
 
     def get_count(self, company_id: str) -> VehiculoCountSchema:
         try:

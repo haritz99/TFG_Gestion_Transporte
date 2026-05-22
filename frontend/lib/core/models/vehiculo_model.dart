@@ -12,6 +12,7 @@ class VehiculoModel {
   final String? companyId;
   final String? transportistaId;
   final String? transportistaNombre;
+  final String? cargaId;
 
   VehiculoModel({
     required this.matricula,
@@ -27,6 +28,7 @@ class VehiculoModel {
     this.companyId,
     this.transportistaId,
     this.transportistaNombre,
+    this.cargaId,
   });
 
   factory VehiculoModel.fromMap(Map<String, dynamic> map, String id) {
@@ -44,6 +46,7 @@ class VehiculoModel {
       companyId: map['companyId'],
       transportistaId: map['transportistaId'],
       transportistaNombre: map['transportistaNombre'],
+      cargaId: map['cargaId'],
     );
   }
 
@@ -62,6 +65,7 @@ class VehiculoModel {
       'companyId': companyId?.isEmpty == true ? null : companyId,
       'transportistaId': transportistaId?.isEmpty == true ? null : transportistaId,
       'transportistaNombre': transportistaNombre?.isEmpty == true ? null : transportistaNombre,
+      'cargaId': cargaId?.isEmpty == true ? null : cargaId,
     };
   }
 }
