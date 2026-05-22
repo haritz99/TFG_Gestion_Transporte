@@ -61,4 +61,25 @@ class CargaService {
     final List<dynamic> data = jsonDecode(response.body);
     return data.map((e) => TipoCargaModel.fromMap(e, e['id'])).toList();
   }
+
+  Future<void> updateCargas(List<CargaModel> cargas) async {
+    final token = await tokenProvider.getRequiredToken();
+
+    final uri = Uri.parse('$_baseUrl/bulk');
+
+    final body = jsonEncode(cargas.map((c) => c.toMap()).toList());
+
+    final response = await http.put(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: body,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar las cargas: ${response.statusCode} - ${response.body}');
+    }
+  }
 }

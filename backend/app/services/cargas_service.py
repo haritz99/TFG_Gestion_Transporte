@@ -4,12 +4,14 @@ from typing import Optional, List
 from fastapi import HTTPException, Depends
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from app.crud.cargas_crud import CargasCRUD
+from app.crud.pedidos_crud import PedidosCRUD
 from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
 
 
 class CargasService:
-    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD)):
+    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), pedidos_crud: PedidosCRUD = Depends(PedidosCRUD)):
         self._crud = crud
+        self._pedidos_crud = pedidos_crud
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min) if fecha_inicio else None
@@ -107,6 +109,43 @@ class CargasService:
         
         self._crud.update_carga_doc(carga_id, update_data)
         return carga
+
+    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
+
+        batch = self._crud.get_batch()
+        validated: List[CargaSchema] = []
+        for carga in cargas:
+            doc = self._crud.get_carga_doc(carga.id)
+            if not doc.exists:
+                raise HTTPException(status_code=404, detail=f"Carga {carga.id} no encontrada")
+
+            carga_data = doc.to_dict()
+            if carga_data.get("companyId") != company_id:
+                raise HTTPException(status_code=403, detail=f"No autorizado para modificar la carga {carga.id}")
+
+            if not carga.pedidoId:
+                raise HTTPException(status_code=400, detail=f"La carga {carga.id} debe estar asociada a un pedido")
+
+            pedido_doc = self._pedidos_crud.get_pedido_doc(carga.pedidoId)
+            if not pedido_doc.exists:
+                raise HTTPException(status_code=404, detail=f"Pedido {carga.pedidoId} no encontrado")
+
+            pedido_schema = PedidoSchema.from_firestore(pedido_doc, company_id)
+
+            carga.companyId = company_id
+            carga.clienteId = pedido_schema.clienteId
+            validated.append(carga)
+
+        for carga in validated:
+            ref = self._crud.get_carga_ref(carga.id)
+            if ref is None:
+                raise HTTPException(status_code=500, detail=f"No se pudo obtener la referencia de la carga {carga.id}")
+            batch.update(ref, carga.model_dump(exclude={'id'}))
+
+        batch.commit()
+
+        return validated
+
 
     def delete_carga(self, carga_id: str, company_id: str):
         doc = self._crud.get_carga_doc(carga_id)

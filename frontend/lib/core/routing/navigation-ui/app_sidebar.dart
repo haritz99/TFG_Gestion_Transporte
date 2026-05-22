@@ -52,6 +52,12 @@ class AppSidebar extends StatelessWidget {
                   isSelected: location == '/panel',
                 ),
                 SidebarItem(
+                  title: 'Planificación',
+                  icon: Icons.calendar_today_rounded,
+                  route: '/planificacion',
+                  isSelected: location == '/planificacion',
+                ),
+                SidebarItem(
                   title: 'Gestión de Flota',
                   icon: Icons.local_shipping_outlined,
                   route: '/flota',

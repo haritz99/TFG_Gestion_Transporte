@@ -69,16 +69,14 @@ class CargaSchema(CargaBaseSchema):
         Valida que la carga cumpla con las restricciones de su pedido padre.
         Se debe llamar a este método desde el servicio/router tras obtener el pedido de la base de datos y validarlo con Pydantic.
         """
-        # Validar fechas
         if self.fechaCarga < pedido.fechaCarga:
             raise ValueError(f"La fecha de carga ({self.fechaCarga}) no puede ser anterior a la del pedido ({pedido.fechaCarga}).")
         if self.fechaDescarga > pedido.fechaDescarga:
             raise ValueError(f"La fecha de descarga ({self.fechaDescarga}) no puede ser posterior a la del pedido ({pedido.fechaDescarga}).")
 
-        # Validar orígenes y destinos
-        if self.origen not in pedido.origenes:
+        if pedido.origenes and self.origen not in pedido.origenes:
             raise ValueError(f"El origen '{self.origen}' no existe en los orígenes válidos del pedido.")
-        if self.destino not in pedido.destinos:
+        if pedido.destinos and self.destino not in pedido.destinos:
             raise ValueError(f"El destino '{self.destino}' no existe en los destinos válidos del pedido.")
 
     @model_validator(mode='after')

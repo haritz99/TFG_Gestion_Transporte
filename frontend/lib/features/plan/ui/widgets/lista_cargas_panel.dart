@@ -1,0 +1,158 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../providers/planificacion_provider.dart';
+import '../../../../core/models/carga_model.dart';
+import '../../../cargas/providers/carga_provider.dart';
+import '../../../cargas/providers/pedido_provider.dart';
+
+class ListaCargasPanel extends StatelessWidget {
+  const ListaCargasPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final planProvider = context.watch<PlanificacionProvider>();
+    final pedidoProvider = context.watch<PedidoProvider>();
+    final cargaProvider = context.watch<CargaProvider>();
+
+    final pedidos = pedidoProvider.pedidos;
+    final todasCargas = cargaProvider.cargas;
+
+    final cargasPendientes = todasCargas.where((c) =>
+      c.estado == EstadoCarga.pendiente &&
+      !planProvider.cargasPlanificadasIds.contains(c.id)
+    ).toList();
+
+    final Map<String, List<CargaModel>> cargasPorPedido = {};
+    for (var c in cargasPendientes) {
+      final pId = c.pedidoId ?? 'sin-pedido';
+      cargasPorPedido.putIfAbsent(pId, () => []).add(c);
+    }
+
+    final uniquePedidoIds = cargasPorPedido.keys.toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Cargas Pendientes',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.titleText,
+              ),
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.border),
+          Expanded(
+            child: ListView.builder(
+              itemCount: uniquePedidoIds.length,
+              itemBuilder: (context, index) {
+                final pId = uniquePedidoIds[index];
+                final cargasDelPedido = cargasPorPedido[pId]!;
+
+                final pedidoOpt = pedidos.where((p) => p.id == pId).firstOrNull;
+                final title = pedidoOpt != null
+                    ? '${pedidoOpt.id?.toUpperCase() ?? ''} - ${pedidoOpt.descripcion}'
+                    : 'Pedido ${pId != 'sin-pedido' && pId.length > 8 ? pId.substring(0, 8).toUpperCase() : pId.toUpperCase()}';
+
+                return ExpansionTile(
+                  initiallyExpanded: true,
+                  title: Text(
+                    title,
+                    style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  children: cargasDelPedido.map((carga) => _buildCargaDraggable(context, carga, planProvider)).toList(),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCargaDraggable(
+    BuildContext context,
+    CargaModel carga,
+    PlanificacionProvider provider,
+  ) {
+    return Draggable<CargaModel>(
+      data: carga,
+      feedback: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 200,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            carga.mercancia,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.5,
+        child: _buildCargaCard(carga, false),
+      ),
+      child: InkWell(
+        onTap: () => provider.seleccionarCarga(carga),
+        child: _buildCargaCard(
+          carga,
+          provider.cargaSeleccionada?.id == carga.id,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCargaCard(CargaModel carga, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.pageBackground,
+        border: Border.all(
+          color: isSelected ? AppColors.primary : AppColors.border,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            carga.mercancia,
+            style: AppTextStyles.bodySm.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${carga.origen} → ${carga.destino}',
+            style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${carga.peso}t · ${carga.numBultos} bultos',
+            style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../../auth/providers/token_provider.dart';
 import '../data/dashboard_service.dart';
 import '../../../core/models/carga_model.dart';
-import '../../cargas/data/carga_service.dart';
+import '../../cargas/providers/carga_provider.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final DashboardService _service;
-  final CargaService _cargaService;
   final AuthTokenProvider _tokenProvider;
+  final CargaProvider _cargaProvider;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -19,8 +19,6 @@ class DashboardProvider extends ChangeNotifier {
   int _entregadasHoy = 0;
   int _totalEntregasHoy = 0;
 
-  List<CargaModel> _cargas = [];
-
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -31,14 +29,14 @@ class DashboardProvider extends ChangeNotifier {
   int get entregadasHoy => _entregadasHoy;
   int get totalEntregasHoy => _totalEntregasHoy;
 
-  List<CargaModel> get cargas => _cargas;
+  List<CargaModel> get cargas => _cargaProvider.cargas;
 
   DashboardProvider({
     required AuthTokenProvider tokenProvider,
+    required CargaProvider cargaProvider,
     DashboardService? service,
-    CargaService? cargaService,
   })  : _service = service ?? DashboardService(),
-        _cargaService = cargaService ?? CargaService(tokenProvider),
+        _cargaProvider = cargaProvider,
         _tokenProvider = tokenProvider {
     _loadDashboardData();
   }
@@ -56,19 +54,16 @@ class DashboardProvider extends ChangeNotifier {
 
       final results = await Future.wait([
         _service.fetchDashboardSummary(token: token),
-        _cargaService.getCargasDelMes(start, end),
+        _cargaProvider.fetchCargasDelMes(start, end),
       ]);
 
       final summary = results[0] as DashboardSummary;
-      final cargasDelMes = results[1] as List<CargaModel>;
 
       _cargasAsignadas = summary.cargasAsignadas;
       _cargasSinAsignar = summary.cargasSinAsignar;
       _incidenciasAbiertas = summary.incidenciasAbiertas;
       _entregadasHoy = summary.entregadasHoy;
       _totalEntregasHoy = summary.totalEntregasHoy;
-
-      _cargas = cargasDelMes;
 
     } catch (e) {
       _errorMessage = 'Error al cargar el dashboard: $e';

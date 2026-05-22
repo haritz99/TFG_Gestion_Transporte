@@ -34,7 +34,7 @@ class AsignacionCarga {
 class PedidoProvider extends ChangeNotifier {
   final PedidoService _service;
 
-  List<PedidoModel> _pedidos = [];
+  final List<PedidoModel> _pedidos = [];
   List<PedidoModel> get pedidos => _pedidos;
 
   bool _isLoading = false;

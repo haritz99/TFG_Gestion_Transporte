@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:syncfusion_flutter_core/core.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
 import 'flavors.dart';
@@ -24,5 +23,6 @@ Future<void> main() async{
     (element) => element.name == appFlavor,
   );
   await initializeFirebaseApp();
+  await initializeDateFormatting('es', null);
   runApp(const App());
 }

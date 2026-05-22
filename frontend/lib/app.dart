@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
@@ -29,17 +30,21 @@ class App extends StatelessWidget {
           create: (context) => AuthProvider(authService: context.read<AuthService>()),
           update: (_, authService, previous) => previous ?? AuthProvider(authService: authService),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, DashboardProvider>(
-          create: (context) => DashboardProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? DashboardProvider(tokenProvider: tokenProvider),
+        ChangeNotifierProxyProvider<AuthTokenProvider, CargaProvider>(
+          create: (context) => CargaProvider(tokenProvider: context.read<AuthTokenProvider>()),
+          update: (_, tokenProvider, previous) => previous ?? CargaProvider(tokenProvider: tokenProvider),
+        ),
+        ChangeNotifierProxyProvider2<AuthTokenProvider, CargaProvider, DashboardProvider>(
+          create: (context) => DashboardProvider(
+            tokenProvider: context.read<AuthTokenProvider>(),
+            cargaProvider: context.read<CargaProvider>()
+          ),
+          update: (_, tokenProvider, cargaProvider, previous) =>
+            previous ?? DashboardProvider(tokenProvider: tokenProvider, cargaProvider: cargaProvider),
         ),
         ChangeNotifierProxyProvider<AuthTokenProvider, PedidoProvider>(
           create: (context) => PedidoProvider(tokenProvider: context.read<AuthTokenProvider>()),
           update: (_, tokenProvider, previous) => previous ?? PedidoProvider(tokenProvider: tokenProvider),
-        ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, CargaProvider>(
-          create: (context) => CargaProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? CargaProvider(tokenProvider: tokenProvider),
         ),
         ChangeNotifierProxyProvider<AuthTokenProvider, VehiculoProvider>(
           create: (context) => VehiculoProvider(tokenProvider: context.read<AuthTokenProvider>()),
@@ -56,6 +61,15 @@ class App extends StatelessWidget {
               title: F.title,
               theme: AppTheme.light,
               routerConfig: AppRouter.router(authProvider),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('es', ''),
+              ],
+              locale: const Locale('es', ''),
               builder: (context, child) {
                 if (child == null) {
                   return const SizedBox.shrink();

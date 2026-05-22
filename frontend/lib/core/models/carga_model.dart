@@ -174,4 +174,72 @@ class CargaModel extends CargaBaseModel {
       clienteId: map['clienteId'] as String?,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'origen': origen,
+      'destino': destino,
+      'mercancia': mercancia,
+      'numBultos': numBultos,
+      'peso': peso,
+      'precio': precio,
+      if (largo != null) 'largo': largo,
+      if (ancho != null) 'ancho': ancho,
+      if (alto != null) 'alto': alto,
+      'estado': estado.value,
+      'fechaCarga': fechaCarga.toIso8601String(),
+      'fechaDescarga': fechaDescarga.toIso8601String(),
+      if (transportistaId != null) 'transportistaId': transportistaId,
+      if (transportistaNombre != null) 'conductorNombre': transportistaNombre,
+      if (pedidoId != null) 'pedidoId': pedidoId,
+      if (vehiculoId != null) 'vehiculoId': vehiculoId,
+      if (companyId != null) 'companyId': companyId,
+      if (clienteId != null) 'clienteId': clienteId,
+    };
+  }
+
+  CargaModel copyWith({
+    String? id,
+    EstadoCarga? estado,
+    DateTime? fechaCarga,
+    DateTime? fechaDescarga,
+    String? transportistaId,
+    String? transportistaNombre,
+    String? pedidoId,
+    String? vehiculoId,
+    String? companyId,
+    String? clienteId,
+    String? origen,
+    String? destino,
+    String? mercancia,
+    int? numBultos,
+    double? peso,
+    double? precio,
+    double? largo,
+    double? ancho,
+    double? alto,
+  }) {
+    return CargaModel(
+      id: id ?? this.id,
+      estado: estado ?? this.estado,
+      fechaCarga: fechaCarga ?? this.fechaCarga,
+      fechaDescarga: fechaDescarga ?? this.fechaDescarga,
+      transportistaId: transportistaId ?? this.transportistaId,
+      transportistaNombre: transportistaNombre ?? this.transportistaNombre,
+      pedidoId: pedidoId ?? this.pedidoId,
+      vehiculoId: vehiculoId ?? this.vehiculoId,
+      companyId: companyId ?? this.companyId,
+      clienteId: clienteId ?? this.clienteId,
+      origen: origen ?? this.origen,
+      destino: destino ?? this.destino,
+      mercancia: mercancia ?? this.mercancia,
+      numBultos: numBultos ?? this.numBultos,
+      peso: peso ?? this.peso,
+      precio: precio ?? this.precio,
+      largo: largo ?? this.largo,
+      ancho: ancho ?? this.ancho,
+      alto: alto ?? this.alto,
+    );
+  }
 }

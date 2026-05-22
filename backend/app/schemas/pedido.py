@@ -22,8 +22,8 @@ class PedidoSchema(FirestoreSchema):
     descripcion: Optional[str] = None
     fechaCarga: datetime.datetime = Field(...)  # Fecha de carga
     fechaDescarga: datetime.datetime = Field(...) # Fecha de descarga maxima
-    origenes: List[str] = Field(..., min_length=1)  # Lista de origenes
-    destinos: List[str] = Field(..., min_length=1)  # Lista de destinos
+    origenes: List[str] = Field(default_factory=list)  # Lista de origenes
+    destinos: List[str] = Field(default_factory=list)  # Lista de destinos
     estado: EstadoPedido = Field(default=EstadoPedido.PLANIFICADO)
     clienteId: str = Field(..., min_length=1) 
     companyId: Optional[str] = Field(default=None, min_length=1)

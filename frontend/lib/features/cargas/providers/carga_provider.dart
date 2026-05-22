@@ -10,6 +10,9 @@ class CargaProvider extends ChangeNotifier {
   List<CargaModel> get cargas => _cargas;
   List<TipoCargaModel> _tiposCarga = [];
 
+  final Set<String> _cargasModificadas = {};
+  bool get hayCambiosSinGuardar => _cargasModificadas.isNotEmpty;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -29,6 +32,7 @@ class CargaProvider extends ChangeNotifier {
 
     try {
       _cargas = await _service.getCargasDelMes(start, end);
+      _cargasModificadas.clear();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -61,5 +65,70 @@ class CargaProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-}
 
+  void actualizarFechasCarga(String cargaId, DateTime start, DateTime end) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      _cargas[idx] = _cargas[idx].copyWith(
+        fechaCarga: start,
+        fechaDescarga: end,
+      );
+      _cargasModificadas.add(cargaId);
+      notifyListeners();
+    }
+  }
+
+  void asignarVehiculo(String cargaId, String? matricula) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      final old = _cargas[idx];
+      final newEstado = (matricula != null || old.transportistaId != null)
+          ? EstadoCarga.asignado
+          : EstadoCarga.pendiente;
+
+      _cargas[idx] = old.copyWith(
+        estado: newEstado,
+        vehiculoId: matricula,
+      );
+      _cargasModificadas.add(cargaId);
+      notifyListeners();
+    }
+  }
+
+  void asignarConductor(String cargaId, String? conductorId, String? nombre) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      final old = _cargas[idx];
+      final newEstado = (conductorId != null || old.vehiculoId != null)
+          ? EstadoCarga.asignado
+          : EstadoCarga.pendiente;
+
+      _cargas[idx] = old.copyWith(
+        estado: newEstado,
+        transportistaId: conductorId,
+        transportistaNombre: nombre,
+      );
+      _cargasModificadas.add(cargaId);
+      notifyListeners();
+    }
+  }
+
+  Future<void> guardarCambios() async {
+    if (_cargasModificadas.isEmpty) return;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final cargasAGuardar = _cargas.where((c) => _cargasModificadas.contains(c.id)).toList();
+      await _service.updateCargas(cargasAGuardar);
+      _cargasModificadas.clear();
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+}
