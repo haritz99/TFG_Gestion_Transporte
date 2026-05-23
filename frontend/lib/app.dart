@@ -5,6 +5,9 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/connectivity_service.dart';
+import 'core/providers/connectivity_provider.dart';
+import 'core/widgets/connectivity_banner.dart';
 import 'features/auth/providers/token_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/services/auth_service.dart';
@@ -23,6 +26,14 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ConnectivityService>(create: (_) => ConnectivityService()),
+        ChangeNotifierProxyProvider<ConnectivityService, ConnectivityProvider>(
+          create: (context) => ConnectivityProvider(
+            connectivityService: context.read<ConnectivityService>(),
+          ),
+          update: (_, connectivityService, previous) =>
+            previous ?? ConnectivityProvider(connectivityService: connectivityService),
+        ),
         Provider<AuthService>(create: (_) => AuthService()),
         ProxyProvider<AuthService, AuthTokenProvider>(
           update: (_, authService, __) => AuthTokenProvider(authService),
@@ -63,23 +74,24 @@ class App extends StatelessWidget {
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           return MaterialApp.router(
-              title: F.title,
-              theme: AppTheme.light,
-              routerConfig: AppRouter.router(authProvider),
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('es', ''),
-              ],
-              locale: const Locale('es', ''),
-              builder: (context, child) {
-                if (child == null) {
-                  return const SizedBox.shrink();
-                }
-                return ResponsiveBreakpoints.builder(
+            title: F.title,
+            theme: AppTheme.light,
+            routerConfig: AppRouter.router(authProvider),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('es', ''),
+            ],
+            locale: const Locale('es', ''),
+            builder: (context, child) {
+              if (child == null) {
+                return const SizedBox.shrink();
+              }
+              return ConnectivityBanner(
+                child: ResponsiveBreakpoints.builder(
                   child: child,
                   breakpoints: const [
                     Breakpoint(start: 0, end: 599, name: MOBILE),
@@ -87,8 +99,9 @@ class App extends StatelessWidget {
                     Breakpoint(start: 1024, end: 1920, name: DESKTOP),
                     Breakpoint(start: 1921, end: double.infinity, name: '4K'),
                   ],
-                );
-              },
+                ),
+              );
+            },
           );
         },
       ),

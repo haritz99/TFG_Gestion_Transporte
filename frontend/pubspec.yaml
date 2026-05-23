@@ -52,6 +52,9 @@ dependencies:
   # HTTP para comunicación con FastAPI
   http: ^1.3.0
 
+  # Conectividad
+  connectivity_plus: ^6.0.0
+
   # Estado
   provider: ^6.1.2
   responsive_framework: ^1.5.1
