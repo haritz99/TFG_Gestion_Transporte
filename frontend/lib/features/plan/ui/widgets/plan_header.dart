@@ -9,7 +9,7 @@ class PlanHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13.5),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),

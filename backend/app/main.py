@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import trans, external_users, pedidos, dashboard, cargas
 from .routers import vehiculos
-from .routers import intent
 from .routers import custom_claims
 import os
 from dotenv import load_dotenv
@@ -12,7 +11,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]  # backend/
 load_dotenv(BASE_DIR / ".env")
 
-app = FastAPI(title="Gestión Transporte API")
+app = FastAPI(
+    title="Gestión Transporte API",
+    docs_url="/swagger",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 
 # Middleware para CORS
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5500")
@@ -38,5 +42,4 @@ app.include_router(vehiculos.router)
 app.include_router(external_users.router)
 app.include_router(pedidos.router)
 app.include_router(cargas.router)
-app.include_router(intent.router)
 app.include_router(dashboard.router)

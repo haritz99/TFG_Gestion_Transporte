@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import '../../../auth/providers/token_provider.dart';
-import '../../providers/invite_provider.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'invite/invite_modal.dart';
@@ -50,58 +48,23 @@ class DashboardHeader extends StatelessWidget {
           ),
           Row(
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  final tokenProvider = context.read<AuthTokenProvider>();
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
-                      create: (_) => InviteProvider(
-                        tokenProvider: tokenProvider,
-                      ),
-                      child: const FormBuilderPedido(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Nuevo Pedido'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              _responsiveButton(
+                label: 'Nuevo Pedido',
+                icon: Icons.add,
+                backgroundColor: AppColors.primary,
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (ctx) => const FormBuilderPedido(),
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final tokenProvider = context.read<AuthTokenProvider>();
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => ChangeNotifierProvider<InviteProvider>(
-                      create: (_) => InviteProvider(
-                        tokenProvider: tokenProvider,
-                      ),
-                      child: const InviteModal(),
-                    ),
-                  );
-                },
-                icon: const Icon(
-                  Icons.person_add,
-                  size: 18,
-                ),
-                label: const Text('Invitar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              _responsiveButton(
+                label: 'Invitar',
+                icon: Icons.person_add,
+                backgroundColor: const Color(0xFF4CAF50),
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (ctx) => const InviteModal(),
                 ),
               ),
             ],
@@ -109,5 +72,44 @@ class DashboardHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _responsiveButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+  }) {
+    return Builder(builder: (ctx) {
+      final isMobile = ResponsiveBreakpoints.of(ctx).isMobile;
+
+      final style = ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: isMobile
+            ? const EdgeInsets.all(8)
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      );
+
+      if (isMobile) {
+        return Tooltip(
+          message: label,
+          child: ElevatedButton(
+            onPressed: onPressed,
+            style: style,
+            child: Icon(icon, size: 20),
+          ),
+        );
+      }
+
+      return ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: style,
+      );
+    });
   }
 }

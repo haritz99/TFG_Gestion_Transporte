@@ -117,19 +117,21 @@ class _DashboardCalendarState extends State<DashboardCalendar> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Calendario de Pedidos',
-              style: AppTextStyles.headingMd.copyWith(color: AppColors.primary),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${widget.cargas.length} cargas próximas',
-              style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Calendario de Pedidos',
+                style: AppTextStyles.headingMd.copyWith(color: AppColors.primary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${widget.cargas.length} cargas próximas',
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
+              ),
+            ],
+          ),
         ),
         Row(
           children: [

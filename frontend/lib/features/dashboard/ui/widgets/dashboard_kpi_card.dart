@@ -29,7 +29,7 @@ class DashboardKpiCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -61,8 +61,7 @@ class DashboardKpiCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
               color: labelColor,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
           if (bottomContent != null) ...[
             const Spacer(),
