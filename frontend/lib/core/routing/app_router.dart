@@ -41,7 +41,7 @@ class AppRouter {
 
       final user = authProvider.user;
       final externalUser = authProvider.externalUser;
-
+      final location = state.matchedLocation;
 
       if (user == null && externalUser == null) {
         return isLoggingIn ? null : '/login';
@@ -49,36 +49,44 @@ class AppRouter {
 
       // Lógica para usuario interno
       if (user != null) {
+        final internalRoutes = ['/panel', '/planificacion', '/flota', '/equipo', '/incidencias'];
+
+        if (!internalRoutes.any((route) => location.startsWith(route))) {
+          return '/panel';
+        }
+
         if (isLoggingIn) {
-          if (user.rol.contains('encargado')) {
-            return '/panel';
-          }
-          else if (user.rol.contains('transportista')) {
-            return '/panel';  // TODO: Cambiar cuando haya panel propio
-          }
+          return '/panel';
         }
       }
 
       // Lógica para usuario externo
       if (externalUser != null) {
         if (!externalUser.datosCompletos) {
-          if (externalUser.rol.contains('cliente') && state.matchedLocation != '/cargador_register') {
+          if (externalUser.rol.contains('cliente') && location != '/cargador_register') {
             return '/cargador_register';
-          } else if (externalUser.rol.contains('subcontratado') && state.matchedLocation != '/subcontratado_register') {
+          } else if (externalUser.rol.contains('subcontratado') && location != '/subcontratado_register') {
             return '/subcontratado_register';
           }
           return null;
         } else {
-          // Si tiene datos completos y está en el login o en el propio registro
-          if (isLoggingIn || state.matchedLocation.contains('_register')) {
-            if (externalUser.rol.contains('cliente')) {
+          if (externalUser.rol.contains('cliente')) {
+            final clienteRoutes = ['/cargador_home'];
+            if (!clienteRoutes.any((route) => location.startsWith(route))) {
               return '/cargador_home';
             }
-            else if (externalUser.rol.contains('subcontratado')) {
-              return '/panel';    // TODO: Cambiar por panel sub
+          }
+
+          if (externalUser.rol.contains('subcontratado')) {
+            final subRoutes = ['/panel']; // TODO: Cambiar por home subcontratado específico
+            if (!subRoutes.any((route) => location.startsWith(route))) {
+              return '/panel';
             }
           }
-          return null;
+
+          if (isLoggingIn || location.contains('_register')) {
+            return externalUser.rol.contains('cliente') ? '/cargador_home' : '/panel';
+          }
         }
       }
 
