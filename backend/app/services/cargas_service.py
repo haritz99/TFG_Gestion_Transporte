@@ -9,6 +9,7 @@ from app.crud.user_crud import UserCRUD
 from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
+from google.cloud.firestore import ArrayUnion
 
 
 class CargasService:
@@ -167,7 +168,16 @@ class CargasService:
         snapshot = carga.cartaPorteSnapshot
         update_payload = self._rellenar_snapshot_subcontratado(snapshot, subcontratado)
 
-        self._crud.update_carga_doc(carga_id, update_payload)
+        batch = self._crud.get_batch()
+        carga_ref = doc.reference
+        batch.update(carga_ref, update_payload)
+
+        batch.update(sub_doc.reference, {
+            "cargasCedidas": ArrayUnion([carga_id])
+        })
+
+        batch.commit()
+
         updated_doc = self._crud.get_carga_doc(carga_id)
         return CargaSchema.from_firestore(updated_doc, company_id)
 

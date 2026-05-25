@@ -8,6 +8,18 @@ class CargaProvider extends ChangeNotifier {
 
   List<CargaModel> _cargas = [];
   List<CargaModel> get cargas => _cargas;
+
+  List<CargaModel> get cargasSemanaAnterior {
+    final now = DateTime.now();
+    final inicioSemana = now.subtract(Duration(days: now.weekday - 1));
+    final inicioSemanaSinHora = DateTime(inicioSemana.year, inicioSemana.month, inicioSemana.day);
+
+    return _cargas.where((c) =>
+      c.estado == EstadoCarga.pendiente &&
+      c.fechaDescarga.isBefore(inicioSemanaSinHora)
+    ).toList();
+  }
+
   List<TipoCargaModel> _tiposCarga = [];
 
   final Set<String> _cargasModificadas = {};
@@ -82,13 +94,14 @@ class CargaProvider extends ChangeNotifier {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {
       final old = _cargas[idx];
-      final newEstado = (matricula != null || old.transportistaId != null)
+      final newEstado = (matricula != null && old.transportistaId != null)
           ? EstadoCarga.asignado
           : EstadoCarga.pendiente;
 
       _cargas[idx] = old.copyWith(
         estado: newEstado,
         vehiculoId: matricula,
+        clearVehiculoId: matricula == null,
       );
       _cargasModificadas.add(cargaId);
       notifyListeners();
@@ -99,18 +112,40 @@ class CargaProvider extends ChangeNotifier {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {
       final old = _cargas[idx];
-      final newEstado = (conductorId != null || old.vehiculoId != null)
+      final newEstado = (conductorId != null && old.vehiculoId != null)
           ? EstadoCarga.asignado
           : EstadoCarga.pendiente;
 
       _cargas[idx] = old.copyWith(
         estado: newEstado,
         transportistaId: conductorId,
+        clearTransportistaId: conductorId == null,
         transportistaNombre: nombre,
+        clearTransportistaNombre: nombre == null,
       );
       _cargasModificadas.add(cargaId);
       notifyListeners();
     }
+  }
+
+  void traerCargasEstaSemana() {
+    final now = DateTime.now();
+
+    for (final carga in cargasSemanaAnterior) {
+      final idx = _cargas.indexWhere((c) => c.id == carga.id);
+      if (idx != -1) {
+        final duracion = carga.fechaDescarga.difference(carga.fechaCarga);
+        final nuevaFechaCarga = DateTime(now.year, now.month, now.day, now.hour);
+        final nuevaFechaDescarga = nuevaFechaCarga.add(duracion);
+
+        _cargas[idx] = carga.copyWith(
+          fechaCarga: nuevaFechaCarga,
+          fechaDescarga: nuevaFechaDescarga,
+        );
+        _cargasModificadas.add(carga.id!);
+      }
+    }
+    notifyListeners();
   }
 
   Future<void> guardarCambios() async {

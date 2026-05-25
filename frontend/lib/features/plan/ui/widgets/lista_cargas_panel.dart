@@ -17,8 +17,8 @@ class ListaCargasPanel extends StatelessWidget {
     final cargaProvider = context.watch<CargaProvider>();
 
     final pedidos = pedidoProvider.pedidos;
-    final todasCargas = cargaProvider.cargas;
-
+    final todasCargas = cargaProvider.cargas.where((c) => c.estado != EstadoCarga.cedido);
+    final cargasSemanaAnterior = cargaProvider.cargasSemanaAnterior;
     final cargasPendientes = todasCargas.where((c) =>
       c.estado == EstadoCarga.pendiente &&
       !planProvider.cargasPlanificadasIds.contains(c.id)
@@ -39,6 +39,7 @@ class ListaCargasPanel extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
@@ -76,6 +77,20 @@ class ListaCargasPanel extends StatelessWidget {
               },
             ),
           ),
+          const Divider(height: 1, color: AppColors.border),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (cargasSemanaAnterior.isNotEmpty) ...[
+                    Text("Aun hay ${cargasSemanaAnterior.length} cargas de la semana pasada sin planificar", style: AppTextStyles.bodyMd),
+                    const SizedBox(height: 8),
+                    _botonCargasTraerHoy(cargaProvider),
+                  ],
+                ]
+            )
+          )
         ],
       ),
     );
@@ -153,6 +168,21 @@ class ListaCargasPanel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _botonCargasTraerHoy(CargaProvider cargaProvider) {
+    return TextButton(
+      onPressed: () {
+        cargaProvider.traerCargasEstaSemana();
+      },
+      style: TextButton.styleFrom(
+        backgroundColor: AppColors.mutedText,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: const Text('Traer a esta semana'),
     );
   }
 }

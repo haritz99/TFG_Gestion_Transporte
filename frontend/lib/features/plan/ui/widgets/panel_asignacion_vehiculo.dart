@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/models/carga_model.dart';
 import '../../providers/planificacion_provider.dart';
 import '../../../transportistas/providers/transportista_provider.dart';
 import '../../../vehiculos/providers/vehiculo_provider.dart';
@@ -16,12 +17,10 @@ class PanelAsignacionVehiculo extends StatelessWidget {
     final planProvider = context.watch<PlanificacionProvider>();
     final cargaProvider = context.watch<CargaProvider>();
 
-    // Buscar la carga actualizada en CargaProvider por si cambió algo
     final seleccionId = planProvider.cargaSeleccionada?.id;
-    final seleccion = seleccionId != null
-        ? cargaProvider.cargas.firstWhere((c) => c.id == seleccionId) : null;
-
-    final hasSelection = seleccion != null;
+    final carga = seleccionId != null
+        ? cargaProvider.cargas.where((c) => c.id == seleccionId).firstOrNull
+        : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -29,52 +28,46 @@ class PanelAsignacionVehiculo extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: hasSelection
-          ? _buildDetailsPanel(context, planProvider)
-          : _buildEmptyState(),
+      child: carga != null
+          ? _DetallesAsignacionContent(carga: carga)
+          : const Center(child: Text('No hay cargas seleccionadas'))
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.assignment_outlined,
-            size: 48,
-            color: AppColors.border,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Selecciona una carga',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.bodyText,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Haz clic en una carga del calendario para\nver y gestionar su asignación.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.mutedText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+}
 
-  Widget _buildDetailsPanel(BuildContext context, PlanificacionProvider planProvider) {
-    final cargaProvider = context.read<CargaProvider>();
-    final selecionId = planProvider.cargaSeleccionada?.id;
-    final carga = cargaProvider.cargas.firstWhere((c) => c.id == selecionId);
+class _DetallesAsignacionContent extends StatelessWidget {
+  final CargaModel carga;
+  const _DetallesAsignacionContent({required this.carga});
 
+  @override
+  Widget build(BuildContext context) {
+    final planProvider = context.watch<PlanificacionProvider>();
+    final cargaProvider = context.watch<CargaProvider>();
     final vehiculoProvider = context.watch<VehiculoProvider>();
     final transportistaProvider = context.watch<TransportistaProvider>();
+    final inviteProvider = context.watch<InviteProvider>();
+
+    final subcontratados = inviteProvider.guests
+        .where((guest) => guest.rol.any((r) => r.toLowerCase().contains('subcontratado')))
+        .toList();
+
+    final Set<String> conductoresOcupados = {};
+    final Set<String> vehiculosOcupados = {};
+
+    for (final c in cargaProvider.cargas) {
+      if (c.id == carga.id) continue;
+      if (c.transportistaId != null) conductoresOcupados.add(c.transportistaId!);
+      if (c.vehiculoId != null) vehiculosOcupados.add(c.vehiculoId!);
+    }
+
+    final conductoresDisponibles = transportistaProvider.transportistasDisponibles
+        .where((t) => !conductoresOcupados.contains(t.uid))
+        .toList();
+
+    final vehiculosDisponibles = vehiculoProvider.vehiculosDisponibles
+        .where((v) => !vehiculosOcupados.contains(v.matricula))
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -120,30 +113,31 @@ class PanelAsignacionVehiculo extends StatelessWidget {
         const SizedBox(height: 24),
         Text('Conductor Asignado', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
+        _buildDropdown<String?>(
           initialValue: carga.transportistaId,
-          decoration: _inputDecoration(),
           items: [
             const DropdownMenuItem(value: null, child: Text('Sin asignar')),
-            ...transportistaProvider.transportistasDisponibles.map((t) =>
-                DropdownMenuItem(value: t.uid, child: Text(t.nombre, overflow: TextOverflow.ellipsis))),
+            ...conductoresDisponibles.map((t) =>
+                DropdownMenuItem(value: t.uid, child: Text(
+                    '${t.nombre} ${t.apellido}'.trim(),
+                    overflow: TextOverflow.ellipsis,
+                ),
+                )),
           ],
           onChanged: (id) {
             final t = transportistaProvider.transportistasDisponibles.where((x) => x.uid == id).firstOrNull;
-            cargaProvider.asignarConductor(carga.id!, id, t?.nombre);
+            final nombreCompleto = t != null ? '${t.nombre} ${t.apellido}'.trim() : null;
+            cargaProvider.asignarConductor(carga.id!, id, nombreCompleto);
           },
         ),
         const SizedBox(height: 24),
         Text('Vehículo Asignado', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
+        _buildDropdown<String?>(
           initialValue: carga.vehiculoId,
-          decoration: _inputDecoration(),
           items: [
             const DropdownMenuItem(value: null, child: Text('Sin asignar')),
-            ...vehiculoProvider.vehiculosDisponibles.map((v) =>
+            ...vehiculosDisponibles.map((v) =>
                 DropdownMenuItem(value: v.matricula, child: Text(v.matricula))),
           ],
           onChanged: (matricula) => cargaProvider.asignarVehiculo(carga.id!, matricula),
@@ -166,18 +160,16 @@ class PanelAsignacionVehiculo extends StatelessWidget {
         const Divider(height: 32),
         Text('Ceder carga (Opcional)', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
-          initialValue: planProvider.subcontratadoSeleccionadoId,
-          decoration: _inputDecoration(),
+        _buildDropdown<String?>(
+          initialValue: subcontratados.any((s) => s.uid == planProvider.subcontratadoSeleccionadoId)
+              ? planProvider.subcontratadoSeleccionadoId
+              : null,
           items: [
             const DropdownMenuItem(value: null, child: Text('---- Seleccionar Subcontratado ---')),
-            ...context.watch<InviteProvider>().guests
-                .where((guest) => guest.rol.contains('subcontratado'))
-                .map((guest) => DropdownMenuItem(
+            ...subcontratados.map((guest) => DropdownMenuItem(
                       value: guest.uid,
                       child: Text(guest.nombre, overflow: TextOverflow.ellipsis),
-                    )),
+            )),
           ],
           onChanged: planProvider.seleccionarSubcontratado,
         ),
@@ -187,14 +179,31 @@ class PanelAsignacionVehiculo extends StatelessWidget {
               ? null
               : () => _cederCarga(context, carga.id!, cargaProvider, planProvider.subcontratadoSeleccionadoId),
           icon: const Icon(Icons.handshake_outlined),
-          label: const Text('Ceder carga a Subcontratados'),
-
+          label: const Text('Ceder carga a Subcontratado'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         ),
       ],
     );
   }
 
-  InputDecoration _inputDecoration() => InputDecoration(
+  Widget _buildDropdown<T>({
+    required T? initialValue,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      isExpanded: true,
+      initialValue: initialValue,
+      decoration: _decoration,
+      items: items,
+      onChanged: onChanged,
+    );
+  }
+
+  InputDecoration get _decoration => InputDecoration(
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     border: OutlineInputBorder(

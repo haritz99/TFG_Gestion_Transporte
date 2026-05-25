@@ -53,8 +53,6 @@ class VehiculoSchema(FirestoreSchema):
                 raise ValueError('Un vehículo asignado debe tener transportistaId')
             if not self.transportistaNombre:
                 raise ValueError('Un vehículo asignado debe tener transportistaNombre')
-            if not self.cargaId:
-                raise ValueError('Un vehículo asignado debe estar vinculado a una carga')
         elif self.estado == 'disponible':
             if self.transportistaId or self.transportistaNombre or self.cargaId:
                 raise ValueError('Un vehículo disponible no puede tener transportista ni carga asignados')

@@ -27,7 +27,6 @@ class ExternalUserService:
             data = doc.to_dict()
             if not data:
                 continue
-            # Ya no filtramos aqui el campo 'activo' porque lo hace la base de datos
             data["uid"] = doc.id
             users.append(ExternalUserSchema(**data))
 

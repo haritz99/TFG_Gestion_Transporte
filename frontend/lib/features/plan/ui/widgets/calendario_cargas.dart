@@ -29,8 +29,14 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
     final pedidoProvider = context.watch<PedidoProvider>();
     final cargaProvider = context.watch<CargaProvider>();
 
-    final Set<String> pedidoIdsMostrados = cargaProvider.cargas
-        .where((c) => c.estado != EstadoCarga.pendiente || planProvider.cargasPlanificadasIds.contains(c.id))
+    final cargasVisibles = cargaProvider.cargas.where((c) {
+      final planificando = c.estado == EstadoCarga.pendiente && planProvider.cargasPlanificadasIds.contains(c.id);
+      final estaEnProgreso = c.estado != EstadoCarga.pendiente && c.estado != EstadoCarga.cedido;
+
+      return planificando || estaEnProgreso;
+    }).toList();
+
+    final Set<String> pedidoIdsMostrados = cargasVisibles
         .map((c) => c.pedidoId ?? 'sin-pedido')
         .toSet();
 
@@ -52,9 +58,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
       recursos.add(CalendarResource(id: 'dummy', displayName: 'Sin cargas en progreso', color: Colors.transparent));
     }
 
-    final List<Appointment> appointments = cargaProvider.cargas
-        .where((c) => c.estado != EstadoCarga.pendiente || planProvider.cargasPlanificadasIds.contains(c.id))
-        .map((c) {
+    final List<Appointment> appointments = cargasVisibles.map((c) {
       return Appointment(
         id: c.id,
         startTime: c.fechaCarga,
