@@ -1,3 +1,5 @@
+import 'carta_porte.dart';
+
 abstract class CargaBaseModel {
   final String origen;
   final String destino;
@@ -26,7 +28,8 @@ enum EstadoCarga {
   pendiente('pendiente'),
   asignado('asignado'),
   enTransito('en_transito'),
-  entregado('entregado');
+  entregado('entregado'),
+  cedido('cedido');
 
   final String value;
   const EstadoCarga(this.value);
@@ -83,8 +86,6 @@ class TipoCargaModel extends CargaBaseModel {
   }
 }
 
-
-
 class CargaModel extends CargaBaseModel {
   final String? id;
   final EstadoCarga estado;
@@ -96,6 +97,7 @@ class CargaModel extends CargaBaseModel {
   final String? vehiculoId;
   final String? companyId;
   final String? clienteId;
+  final CartaPorteSnapshotModel? cartaPorteSnapshot;
 
   const CargaModel({
     this.id,
@@ -108,6 +110,7 @@ class CargaModel extends CargaBaseModel {
     this.vehiculoId,
     this.companyId,
     this.clienteId,
+    this.cartaPorteSnapshot,
     required super.origen,
     required super.destino,
     required super.mercancia,
@@ -172,6 +175,10 @@ class CargaModel extends CargaBaseModel {
       vehiculoId: map['vehiculoId'] as String?,
       companyId: map['companyId'] as String?,
       clienteId: map['clienteId'] as String?,
+      cartaPorteSnapshot: map['cartaPorteSnapshot'] != null
+          ? CartaPorteSnapshotModel.fromMap(
+              Map<String, dynamic>.from(map['cartaPorteSnapshot'] as Map))
+          : null,
     );
   }
 
@@ -196,6 +203,8 @@ class CargaModel extends CargaBaseModel {
       if (vehiculoId != null) 'vehiculoId': vehiculoId,
       if (companyId != null) 'companyId': companyId,
       if (clienteId != null) 'clienteId': clienteId,
+      if (cartaPorteSnapshot != null)
+        'cartaPorteSnapshot': cartaPorteSnapshot!.toMap(),
     };
   }
 
@@ -219,6 +228,7 @@ class CargaModel extends CargaBaseModel {
     double? largo,
     double? ancho,
     double? alto,
+    CartaPorteSnapshotModel? cartaPorteSnapshot,
   }) {
     return CargaModel(
       id: id ?? this.id,
@@ -240,6 +250,7 @@ class CargaModel extends CargaBaseModel {
       largo: largo ?? this.largo,
       ancho: ancho ?? this.ancho,
       alto: alto ?? this.alto,
+      cartaPorteSnapshot: cartaPorteSnapshot ?? this.cartaPorteSnapshot,
     );
   }
 }

@@ -23,6 +23,7 @@ class VehiculoSchema(FirestoreSchema):
     companyId: Optional[str] = Field(default=None, min_length=1)
     transportistaId: Optional[str] = None
     transportistaNombre: Optional[str] = None
+    cargaId: Optional[str] = None
 
 
     @field_validator('matricula')
@@ -52,9 +53,11 @@ class VehiculoSchema(FirestoreSchema):
                 raise ValueError('Un vehículo asignado debe tener transportistaId')
             if not self.transportistaNombre:
                 raise ValueError('Un vehículo asignado debe tener transportistaNombre')
+            if not self.cargaId:
+                raise ValueError('Un vehículo asignado debe estar vinculado a una carga')
         elif self.estado == 'disponible':
-            if self.transportistaId or self.transportistaNombre:
-                raise ValueError('Un vehículo disponible no puede tener transportista asignado')
+            if self.transportistaId or self.transportistaNombre or self.cargaId:
+                raise ValueError('Un vehículo disponible no puede tener transportista ni carga asignados')
 
         if self.interno and not self.matriculaRemolque:
             raise ValueError('matriculaRemolque es obligatoria cuando interno es true')
@@ -86,4 +89,3 @@ class VehiculoCountSchema(FirestoreSchema):
 class VehiculoAssignSchema(FirestoreSchema):
     matricula: str = Field(..., min_length=3)
     uid: str = Field(..., min_length=1)
-

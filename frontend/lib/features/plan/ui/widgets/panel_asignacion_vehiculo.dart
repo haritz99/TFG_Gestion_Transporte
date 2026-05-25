@@ -6,6 +6,7 @@ import '../../providers/planificacion_provider.dart';
 import '../../../transportistas/providers/transportista_provider.dart';
 import '../../../vehiculos/providers/vehiculo_provider.dart';
 import '../../../cargas/providers/carga_provider.dart';
+import '../../../dashboard/providers/invite_provider.dart';
 
 class PanelAsignacionVehiculo extends StatelessWidget {
   const PanelAsignacionVehiculo({super.key});
@@ -161,6 +162,34 @@ class PanelAsignacionVehiculo extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
            ),
         ),
+
+        const Divider(height: 32),
+        Text('Ceder carga (Opcional)', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String?>(
+          isExpanded: true,
+          initialValue: planProvider.subcontratadoSeleccionadoId,
+          decoration: _inputDecoration(),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('---- Seleccionar Subcontratado ---')),
+            ...context.watch<InviteProvider>().guests
+                .where((guest) => guest.rol.contains('subcontratado'))
+                .map((guest) => DropdownMenuItem(
+                      value: guest.uid,
+                      child: Text(guest.nombre, overflow: TextOverflow.ellipsis),
+                    )),
+          ],
+          onChanged: planProvider.seleccionarSubcontratado,
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: (planProvider.subcontratadoSeleccionadoId == null || carga.id == null)
+              ? null
+              : () => _cederCarga(context, carga.id!, cargaProvider, planProvider.subcontratadoSeleccionadoId),
+          icon: const Icon(Icons.handshake_outlined),
+          label: const Text('Ceder carga a Subcontratados'),
+
+        ),
       ],
     );
   }
@@ -178,4 +207,19 @@ class PanelAsignacionVehiculo extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.primary)),
   );
+
+  Future<void> _cederCarga(BuildContext context, String cargaId, CargaProvider cargaProvider, String? subId) async {
+    try {
+      await cargaProvider.cederCargaASubcontratado(cargaId: cargaId, subcontratadoId: subId!);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Carga cedida al subcontratado.')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al ceder la carga: $e')),
+      );
+    }
+  }
 }

@@ -4,7 +4,7 @@ import datetime
 
 from pydantic import Field, model_validator, BaseModel
 
-from .base import FirestoreSchema
+from .base import FirestoreSchema, DatetimeUTCMixin
 import enum
 from typing import TYPE_CHECKING
 
@@ -17,7 +17,7 @@ class EstadoPedido(str, enum.Enum):
     COMPLETADO = 'completado'
     CANCELADO = 'cancelado'
 
-class PedidoSchema(FirestoreSchema):
+class PedidoSchema(FirestoreSchema, DatetimeUTCMixin):
     id: Optional[str] = None
     descripcion: Optional[str] = None
     fechaCarga: datetime.datetime = Field(...)  # Fecha de carga

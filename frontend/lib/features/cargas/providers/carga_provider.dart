@@ -131,4 +131,25 @@ class CargaProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> cederCargaASubcontratado({required String cargaId, required String subcontratadoId}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedCarga = await _service.cederCarga(cargaId: cargaId, subcontratadoUid: subcontratadoId);
+      final idx = _cargas.indexWhere((c) => c.id == cargaId);
+      if (idx != -1) {
+        _cargas[idx] = updatedCarga;
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

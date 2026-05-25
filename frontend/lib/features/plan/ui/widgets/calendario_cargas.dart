@@ -106,6 +106,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
               ),
               dataSource: CargasDataSource(appointments, recursos),
               allowDragAndDrop: true,
+              allowAppointmentResize: true,
               onDragStart: (AppointmentDragStartDetails details) {
                 if (details.appointment != null) {
                   final app = details.appointment as Appointment;
@@ -133,6 +134,25 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
                 } else if (details.targetElement == CalendarElement.calendarCell) {
                   planProvider.limpiarSeleccion();
                 }
+              },
+              onAppointmentResizeStart: (AppointmentResizeStartDetails details) {
+                final appointment = details.appointment as Appointment?;
+                if (appointment != null) {
+                  final carga = cargaProvider.cargas.firstWhere((c) => c.id == appointment.id);
+                  planProvider.seleccionarCarga(carga);
+                }
+              },
+              onAppointmentResizeEnd: (AppointmentResizeEndDetails details) {
+                final appointment = details.appointment as Appointment?;
+                if (appointment == null) return;
+                final start = details.startTime ?? appointment.startTime;
+                final end = details.endTime ?? appointment.endTime;
+                if (!end.isAfter(start)) return;
+                cargaProvider.actualizarFechasCarga(
+                  appointment.id as String,
+                  start,
+                  end,
+                );
               },
             );
           },

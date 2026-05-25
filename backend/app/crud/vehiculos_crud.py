@@ -7,7 +7,7 @@ class VehiculoCRUD:
         if last_doc_id:
             last_doc = self.get_by_id(last_doc_id)
             if last_doc.exists:
-                query = query.start_after(last_doc)
+                query = query.start_after_document(last_doc)
 
         return query.limit(limit).stream()
 

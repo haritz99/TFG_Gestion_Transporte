@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../dashboard/providers/invite_provider.dart';
 import 'widgets/plan_header.dart';
 import 'widgets/calendario_cargas.dart';
 import 'widgets/panel_asignacion_vehiculo.dart';
@@ -23,9 +24,13 @@ class _PlanificacionScreenState extends State<PlanificacionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final transportistaProvider = context.read<TransportistaProvider>();
       final vehiculoProvider = context.read<VehiculoProvider>();
+      final inviteProvider = context.read<InviteProvider>();
 
-      transportistaProvider.fetchTransportistasDisponibles();
-      vehiculoProvider.loadInitialVehiculos();
+      Future.wait([
+        transportistaProvider.fetchTransportistasDisponibles(),
+        vehiculoProvider.loadInitialVehiculos(),
+        inviteProvider.getGuests(),
+      ]);
     });
   }
 
@@ -40,34 +45,34 @@ class _PlanificacionScreenState extends State<PlanificacionScreen> {
           const PlanHeader(),
           Expanded(
             child: isDesktop
-                ? const Row(
+                ? Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         flex: 2,
                         child: Padding(
                           padding: EdgeInsets.all(16.0),
                           child: ListaCargasPanel(),
                         ),
                       ),
-                      VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
-                      Expanded(
+                      const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
+                      const Expanded(
                         flex: 5,
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(0, 16, 16, 16),
                           child: CalendarioCargas(),
                         ),
                       ),
-                      VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
+                      const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
                       Expanded(
                         flex: 3,
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(0, 16, 16, 16),
-                          child: PanelAsignacionVehiculo(),
+                          padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+                          child: const PanelAsignacionVehiculo(),
                         ),
                       ),
                     ],
                   )
-                : const Column(
+                : Column(
                     children: [
                       Expanded(
                         flex: 3,
@@ -88,8 +93,8 @@ class _PlanificacionScreenState extends State<PlanificacionScreen> {
                       Expanded(
                         flex: 3,
                         child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: PanelAsignacionVehiculo(),
+                          padding: const EdgeInsets.all(16.0),
+                          child: const PanelAsignacionVehiculo(),
                         ),
                       ),
                     ],
