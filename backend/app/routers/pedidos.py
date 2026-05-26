@@ -4,11 +4,11 @@ import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from ..dependencies.auth import get_current_encargado
+from ..dependencies.auth import get_current_encargado, get_current_cargador
 from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from ..services.pedidos_service import PedidosService
 
-router = APIRouter(prefix="/pedidos", tags=["pedidos"], dependencies=[Depends(get_current_encargado)])
+router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
 @router.get("/", response_model=list[PedidoSchema])
 def get_pedidos(
@@ -25,6 +25,16 @@ def get_pedidos(
         estado=estado,
         fecha_inicio=fecha_inicio,
         fecha_fin=fecha_fin
+    )
+
+@router.get("/cargador", response_model=list[PedidoSchema])
+def get_pedidos_cargador_endpoint(
+    current_user: dict[str, Any] = Depends(get_current_cargador),
+    service: PedidosService = Depends(PedidosService)
+):
+    return service.fetch_pedidos(
+        company_id=current_user.get("companyId"),
+        cliente_id=current_user.get("uid")
     )
 
 @router.get("/{pedido_id}", response_model=PedidoSchema)

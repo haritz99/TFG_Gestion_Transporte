@@ -4,7 +4,7 @@ import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
-from ..dependencies.auth import get_current_encargado
+from ..dependencies.auth import get_current_encargado, get_current_sub
 from ..dependencies.pedido_valido import get_pedido_from_carga
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from ..schemas.pedido import PedidoSchema
@@ -103,3 +103,10 @@ def delete_carga(carga_id: str,
                  service: CargasService = Depends(CargasService)):
     service.delete_carga(carga_id, current_user.get("companyId"))
     return None
+
+@router.get("/subcontratado", response_model=list[CargaSchema])
+def get_cargas_subcontratado(
+    current_user: dict[str, Any] = Depends(get_current_sub),
+    service: CargasService = Depends(CargasService)
+):
+    return service.fetch_cargas_cedidas(current_user.get("uid"))

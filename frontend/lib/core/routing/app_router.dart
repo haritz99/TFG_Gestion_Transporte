@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/auth/ui/subcontratado_register_page.dart';
-import 'package:gestion_transporte/features/home/ui/cargador_home_screen.dart';
+import 'package:gestion_transporte/features/external/cargador/cargador_home_screen.dart';
+import 'package:gestion_transporte/features/external/cargador/listado_pedidos.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
@@ -71,7 +72,7 @@ class AppRouter {
           return null;
         } else {
           if (externalUser.rol.contains('cliente')) {
-            final clienteRoutes = ['/cargador_home'];
+            final clienteRoutes = ['/cargador_home', '/cargador_pedidos'];
             if (!clienteRoutes.any((route) => location.startsWith(route))) {
               return '/cargador_home';
             }
@@ -112,6 +113,11 @@ class AppRouter {
         path: '/cargador_home',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CargadorHomeScreen(),
+      ),
+      GoRoute(
+        path: '/cargador_pedidos',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CargadorListaPedidos(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

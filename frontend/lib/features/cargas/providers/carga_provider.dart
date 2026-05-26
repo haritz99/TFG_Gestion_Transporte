@@ -32,6 +32,20 @@ class CargaProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<TipoCargaModel> get tiposCarga => _tiposCarga;
 
+  List<CargaModel> _cargasCedidas = [];
+  List<CargaModel> get cargasCedidas => _cargasCedidas;
+
+  Future<void> fetchCargasCedidas() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _cargasCedidas = await _service.getCargasCedidas();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   CargaProvider({
     required AuthTokenProvider tokenProvider,
     CargaService? service,

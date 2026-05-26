@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/theme/app_text_styles.dart';
+import 'package:provider/provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 class ExternalHome extends StatelessWidget {
   final String title;
@@ -21,7 +23,17 @@ class ExternalHome extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black87),
+            onPressed: () {
+              context.read<AuthProvider>().signOut();
+            },
+            tooltip: 'Cerrar Sesión',
+          ),
+        ],
       ),
+
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -34,7 +46,12 @@ class ExternalHome extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              ...actions,
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: actions,
+              ),
             ],
           ),
         ),
@@ -42,4 +59,3 @@ class ExternalHome extends StatelessWidget {
     );
   }
 }
-

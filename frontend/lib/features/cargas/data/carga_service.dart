@@ -101,4 +101,22 @@ class CargaService {
     final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
     return CargaModel.fromMap(data, data['id'] as String);
   }
+
+  Future<List<CargaModel>> getCargasCedidas() async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/subcontratado');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((e) => CargaModel.fromMap(e, e['id'])).toList();
+    } else {
+      throw Exception('Error al obtener cargas cedidas');
+    }
+  }
 }

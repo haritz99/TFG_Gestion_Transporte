@@ -6,7 +6,7 @@ from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
 from app.crud.cargas_crud import CargasCRUD
 from app.crud.pedidos_crud import PedidosCRUD
 from app.crud.user_crud import UserCRUD
-from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
+from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
 from google.cloud.firestore import ArrayUnion
@@ -55,14 +55,6 @@ class CargasService:
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
         return CargaSchema.from_firestore(doc, company_id)
-
-    def create_carga(self, carga: CargaSchema, pedido_schema: CreatePedidoSchema, company_id: str) -> CargaSchema:
-        carga.companyId = company_id
-        carga.clienteId = pedido_schema.clienteId
-        
-        carga_id = self._crud.create_carga_doc(carga.model_dump())
-        carga.id = carga_id
-        return carga
 
     def assign_carga_transportista(self, carga_id: str, transportista_id: str, company_id: str) -> CargaSchema:
         doc = self._crud.get_carga_doc(carga_id)
@@ -218,3 +210,14 @@ class CargasService:
             raise HTTPException(status_code=400, detail=f"No se puede eliminar una carga en estado {estado_actual}.")
 
         self._crud.delete_carga_doc(carga_id)
+
+    def fetch_cargas_cedidas(self, subcontratado_id: str) -> list[CargaSchema]:
+        user_doc = self._users_crud.get_subcontratado_by_id(subcontratado_id)
+        if not user_doc.exists:
+            return []
+        user_data = user_doc.to_dict()
+        cargas_cedidas_ids = user_data.get("cargasCedidas", [])
+        if not cargas_cedidas_ids:
+            return []
+        docs = self._crud.get_cargas_by_ids(cargas_cedidas_ids)
+        return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]

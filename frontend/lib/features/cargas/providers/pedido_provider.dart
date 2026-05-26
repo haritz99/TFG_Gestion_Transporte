@@ -156,6 +156,27 @@ class PedidoProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+  
+  Future<List<PedidoModel>> getPedidosDelCargador() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      final fetchedPedidos = await _service.getPedidosDelCargador();
+      _pedidos.clear();
+      _pedidos.addAll(fetchedPedidos);
+      return fetchedPedidos;
+    } catch (e) {
+      throw Exception('Error al obtener pedidos del cargador: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  List<PedidoModel> pedidosFiltrados(String estado) {
+    if (estado == 'Todos') return _pedidos;
+    return _pedidos.where((p) => p.estado.name == estado.toLowerCase()).toList();
+  }
 
   void _resetForm() {
     _cargasDelPedido = null;

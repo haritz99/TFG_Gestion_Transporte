@@ -27,7 +27,7 @@ class SubHomeScreen extends StatelessWidget {
         const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: () {
-            // TODO: Navigate or show dialog
+
           },
           icon: const Icon(Icons.list),
           label: const Text('Revisa tus cartas de porte'),

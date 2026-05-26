@@ -86,3 +86,14 @@ class CargasCRUD:
 
     def get_batch(self):
         return db.batch()
+
+    @staticmethod
+    def get_cargas_by_ids(ids: list[str]):
+        if not ids:
+            return []
+        docs = []
+        for i in range(0, len(ids), 30):
+            chunk = ids[i:i+30]
+            refs = [db.collection("cargas").document(id) for id in chunk]
+            docs.extend([ref.get() for ref in refs])
+        return docs
