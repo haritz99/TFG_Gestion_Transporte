@@ -220,7 +220,4 @@ class CargasService:
         if not cargas_cedidas_ids:
             return []
         docs = self._crud.get_cargas_by_ids(cargas_cedidas_ids)
-        for doc in docs:
-            print(f"ID buscado existe: {doc.exists} → {doc.id}")
-
         return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]
