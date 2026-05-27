@@ -95,6 +95,8 @@ class CargaModel extends CargaBaseModel {
   final String? transportistaNombre;
   final String? pedidoId;
   final String? vehiculoId;
+  final String? subVehiculoMatricula;
+  final String? subRemolqueMatricula;
   final String? companyId;
   final String? clienteId;
   final CartaPorteSnapshotModel? cartaPorteSnapshot;
@@ -108,6 +110,8 @@ class CargaModel extends CargaBaseModel {
     this.transportistaNombre,
     this.pedidoId,
     this.vehiculoId,
+    this.subVehiculoMatricula,
+    this.subRemolqueMatricula,
     this.companyId,
     this.clienteId,
     this.cartaPorteSnapshot,
@@ -173,6 +177,9 @@ class CargaModel extends CargaBaseModel {
       transportistaId: map['transportistaId'] as String?,
       pedidoId: map['pedidoId'] as String?,
       vehiculoId: map['vehiculoId'] as String?,
+      subVehiculoMatricula: map['subVehiculoMatricula'] as String?,
+      subRemolqueMatricula: map['subRemolqueMatricula'] as String?,
+      transportistaNombre: map['conductorNombre'] as String? ?? map['transportistaNombre'] as String?,
       companyId: map['companyId'] as String?,
       clienteId: map['clienteId'] as String?,
       cartaPorteSnapshot: map['cartaPorteSnapshot'] != null
@@ -201,6 +208,8 @@ class CargaModel extends CargaBaseModel {
       'conductorNombre': transportistaNombre,
       if (pedidoId != null) 'pedidoId': pedidoId,
       'vehiculoId': vehiculoId,
+      'subVehiculoMatricula': subVehiculoMatricula,
+      'subRemolqueMatricula': subRemolqueMatricula,
       if (companyId != null) 'companyId': companyId,
       if (clienteId != null) 'clienteId': clienteId,
       if (cartaPorteSnapshot != null)
@@ -220,6 +229,8 @@ class CargaModel extends CargaBaseModel {
     String? pedidoId,
     String? vehiculoId,
     bool clearVehiculoId = false,
+    String? subVehiculoMatricula,
+    String? subRemolqueMatricula,
     String? companyId,
     String? clienteId,
     String? origen,
@@ -242,6 +253,8 @@ class CargaModel extends CargaBaseModel {
       transportistaNombre: clearTransportistaNombre ? null : (transportistaNombre ?? this.transportistaNombre),
       pedidoId: pedidoId ?? this.pedidoId,
       vehiculoId: clearVehiculoId ? null : (vehiculoId ?? this.vehiculoId),
+      subVehiculoMatricula: subVehiculoMatricula ?? this.subVehiculoMatricula,
+      subRemolqueMatricula: subRemolqueMatricula ?? this.subRemolqueMatricula,
       companyId: companyId ?? this.companyId,
       clienteId: clienteId ?? this.clienteId,
       origen: origen ?? this.origen,

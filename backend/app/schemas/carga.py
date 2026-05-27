@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import datetime
 import enum
+import re
 from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema
+
+
+_NOMBRE_APELLIDOS_REGEX = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+$")
+_DNI_NIE_REGEX = re.compile(r"^(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])$")
+_MATRICULA_REGEX = re.compile(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$")
 
 
 class EstadoCarga(str, enum.Enum):
@@ -59,6 +65,8 @@ class CargaSchema(CargaBaseSchema):
     conductorNombre: Optional[str] = None # Desnormalizacion para prevenir n+1
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
+    subVehiculoMatricula: Optional[str] = None
+    subRemolqueMatricula: Optional[str] = None
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
     cartaPorteSnapshot: Optional[CartaDePorteSnapshotSchema] = None
@@ -132,3 +140,40 @@ class TipoCargaSchema(CargaBaseSchema):
         if company_id != data.get("companyId"):
             raise HTTPException(status_code=403, detail="No autorizado para usar este tipo de carga")
         return cls(**data)
+
+class CargaUpdateSubSchema(BaseModel):
+    estado: EstadoCarga | None = None
+    transportistaId: str | None = Field(default=None)
+    conductorNombre: str | None = Field(default=None)
+    subVehiculoMatricula: str | None = Field(default=None)
+    subRemolqueMatricula: str | None = Field(default=None)
+
+    @field_validator("conductorNombre")
+    @classmethod
+    def validar_nombre_apellidos(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalizado = " ".join(value.strip().split())
+        if not _NOMBRE_APELLIDOS_REGEX.fullmatch(normalizado):
+            raise ValueError("El nombre del conductor debe incluir nombre y apellidos válidos")
+        return normalizado
+
+    @field_validator("transportistaId")
+    @classmethod
+    def validar_dni_nie(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalizado = value.strip().upper()
+        if not _DNI_NIE_REGEX.fullmatch(normalizado):
+            raise ValueError("El DNI/NIE del conductor no tiene un formato válido")
+        return normalizado
+
+    @field_validator("subVehiculoMatricula", "subRemolqueMatricula")
+    @classmethod
+    def validar_matricula_es(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalizado = value.strip().upper().replace("-", "").replace(" ", "")
+        if not _MATRICULA_REGEX.fullmatch(normalizado):
+            raise ValueError("La matrícula debe tener formato correcto")
+        return normalizado

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_encargado, get_current_sub
 from ..dependencies.pedido_valido import get_pedido_from_carga
-from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from ..schemas.pedido import PedidoSchema
 from ..services.cargas_service import CargasService
 
@@ -48,8 +48,8 @@ def get_tipos_carga(
 
 @router.get("/subcontratado", response_model=list[CargaSchema])
 def get_cargas_subcontratado(
-        current_user: dict[str, Any] = Depends(get_current_sub),
-        service: CargasService = Depends(CargasService)
+    current_user: dict[str, Any] = Depends(get_current_sub),
+    service: CargasService = Depends(CargasService)
 ):
     return service.fetch_cargas_cedidas(current_user.get("uid"))
 
@@ -94,6 +94,13 @@ def update_carga(carga_id: str,
                  current_user: dict[str, Any] = Depends(get_current_encargado),
                  service: CargasService = Depends(CargasService)):
     return service.update_carga(carga_id, carga, pedido_schema, current_user.get("companyId"))
+
+@router.put("/sub/{carga_id}", response_model=CargaSchema)
+def update_carga_sub(carga_id: str,
+                 carga: CargaUpdateSubSchema,
+                 current_user: dict[str, Any] = Depends(get_current_sub),
+                 service: CargasService = Depends(CargasService)):
+    return service.update_carga_sub(carga_id, carga, current_user.get("companyId"))
 
 @router.post("/{carga_id}/subcontratar", response_model=CargaSchema)
 def ceder_carga(

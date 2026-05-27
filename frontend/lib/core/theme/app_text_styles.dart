@@ -51,9 +51,9 @@ class AppTextStyles {
 
   static const TextStyle tableHeader = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: FontWeight.w700,
-    color: Color(0xFFA1AABC),
+    color: Color(0xFF4A5E79),
     letterSpacing: 0.6,
   );
 

@@ -67,6 +67,48 @@ class CargaProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateCargaSubcontratado({
+    required String cargaId,
+    EstadoCarga? estado,
+    String? transportistaId,
+    String? conductorNombre,
+    String? subVehiculoMatricula,
+    String? subRemolqueMatricula,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedCarga = await _service.updateCargaSubcontratado(
+        cargaId: cargaId,
+        estado: estado,
+        transportistaId: transportistaId,
+        conductorNombre: conductorNombre,
+        subVehiculoMatricula: subVehiculoMatricula,
+        subRemolqueMatricula: subRemolqueMatricula,
+      );
+
+      final idx = _cargasCedidas.indexWhere((c) => c.id == cargaId);
+      if (idx != -1) {
+        _cargasCedidas[idx] = updatedCarga;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  List<CargaModel> cargasCedidasFiltradas(String estado) {
+    if (estado == 'Todos') return _cargasCedidas;
+    return _cargasCedidas
+        .where((c) => c.estado.name == estado.toLowerCase())
+        .toList();
+  }
+
   Future<void> fetchCargasIniciales() async {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, 1);

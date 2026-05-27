@@ -2,7 +2,7 @@ import datetime
 import pytz
 from typing import Optional, List
 from fastapi import HTTPException, Depends
-from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from app.crud.cargas_crud import CargasCRUD
 from app.crud.pedidos_crud import PedidosCRUD
 from app.crud.user_crud import UserCRUD
@@ -107,8 +107,44 @@ class CargasService:
         self._crud.update_carga_doc(carga_id, update_data)
         return carga
 
-    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
 
+    @staticmethod
+    def _calcular_estado_sub(carga: CargaUpdateSubSchema, carga_data: dict) -> str:
+        if carga.estado is not None:
+            return carga.estado.value
+
+        conductor_id = carga.transportistaId or carga_data.get("transportistaId")
+        vehiculo_sub = carga.subVehiculoMatricula or carga_data.get("subVehiculoMatricula")
+
+        if conductor_id and vehiculo_sub:
+            return EstadoCarga.ASIGNADO.value
+        return carga_data.get("estado", EstadoCarga.CEDIDO.value)
+
+
+    def update_carga_sub(self, carga_id: str, carga: CargaUpdateSubSchema, sub_company_id: str) -> CargaSchema:
+
+        doc = self._crud.get_carga_doc(carga_id)
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Carga no encontrada")
+
+        carga_data = doc.to_dict() or {}
+
+        if carga_data.get("companyId") != sub_company_id:
+            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
+
+        update_data = carga.model_dump(exclude_none=True)
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+
+        update_data["estado"] = self._calcular_estado_sub(carga, carga_data)
+        update_data["updatedAt"] = datetime.datetime.now(datetime.timezone.utc)
+
+        self._crud.update_carga_doc(carga_id, update_data)
+
+        updated_doc = self._crud.get_carga_doc(carga_id)
+        return CargaSchema.from_firestore(updated_doc, carga_data.get("companyId"))
+
+    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
         batch = self._crud.get_batch()
         validated: List[CargaSchema] = []
         for carga in cargas:
@@ -191,7 +227,8 @@ class CargasService:
             "updatedAt": datetime.datetime.now(datetime.timezone.utc),
             "transportistaId": None,
             "conductorNombre": None,
-            "vehiculoId": None,
+            "subVehiculoMatricula": None,
+            "subRemolqueMatricula": None,
         }
         return update_payload
 

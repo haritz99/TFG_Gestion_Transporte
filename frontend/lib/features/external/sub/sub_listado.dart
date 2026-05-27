@@ -19,15 +19,32 @@ class SubListadoCargas extends StatefulWidget {
 
 class _SubListadoCargasState extends State<SubListadoCargas> {
   String _selectedStatus = 'Todos';
+  final _conductorCtrl = TextEditingController();
+  final _transportistaCtrl = TextEditingController();
+  final _vehiculoCtrl = TextEditingController();
+  final _remolqueCtrl = TextEditingController();
+
+  static final RegExp _nombreApellidosRegex =
+      RegExp(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+$");
+  static final RegExp _dniNieRegex =
+      RegExp(r"^(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])$");
+  static final RegExp _matriculaRegex =
+      RegExp(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
+
+  @override
+  void dispose() {
+    _conductorCtrl.dispose();
+    _transportistaCtrl.dispose();
+    _vehiculoCtrl.dispose();
+    _remolqueCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CargaProvider>();
-    final cargas = provider.cargasCedidas;
-    
-    final filteredCargas = _selectedStatus == 'Todos'
-        ? cargas
-        : cargas.where((c) => c.estado.name == _selectedStatus.toLowerCase()).toList();
+
+    final cargasFiltradas = provider.cargasCedidasFiltradas(_selectedStatus);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,10 +60,10 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
           : Padding(
               padding: const EdgeInsets.all(24.0),
               child: CoreTable<CargaModel>(
-                rows: filteredCargas,
+                rows: cargasFiltradas,
                 columns: _buildColumns(context),
                 selectedStatus: _selectedStatus,
-                statusOptions: const ['Todos', 'Pendiente', 'Asignado', 'En_transito', 'Entregado', 'Cedido'],
+                statusOptions: [EstadoCarga.asignado.value, EstadoCarga.enTransito.value, EstadoCarga.entregado.value, EstadoCarga.cedido.value],
                 isMobile: ResponsiveBreakpoints.of(context).isMobile,
                 mobileCardBuilder: (carga) => _buildMobileCard(context, carga),
                 onStatusChanged: (status) {
@@ -82,12 +99,71 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
         ),
       ),
       CoreTableColumn<CargaModel>(
+        label: 'Fecha Descarga',
+        cellBuilder: (carga) => Text(
+          DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaDescarga),
+          style: AppTextStyles.bodyMd,
+        ),
+      ),
+      CoreTableColumn<CargaModel>(
         label: 'Mercancía',
         cellBuilder: (carga) => Text(carga.mercancia, style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
+        label: 'Bultos',
+        cellBuilder: (carga) => Text(carga.numBultos.toString(), style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
+        label: 'Peso (kg)',
+        cellBuilder: (carga) => Text(carga.peso.toStringAsFixed(2), style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
+        label: 'Precio (€)',
+        cellBuilder: (carga) => Text(carga.precio.toStringAsFixed(2), style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
+        label: 'Conductor',
+        cellBuilder: (carga) => Text(carga.transportistaNombre ?? 'Sin asignar', style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
+        label: 'Vehículo',
+        cellBuilder: (carga) => Text(carga.subVehiculoMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
+        label: 'Remolque',
+        cellBuilder: (carga) => Text(carga.subRemolqueMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
+      ),
+      CoreTableColumn<CargaModel>(
         label: 'Estado',
-        cellBuilder: (carga) => Text(carga.estado.name.toUpperCase(), style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) {
+          final estadosManuales = [
+            EstadoCarga.enTransito,
+            EstadoCarga.entregado,
+          ];
+          if (!estadosManuales.contains(carga.estado)) {
+            return Text(carga.estado.name.toUpperCase(), style: AppTextStyles.bodyMd);
+          }
+          return DropdownButton<EstadoCarga>(
+            value: carga.estado,
+            items: estadosManuales.map((e) => DropdownMenuItem(
+              value: e,
+              child: Text(e.name.toUpperCase(), style: AppTextStyles.bodyMd),
+            )).toList(),
+            onChanged: (nuevoEstado) {
+              if (nuevoEstado != null && nuevoEstado != carga.estado) {
+                context.read<CargaProvider>().updateCargaSubcontratado(
+                  cargaId: carga.id!,
+                  estado: nuevoEstado,
+                );
+              }
+            },
+          );
+        },
+      ),
+      CoreTableColumn(
+          label: 'Acciones',
+          cellBuilder: (p) => IconButton(icon: const Icon(Icons.edit, color: Colors.blue),
+          onPressed: () => _showEditDialog(context, p))
       ),
     ];
   }
@@ -95,8 +171,100 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
   Widget _buildMobileCard(BuildContext context, CargaModel carga) {
     return ListTile(
       title: Text('${carga.origen} → ${carga.destino}'),
-      subtitle: Text('Mercancía: ${carga.mercancia}'),
-      trailing: Text(carga.estado.name.toUpperCase()),
+      subtitle: Text('Mercancía: ${carga.mercancia}\nConductor: ${carga.transportistaNombre ?? "Sin asignar"}'),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, color: Colors.blue),
+        onPressed: () => _showEditDialog(context, carga),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, CargaModel carga) {
+    _conductorCtrl.text = carga.transportistaNombre ?? '';
+    _transportistaCtrl.text = carga.transportistaId ?? '';
+    _vehiculoCtrl.text = carga.subVehiculoMatricula ?? '';
+    _remolqueCtrl.text = carga.subRemolqueMatricula ?? '';
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Asignar Conductor y Vehículo'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                TextField(
+                  controller: _conductorCtrl,
+                  decoration: const InputDecoration(labelText: 'Nombre y apellidos del Conductor'),
+                ),
+                TextField(
+                  controller: _transportistaCtrl,
+                  decoration: const InputDecoration(labelText: 'DNI/NIE del Conductor'),
+                ),
+                TextField(
+                  controller: _vehiculoCtrl,
+                  decoration: const InputDecoration(labelText: 'Matrícula del Vehículo (Subcontratado)'),
+                ),
+                TextField(
+                  controller: _remolqueCtrl,
+                  decoration: const InputDecoration(labelText: 'Matrícula del Remolque (Subcontratado, opcional)'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final nombre = _conductorCtrl.text.trim();
+                final dniNie = _transportistaCtrl.text.trim().toUpperCase();
+                final vehiculo = _normalizarMatricula(_vehiculoCtrl.text);
+                final remolque = _normalizarMatricula(_remolqueCtrl.text);
+
+                if (nombre.isNotEmpty && !_nombreApellidosRegex.hasMatch(nombre)) {
+                  _mostrarError('El conductor debe tener nombre y apellidos válidos.');
+                  return;
+                }
+                if (dniNie.isNotEmpty && !_dniNieRegex.hasMatch(dniNie)) {
+                  _mostrarError('El DNI/NIE no tiene formato válido.');
+                  return;
+                }
+                if (vehiculo.isNotEmpty && !_matriculaRegex.hasMatch(vehiculo)) {
+                  _mostrarError('La matrícula del vehículo debe tener formato 0000BBB.');
+                  return;
+                }
+                if (remolque.isNotEmpty && !_matriculaRegex.hasMatch(remolque)) {
+                  _mostrarError('La matrícula del remolque debe tener formato 0000BBB.');
+                  return;
+                }
+
+                context.read<CargaProvider>().updateCargaSubcontratado(
+                  cargaId: carga.id!,
+                  conductorNombre: nombre.isNotEmpty ? nombre : null,
+                  transportistaId: dniNie.isNotEmpty ? dniNie : null,
+                  subVehiculoMatricula: vehiculo.isNotEmpty ? vehiculo : null,
+                  subRemolqueMatricula: remolque.isNotEmpty ? remolque : null,
+                );
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _normalizarMatricula(String raw) {
+    return raw.trim().toUpperCase().replaceAll('-', '').replaceAll(' ', '');
+  }
+
+  void _mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
     );
   }
 }
