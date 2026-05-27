@@ -94,6 +94,6 @@ class CargasCRUD:
         docs = []
         for i in range(0, len(ids), 30):
             chunk = ids[i:i+30]
-            refs = [db.collection("cargas").document(id) for id in chunk]
-            docs.extend([ref.get() for ref in refs])
+            results = db.collection_group("cargas").where("id", "in", chunk).get()
+            docs.extend(results)
         return docs

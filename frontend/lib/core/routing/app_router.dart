@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/auth/ui/subcontratado_register_page.dart';
 import 'package:gestion_transporte/features/external/cargador/cargador_home_screen.dart';
 import 'package:gestion_transporte/features/external/cargador/listado_pedidos.dart';
+import 'package:gestion_transporte/features/external/sub/sub_home_screen.dart';
+import 'package:gestion_transporte/features/external/sub/sub_listado.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
@@ -79,14 +81,14 @@ class AppRouter {
           }
 
           if (externalUser.rol.contains('subcontratado')) {
-            final subRoutes = ['/panel']; // TODO: Cambiar por home subcontratado específico
+            final subRoutes = ['/sub_home', '/sub_pedidos'];
             if (!subRoutes.any((route) => location.startsWith(route))) {
-              return '/panel';
+              return '/sub_home';
             }
           }
 
           if (isLoggingIn || location.contains('_register')) {
-            return externalUser.rol.contains('cliente') ? '/cargador_home' : '/panel';
+            return externalUser.rol.contains('cliente') ? '/cargador_home' : '/sub_home';
           }
         }
       }
@@ -103,6 +105,16 @@ class AppRouter {
         path: '/subcontratado_register',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SubcontratadoRegisterPage(),
+      ),
+      GoRoute(
+        path: '/sub_home',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SubHomeScreen(),
+      ),
+      GoRoute(
+        path: '/sub_pedidos',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SubListadoCargas(),
       ),
       GoRoute(
         path: '/cargador_register',

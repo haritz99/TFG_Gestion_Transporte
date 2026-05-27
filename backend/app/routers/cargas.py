@@ -46,6 +46,13 @@ def get_tipos_carga(
 
     return service.get_tipos_carga(current_user.get("companyId"), cliente_id)
 
+@router.get("/subcontratado", response_model=list[CargaSchema])
+def get_cargas_subcontratado(
+        current_user: dict[str, Any] = Depends(get_current_sub),
+        service: CargasService = Depends(CargasService)
+):
+    return service.fetch_cargas_cedidas(current_user.get("uid"))
+
 
 @router.get("/{carga_id}", response_model=CargaSchema)
 def get_carga_by_id(carga_id: str,
@@ -103,10 +110,3 @@ def delete_carga(carga_id: str,
                  service: CargasService = Depends(CargasService)):
     service.delete_carga(carga_id, current_user.get("companyId"))
     return None
-
-@router.get("/subcontratado", response_model=list[CargaSchema])
-def get_cargas_subcontratado(
-    current_user: dict[str, Any] = Depends(get_current_sub),
-    service: CargasService = Depends(CargasService)
-):
-    return service.fetch_cargas_cedidas(current_user.get("uid"))
