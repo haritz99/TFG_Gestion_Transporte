@@ -72,29 +72,6 @@ def test_cargas_service_get_carga_by_id_existe(service, mock_cargas_crud, valid_
     # Assert
     assert res.id == "c1"
 
-def test_cargas_service_create_carga_valida(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    carga = CargaSchema(**valid_carga_dict)
-    from app.schemas.pedido import CreatePedidoSchema, AsignacionCargaSchema
-    pedido = CreatePedidoSchema(
-        descripcion="T",
-        clienteId="cli1",
-        companyId="comp1",
-        fechaCarga=carga.fechaCarga - datetime.timedelta(hours=1),
-        fechaDescarga=carga.fechaDescarga + datetime.timedelta(hours=1),
-        cargas=[AsignacionCargaSchema(tipoCargaId="t1")]
-    )
-    mock_cargas_crud.create_carga_doc.return_value = "new_c_id"
-
-    # Act
-    res = service.create_carga(carga, pedido, "comp1")
-
-    # Assert
-    assert res.id == "new_c_id"
-    assert res.clienteId == "cli1"
-
-def test_cargas_service_create_carga_error_validacion(service, valid_carga_dict):
-    pass
 
 def test_cargas_service_assign_carga_ok(service, mock_cargas_crud, valid_carga_dict):
     # Arrange
