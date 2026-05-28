@@ -29,7 +29,7 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
   static final RegExp _dniNieRegex =
       RegExp(r"^(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])$");
   static final RegExp _matriculaRegex =
-      RegExp(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
+      RegExp(r"^\d{4}[ABCDFGHJKLMNPRSTVWXYZ]{3}$");
 
   @override
   void dispose() {
@@ -203,11 +203,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                 ),
                 TextField(
                   controller: _vehiculoCtrl,
-                  decoration: const InputDecoration(labelText: 'Matrícula del Vehículo (Subcontratado)'),
+                  decoration: const InputDecoration(labelText: 'Matrícula del Vehículo'),
                 ),
                 TextField(
                   controller: _remolqueCtrl,
-                  decoration: const InputDecoration(labelText: 'Matrícula del Remolque (Subcontratado, opcional)'),
+                  decoration: const InputDecoration(labelText: 'Matrícula del Remolque'),
                 ),
               ],
             ),
@@ -233,11 +233,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                   return;
                 }
                 if (vehiculo.isNotEmpty && !_matriculaRegex.hasMatch(vehiculo)) {
-                  _mostrarError('La matrícula del vehículo debe tener formato 0000BBB.');
+                  _mostrarError('La matrícula del vehículo debe tener formato correcto: 1234ABC.');
                   return;
                 }
                 if (remolque.isNotEmpty && !_matriculaRegex.hasMatch(remolque)) {
-                  _mostrarError('La matrícula del remolque debe tener formato 0000BBB.');
+                  _mostrarError('La matrícula del remolque debe tener formato correcto: 1234ABC.');
                   return;
                 }
 
