@@ -5,6 +5,7 @@ import 'package:gestion_transporte/features/transportistas/providers/transportis
 import 'package:gestion_transporte/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/models/external_user_model.dart';
+import '../../../../../core/models/pedido_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/features/dashboard/providers/invite_provider.dart';
@@ -14,7 +15,9 @@ import 'nuevo_pedido.dart';
 import 'seleccionar_cargas.dart';
 
 class FormBuilderPedido extends StatefulWidget {
-  const FormBuilderPedido({super.key});
+  final PedidoModel? pedidoParaEditar;
+
+  const FormBuilderPedido({super.key, this.pedidoParaEditar});
   @override
   State<FormBuilderPedido> createState() => _FormBuilderPedidoState();
 }

@@ -58,30 +58,35 @@ async def get_current_user(
         )
 
 
-async def get_current_encargado(
-    current_user: dict[str, Any] = Depends(get_current_user)
-) -> dict[str, Any]:
-    uid = current_user.get("uid")
-    if not isinstance(uid, str) or not uid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token sin uid válido",
-        )
+def _require_role(required_role: str):
+    async def role_checker(current_user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
+        uid = current_user.get("uid")
+        if not isinstance(uid, str) or not uid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token sin uid válido",
+            )
 
-    roles = normalize_roles(current_user.get("rol"))
-    company_id = current_user.get("companyId")
-    if "encargado" not in roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos de encargado para realizar esta acción",
-        )
+        roles = normalize_roles(current_user.get("rol"))
+        company_id = current_user.get("companyId")
+        
+        if required_role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"No tienes permisos de {required_role} para realizar esta acción",
+            )
 
-    if not isinstance(company_id, str) or not company_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="El token no contiene un companyId válido",
-        )
+        if not isinstance(company_id, str) or not company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="El token no contiene un companyId válido",
+            )
 
-    current_user["rol"] = roles
-    current_user["companyId"] = company_id
-    return current_user
+        current_user["rol"] = roles
+        current_user["companyId"] = company_id
+        return current_user
+    return role_checker
+
+get_current_encargado = _require_role("encargado")
+get_current_cargador = _require_role("cliente")
+get_current_sub = _require_role("subcontratado")

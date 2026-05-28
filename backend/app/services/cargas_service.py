@@ -2,13 +2,14 @@ import datetime
 import pytz
 from typing import Optional, List
 from fastapi import HTTPException, Depends
-from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from app.crud.cargas_crud import CargasCRUD
 from app.crud.pedidos_crud import PedidosCRUD
 from app.crud.user_crud import UserCRUD
-from app.schemas.pedido import PedidoSchema, CreatePedidoSchema
+from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
+from google.cloud.firestore import ArrayUnion
 
 
 class CargasService:
@@ -54,14 +55,6 @@ class CargasService:
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
         return CargaSchema.from_firestore(doc, company_id)
-
-    def create_carga(self, carga: CargaSchema, pedido_schema: CreatePedidoSchema, company_id: str) -> CargaSchema:
-        carga.companyId = company_id
-        carga.clienteId = pedido_schema.clienteId
-        
-        carga_id = self._crud.create_carga_doc(carga.model_dump())
-        carga.id = carga_id
-        return carga
 
     def assign_carga_transportista(self, carga_id: str, transportista_id: str, company_id: str) -> CargaSchema:
         doc = self._crud.get_carga_doc(carga_id)
@@ -114,8 +107,44 @@ class CargasService:
         self._crud.update_carga_doc(carga_id, update_data)
         return carga
 
-    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
 
+    @staticmethod
+    def _calcular_estado_sub(carga: CargaUpdateSubSchema, carga_data: dict) -> str:
+        if carga.estado is not None:
+            return carga.estado.value
+
+        conductor_id = carga.transportistaId or carga_data.get("transportistaId")
+        vehiculo_sub = carga.subVehiculoMatricula or carga_data.get("subVehiculoMatricula")
+
+        if conductor_id and vehiculo_sub:
+            return EstadoCarga.ASIGNADO.value
+        return carga_data.get("estado", EstadoCarga.CEDIDO.value)
+
+
+    def update_carga_sub(self, carga_id: str, carga: CargaUpdateSubSchema, sub_company_id: str) -> CargaSchema:
+
+        doc = self._crud.get_carga_doc(carga_id)
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Carga no encontrada")
+
+        carga_data = doc.to_dict() or {}
+
+        if carga_data.get("companyId") != sub_company_id:
+            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
+
+        update_data = carga.model_dump(exclude_none=True)
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+
+        update_data["estado"] = self._calcular_estado_sub(carga, carga_data)
+        update_data["updatedAt"] = datetime.datetime.now(datetime.timezone.utc)
+
+        self._crud.update_carga_doc(carga_id, update_data)
+
+        updated_doc = self._crud.get_carga_doc(carga_id)
+        return CargaSchema.from_firestore(updated_doc, carga_data.get("companyId"))
+
+    def bulk_update_cargas(self, cargas: List[CargaSchema], company_id: str) -> List[CargaSchema]:
         batch = self._crud.get_batch()
         validated: List[CargaSchema] = []
         for carga in cargas:
@@ -167,7 +196,16 @@ class CargasService:
         snapshot = carga.cartaPorteSnapshot
         update_payload = self._rellenar_snapshot_subcontratado(snapshot, subcontratado)
 
-        self._crud.update_carga_doc(carga_id, update_payload)
+        batch = self._crud.get_batch()
+        carga_ref = doc.reference
+        batch.update(carga_ref, update_payload)
+
+        batch.update(sub_doc.reference, {
+            "cargasCedidas": ArrayUnion([carga_id])
+        })
+
+        batch.commit()
+
         updated_doc = self._crud.get_carga_doc(carga_id)
         return CargaSchema.from_firestore(updated_doc, company_id)
 
@@ -189,7 +227,8 @@ class CargasService:
             "updatedAt": datetime.datetime.now(datetime.timezone.utc),
             "transportistaId": None,
             "conductorNombre": None,
-            "vehiculoId": None,
+            "subVehiculoMatricula": None,
+            "subRemolqueMatricula": None,
         }
         return update_payload
 
@@ -208,3 +247,14 @@ class CargasService:
             raise HTTPException(status_code=400, detail=f"No se puede eliminar una carga en estado {estado_actual}.")
 
         self._crud.delete_carga_doc(carga_id)
+
+    def fetch_cargas_cedidas(self, subcontratado_id: str) -> list[CargaSchema]:
+        user_doc = self._users_crud.get_subcontratado_by_id(subcontratado_id)
+        if not user_doc.exists:
+            return []
+        user_data = user_doc.to_dict()
+        cargas_cedidas_ids = user_data.get("cargasCedidas", [])
+        if not cargas_cedidas_ids:
+            return []
+        docs = self._crud.get_cargas_by_ids(cargas_cedidas_ids)
+        return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]

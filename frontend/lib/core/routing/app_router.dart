@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/auth/ui/subcontratado_register_page.dart';
-import 'package:gestion_transporte/features/home/ui/cargador_home_screen.dart';
+import 'package:gestion_transporte/features/external/cargador/cargador_home_screen.dart';
+import 'package:gestion_transporte/features/external/cargador/listado_pedidos.dart';
+import 'package:gestion_transporte/features/external/sub/sub_home_screen.dart';
+import 'package:gestion_transporte/features/external/sub/sub_listado.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
@@ -41,7 +44,7 @@ class AppRouter {
 
       final user = authProvider.user;
       final externalUser = authProvider.externalUser;
-
+      final location = state.matchedLocation;
 
       if (user == null && externalUser == null) {
         return isLoggingIn ? null : '/login';
@@ -49,36 +52,44 @@ class AppRouter {
 
       // Lógica para usuario interno
       if (user != null) {
+        final internalRoutes = ['/panel', '/planificacion', '/flota', '/equipo', '/incidencias'];
+
+        if (!internalRoutes.any((route) => location.startsWith(route))) {
+          return '/panel';
+        }
+
         if (isLoggingIn) {
-          if (user.rol.contains('encargado')) {
-            return '/panel';
-          }
-          else if (user.rol.contains('transportista')) {
-            return '/panel';  // TODO: Cambiar cuando haya panel propio
-          }
+          return '/panel';
         }
       }
 
       // Lógica para usuario externo
       if (externalUser != null) {
         if (!externalUser.datosCompletos) {
-          if (externalUser.rol.contains('cliente') && state.matchedLocation != '/cargador_register') {
+          if (externalUser.rol.contains('cliente') && location != '/cargador_register') {
             return '/cargador_register';
-          } else if (externalUser.rol.contains('subcontratado') && state.matchedLocation != '/subcontratado_register') {
+          } else if (externalUser.rol.contains('subcontratado') && location != '/subcontratado_register') {
             return '/subcontratado_register';
           }
           return null;
         } else {
-          // Si tiene datos completos y está en el login o en el propio registro
-          if (isLoggingIn || state.matchedLocation.contains('_register')) {
-            if (externalUser.rol.contains('cliente')) {
+          if (externalUser.rol.contains('cliente')) {
+            final clienteRoutes = ['/cargador_home', '/cargador_pedidos'];
+            if (!clienteRoutes.any((route) => location.startsWith(route))) {
               return '/cargador_home';
             }
-            else if (externalUser.rol.contains('subcontratado')) {
-              return '/panel';    // TODO: Cambiar por panel sub
+          }
+
+          if (externalUser.rol.contains('subcontratado')) {
+            final subRoutes = ['/sub_home', '/sub_pedidos'];
+            if (!subRoutes.any((route) => location.startsWith(route))) {
+              return '/sub_home';
             }
           }
-          return null;
+
+          if (isLoggingIn || location.contains('_register')) {
+            return externalUser.rol.contains('cliente') ? '/cargador_home' : '/sub_home';
+          }
         }
       }
 
@@ -96,6 +107,16 @@ class AppRouter {
         builder: (context, state) => const SubcontratadoRegisterPage(),
       ),
       GoRoute(
+        path: '/sub_home',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SubHomeScreen(),
+      ),
+      GoRoute(
+        path: '/sub_pedidos',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SubListadoCargas(),
+      ),
+      GoRoute(
         path: '/cargador_register',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ClienteRegisterPage(),
@@ -104,6 +125,11 @@ class AppRouter {
         path: '/cargador_home',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CargadorHomeScreen(),
+      ),
+      GoRoute(
+        path: '/cargador_pedidos',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CargadorListaPedidos(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

@@ -8,6 +8,7 @@ class ExternalUserModel {
   final bool datosCompletos;
   final bool activo;
   final DateTime? createdAt;
+  final List<String> cargasCedidas;
 
   ExternalUserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class ExternalUserModel {
     required this.datosCompletos,
     this.activo = true,
     this.createdAt,
+    this.cargasCedidas = const [],
   });
 
   factory ExternalUserModel.fromMap(Map<String, dynamic> map, String id) {
@@ -27,6 +29,10 @@ class ExternalUserModel {
     final List<String> normalizedRol = rawRol == null
         ? <String>[]
         : (rawRol is List ? List<String>.from(rawRol) : [rawRol.toString()]);
+
+    final List<String> cargasCedidas = map['cargasCedidas'] != null
+        ? List<String>.from(map['cargasCedidas'])
+        : [];
 
     if (createdAtValue != null) {
       if (createdAtValue is String) {
@@ -44,6 +50,7 @@ class ExternalUserModel {
       datosCompletos: map['datosCompletos'] ?? false,
       activo: map['activo'] ?? true,
       createdAt: date,
+      cargasCedidas: cargasCedidas,
     );
   }
 
@@ -55,6 +62,7 @@ class ExternalUserModel {
       'datosCompletos': datosCompletos,
       'activo': activo,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'cargasCedidas': cargasCedidas,
     };
   }
 }

@@ -47,4 +47,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+/lib/run_with_loading.dart
+
 .env

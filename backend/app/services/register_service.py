@@ -147,6 +147,7 @@ class RegisterService:
             doc_data = {}
 
             data['datosCompletos'] = True
+            data['activo'] = True
             data['updatedAt'] = datetime.now(timezone.utc)
             data['companyId'] = company_id
 

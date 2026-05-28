@@ -101,4 +101,57 @@ class CargaService {
     final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
     return CargaModel.fromMap(data, data['id'] as String);
   }
+
+  Future<List<CargaModel>> getCargasCedidas() async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/subcontratado');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((e) => CargaModel.fromMap(e, e['id'])).toList();
+    } else {
+      throw Exception('Error al obtener cargas cedidas');
+    }
+  }
+
+  Future<CargaModel> updateCargaSubcontratado({
+    required String cargaId,
+    EstadoCarga? estado,
+    String? transportistaId,
+    String? conductorNombre,
+    String? subVehiculoMatricula,
+    String? subRemolqueMatricula,
+  }) async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/sub/$cargaId');
+
+    final Map<String, dynamic> body = {};
+    if (estado != null) body['estado'] = estado.value;
+    if (transportistaId != null) body['transportistaId'] = transportistaId;
+    if (conductorNombre != null) body['conductorNombre'] = conductorNombre;
+    if (subVehiculoMatricula != null) body['subVehiculoMatricula'] = subVehiculoMatricula;
+    if (subRemolqueMatricula != null) body['subRemolqueMatricula'] = subRemolqueMatricula;
+
+    final response = await http.put(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return CargaModel.fromMap(data, data['id']);
+    } else {
+      throw Exception('Error al actualizar carga cedida: ${response.statusCode} - ${response.body}');
+    }
+  }
 }
