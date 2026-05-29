@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/auth/ui/shared_register.dart';
 import 'package:provider/provider.dart';
-
-import 'package:gestion_transporte/core/models/direccion_model.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
 
 import '../providers/auth_provider.dart';
@@ -17,30 +16,15 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  final _nombreComercialCtr = TextEditingController();
+  final _shared = SharedRegisterControllers();
   final _razonSocialCtr = TextEditingController();
-  final _nifCtr = TextEditingController();
-  final _telefonoCtr = TextEditingController();
   final _numAutorizacionCtr = TextEditingController();
-
-  final _calleCtr = TextEditingController();
-  final _ciudadCtr = TextEditingController();
-  final _provinciaCtr = TextEditingController();
-  final _codigoPostalCtr = TextEditingController();
-  final _paisCtr = TextEditingController(text: 'España');
 
   @override
   void dispose() {
-    _nombreComercialCtr.dispose();
+    _shared.dispose();
     _razonSocialCtr.dispose();
-    _nifCtr.dispose();
-    _telefonoCtr.dispose();
     _numAutorizacionCtr.dispose();
-    _calleCtr.dispose();
-    _ciudadCtr.dispose();
-    _provinciaCtr.dispose();
-    _codigoPostalCtr.dispose();
-    _paisCtr.dispose();
     super.dispose();
   }
 
@@ -48,59 +32,21 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        final provider = context.read<AuthProvider>();
         final data = ExternalUserProfileUpdateModel(
-          nombreComercial: _nombreComercialCtr.text.trim(),
+          nombreComercial: _shared.nombreComercial.text.trim(),
           razonSocial: _razonSocialCtr.text.trim().isEmpty ? null : _razonSocialCtr.text.trim(),
-          nif: _nifCtr.text.trim(),
-          telefono: _telefonoCtr.text.trim(),
+          nif: _shared.nif.text.trim(),
+          telefono: _shared.telefono.text.trim(),
           numeroAutorizacion: _numAutorizacionCtr.text.trim(),
-          direccion: DireccionModel(
-            calle: _calleCtr.text.trim(),
-            ciudad: _ciudadCtr.text.trim(),
-            provincia: _provinciaCtr.text.trim(),
-            codigoPostal: _codigoPostalCtr.text.trim(),
-            pais: _paisCtr.text.trim().isEmpty ? 'España' : _paisCtr.text.trim(),
-          ),
+          direccion: _shared.getDireccionModel(),
         );
-        await provider.fulfillExternalUserProfile(data);
+        await context.read<AuthProvider>().fulfillExternalUserProfile(data);
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-        }
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     }
-  }
-
-  Widget _buildInput(String label, String hint, IconData icon, TextEditingController controller, {bool isRequired = true}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          isRequired ? '$label *' : label,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          validator: isRequired ? (v) => v!.trim().isEmpty ? 'Campo requerido' : null : null,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.shade400),
-            prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.blue)),
-            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red)),
-            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red)),
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -123,46 +69,22 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  _buildInput('Nombre Comercial', 'Nombre Comercial', Icons.local_shipping_outlined, _nombreComercialCtr),
-                  const SizedBox(height: 16),
+                  RegisterInputField(label: 'Nombre Comercial', hint: 'Nombre Comercial', icon: Icons.local_shipping_outlined, controller: _shared.nombreComercial),                  const SizedBox(height: 16),
 
-                  _buildInput('Razón Social', 'Ej. Trans S.L. (si aplica)', Icons.business, _razonSocialCtr, isRequired: false),
-                  const SizedBox(height: 16),
+                  RegisterInputField(label: 'Razón Social', hint: 'Ej. Trans S.L. (si aplica)', icon: Icons.business, controller: _razonSocialCtr, isRequired: false),                  const SizedBox(height: 16),
 
                   Row(
                     children: [
-                      Expanded(child: _buildInput('NIF', '12345678Z', Icons.badge_outlined, _nifCtr)),
+                      Expanded(child: RegisterInputField(label: 'NIF', hint: '12345678Z', icon: Icons.badge_outlined, controller: _shared.nif)),
                       const SizedBox(width: 16),
-                      Expanded(child: _buildInput('Teléfono', '+34 600...', Icons.phone_outlined, _telefonoCtr)),
+                      Expanded(child: RegisterInputField(label: 'Teléfono', hint: '+34 600...', icon: Icons.phone_outlined, controller: _shared.telefono)),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  _buildInput('Nº Autorización (LOTT)', 'Obligatorio', Icons.verified_user_outlined, _numAutorizacionCtr),
-                  const SizedBox(height: 32),
+                  RegisterInputField(label: 'Nº Autorización (LOTT)', hint: 'Obligatorio', icon: Icons.verified_user_outlined, controller: _numAutorizacionCtr),                  const SizedBox(height: 32),
 
-                  const Text('Dirección', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-
-                  _buildInput('Calle y número', 'Dirección completa', Icons.location_on_outlined, _calleCtr),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(child: _buildInput('Ciudad', 'Ciudad', Icons.location_city_outlined, _ciudadCtr)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildInput('Código Postal', '00000', Icons.markunread_mailbox_outlined, _codigoPostalCtr)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(child: _buildInput('Provincia', 'Provincia', Icons.map_outlined, _provinciaCtr)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildInput('País', 'España', Icons.public, _paisCtr)),
-                    ],
-                  ),
+                  DireccionFormSection(shared: _shared),
                   const SizedBox(height: 48),
 
                   SizedBox(
