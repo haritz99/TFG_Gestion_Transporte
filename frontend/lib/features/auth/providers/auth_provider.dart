@@ -134,7 +134,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> fulfillExternalUserProfile(Map<String, dynamic> data) async {
+  Future<void> fulfillExternalUserProfile(ExternalUserProfileUpdateModel data) async {
     _isLoading = true;
     notifyListeners();
     try {

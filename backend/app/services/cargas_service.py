@@ -179,7 +179,7 @@ class CargasService:
 
         return validated
 
-    def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str) -> CargaSchema:
+    def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str, comision: float = 3.0) -> CargaSchema:
         doc = self._crud.get_carga_doc(carga_id)
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
@@ -193,8 +193,11 @@ class CargasService:
             raise HTTPException(status_code=403, detail="No autorizado para ceder esta carga al subcontratado")
 
         subcontratado = SubcontratadoSchema(**{**sub_data, "uid": sub_doc.id})
+
+        precio_neto = round(carga.precio * (1 - comision / 100), 2)
+
         snapshot = carga.cartaPorteSnapshot
-        update_payload = self._rellenar_snapshot_subcontratado(snapshot, subcontratado)
+        update_payload = self._rellenar_snapshot_subcontratado(snapshot, subcontratado, comision, precio_neto)
 
         batch = self._crud.get_batch()
         carga_ref = doc.reference
@@ -210,8 +213,8 @@ class CargasService:
         return CargaSchema.from_firestore(updated_doc, company_id)
 
     @staticmethod
-    def _rellenar_snapshot_subcontratado(snapshot: CartaDePorteSnapshotSchema, subcontratado: SubcontratadoSchema) -> dict:
-        direccion = subcontratado.direccion
+    def _rellenar_snapshot_subcontratado(snapshot: CartaDePorteSnapshotSchema, subcontratado: SubcontratadoSchema, comision: float, precio_neto: float) -> dict:
+        direccion = subcontratado.direccionFiscal
         direccion_format = f"{direccion.calle}, {direccion.codigoPostal} {direccion.ciudad} ({direccion.provincia})"
 
         snapshot.subcontratadoNombre = subcontratado.nombreComercial
@@ -219,7 +222,8 @@ class CargasService:
         snapshot.subcontratadoDireccion = direccion_format
         snapshot.subcontratadoTelefono = subcontratado.telefono
         snapshot.subcontratadoNumAutorizacion = subcontratado.numeroAutorizacion
-        snapshot.congeladoAt = datetime.datetime.now(datetime.timezone.utc)
+        snapshot.precioNeto = precio_neto
+        #snapshot.congeladoAt = datetime.datetime.now(datetime.timezone.utc)
 
         update_payload = {
             "cartaPorteSnapshot": snapshot.model_dump(),
@@ -229,6 +233,7 @@ class CargasService:
             "conductorNombre": None,
             "subVehiculoMatricula": None,
             "subRemolqueMatricula": None,
+            'comisionCesion': comision,
         }
         return update_payload
 

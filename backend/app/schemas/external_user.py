@@ -50,7 +50,7 @@ class SubcontratadoSchema(ExternalUserSchema):
     telefono: str = Field(..., min_length=9)
     numeroAutorizacion: str = Field(..., min_length=1)          # Nº LOTT obligatorio
     razonSocial: Optional[str] = None                          # Si opera como empresa, no autónomo
-    direccion: DireccionSchema
+    direccionFiscal: DireccionSchema
 
 
 class DireccionSchema(BaseModel):

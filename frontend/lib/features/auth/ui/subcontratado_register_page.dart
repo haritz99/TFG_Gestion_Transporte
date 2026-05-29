@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:gestion_transporte/core/models/direccion_model.dart';
+import 'package:gestion_transporte/core/models/external_user_model.dart';
+
 import '../providers/auth_provider.dart';
 
 class SubcontratadoRegisterPage extends StatefulWidget {
@@ -46,18 +49,20 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
       setState(() => _isLoading = true);
       try {
         final provider = context.read<AuthProvider>();
-        final data = {
-          'nombreComercial': _nombreComercialCtr.text,
-          'razonSocial': _razonSocialCtr.text,
-          'nif': _nifCtr.text,
-          'telefono': _telefonoCtr.text,
-          'numeroAutorizacion': _numAutorizacionCtr.text,
-          'calle': _calleCtr.text,
-          'ciudad': _ciudadCtr.text,
-          'provincia': _provinciaCtr.text,
-          'codigoPostal': _codigoPostalCtr.text,
-          'pais': _paisCtr.text,
-        };
+        final data = ExternalUserProfileUpdateModel(
+          nombreComercial: _nombreComercialCtr.text.trim(),
+          razonSocial: _razonSocialCtr.text.trim().isEmpty ? null : _razonSocialCtr.text.trim(),
+          nif: _nifCtr.text.trim(),
+          telefono: _telefonoCtr.text.trim(),
+          numeroAutorizacion: _numAutorizacionCtr.text.trim(),
+          direccion: DireccionModel(
+            calle: _calleCtr.text.trim(),
+            ciudad: _ciudadCtr.text.trim(),
+            provincia: _provinciaCtr.text.trim(),
+            codigoPostal: _codigoPostalCtr.text.trim(),
+            pais: _paisCtr.text.trim().isEmpty ? 'España' : _paisCtr.text.trim(),
+          ),
+        );
         await provider.fulfillExternalUserProfile(data);
       } catch (e) {
         if (mounted) {

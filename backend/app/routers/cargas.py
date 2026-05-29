@@ -106,10 +106,11 @@ def update_carga_sub(carga_id: str,
 def ceder_carga(
     carga_id: str,
     payload: dict,
+    comision: float = Query(default=3.0, ge=0, le=100),
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: CargasService = Depends(CargasService),
 ):
-    return service.ceder_carga_subcontratado(carga_id, payload.get('subcontratadoId'), current_user.get("companyId"))
+    return service.ceder_carga_subcontratado(carga_id, payload.get('subcontratadoId'), current_user.get("companyId"), comision)
 
 @router.delete("/{carga_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_carga(carga_id: str,

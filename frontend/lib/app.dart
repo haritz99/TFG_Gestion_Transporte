@@ -24,7 +24,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
+     return MultiProvider(
       providers: [
         Provider<ConnectivityService>(create: (_) => ConnectivityService()),
         ChangeNotifierProxyProvider<ConnectivityService, ConnectivityProvider>(

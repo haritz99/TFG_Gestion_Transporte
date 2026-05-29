@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'direccion_model.dart';
+
 class ExternalUserModel {
   final String uid;
   final String email;
@@ -63,6 +65,38 @@ class ExternalUserModel {
       'activo': activo,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'cargasCedidas': cargasCedidas,
+    };
+  }
+}
+
+class ExternalUserProfileUpdateModel {
+  final String nombreComercial;
+  final String nif;
+  final String telefono;
+  final String? personaContacto;
+  final String? razonSocial;
+  final String? numeroAutorizacion;
+  final DireccionModel direccion;
+
+  const ExternalUserProfileUpdateModel({
+    required this.nombreComercial,
+    required this.nif,
+    required this.telefono,
+    required this.direccion,
+    this.personaContacto,
+    this.razonSocial,
+    this.numeroAutorizacion,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'nombreComercial': nombreComercial,
+      'nif': nif,
+      'telefono': telefono,
+      if (personaContacto != null) 'personaContacto': personaContacto,
+      if (razonSocial != null) 'razonSocial': razonSocial,
+      if (numeroAutorizacion != null) 'numeroAutorizacion': numeroAutorizacion,
+      'direccionFiscal': direccion.toMap(),
     };
   }
 }
