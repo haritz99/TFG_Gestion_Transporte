@@ -52,6 +52,7 @@ class CartaDePorteSnapshotSchema(BaseModel):
     subcontratadoTelefono: Optional[str] = None
     subcontratadoNumAutorizacion: Optional[str] = None
 
+    precioNeto: Optional[float] = None # lo que cobra el subcontratado (despues de la comision)
     # Snapshot de marcas de tiempo
     congeladoAt: Optional[datetime.datetime] = None
 
@@ -67,6 +68,7 @@ class CargaSchema(CargaBaseSchema):
     vehiculoId: Optional[str] = None
     subVehiculoMatricula: Optional[str] = None
     subRemolqueMatricula: Optional[str] = None
+    comisionCesion: Optional[float] = Field(default=None, ge=0, le=100)
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
     cartaPorteSnapshot: Optional[CartaDePorteSnapshotSchema] = None

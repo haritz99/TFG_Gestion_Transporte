@@ -97,6 +97,7 @@ class CargaModel extends CargaBaseModel {
   final String? vehiculoId;
   final String? subVehiculoMatricula;
   final String? subRemolqueMatricula;
+  final double? comisionCesion;
   final String? companyId;
   final String? clienteId;
   final CartaPorteSnapshotModel? cartaPorteSnapshot;
@@ -112,6 +113,7 @@ class CargaModel extends CargaBaseModel {
     this.vehiculoId,
     this.subVehiculoMatricula,
     this.subRemolqueMatricula,
+    this.comisionCesion,
     this.companyId,
     this.clienteId,
     this.cartaPorteSnapshot,
@@ -134,6 +136,7 @@ class CargaModel extends CargaBaseModel {
         required String companyId,
         String? transportistaId,
         String? vehiculoId,
+        double? comisionCesion,
         String? pedidoId,
       }) {
     return CargaModel(
@@ -152,6 +155,7 @@ class CargaModel extends CargaBaseModel {
       companyId: companyId,
       transportistaId: transportistaId,
       vehiculoId: vehiculoId,
+      comisionCesion: comisionCesion,
       pedidoId: pedidoId,
       estado: (transportistaId != null && vehiculoId != null)
           ? EstadoCarga.asignado
@@ -179,6 +183,7 @@ class CargaModel extends CargaBaseModel {
       vehiculoId: map['vehiculoId'] as String?,
       subVehiculoMatricula: map['subVehiculoMatricula'] as String?,
       subRemolqueMatricula: map['subRemolqueMatricula'] as String?,
+      comisionCesion: (map['comisionCesion'] as num?)?.toDouble(),
       transportistaNombre: map['conductorNombre'] as String? ?? map['transportistaNombre'] as String?,
       companyId: map['companyId'] as String?,
       clienteId: map['clienteId'] as String?,
@@ -210,6 +215,7 @@ class CargaModel extends CargaBaseModel {
       'vehiculoId': vehiculoId,
       'subVehiculoMatricula': subVehiculoMatricula,
       'subRemolqueMatricula': subRemolqueMatricula,
+      if (comisionCesion != null) 'comisionCesion': comisionCesion,
       if (companyId != null) 'companyId': companyId,
       if (clienteId != null) 'clienteId': clienteId,
       if (cartaPorteSnapshot != null)
@@ -231,6 +237,7 @@ class CargaModel extends CargaBaseModel {
     bool clearVehiculoId = false,
     String? subVehiculoMatricula,
     String? subRemolqueMatricula,
+    double? comisionCesion,
     String? companyId,
     String? clienteId,
     String? origen,
@@ -255,6 +262,7 @@ class CargaModel extends CargaBaseModel {
       vehiculoId: clearVehiculoId ? null : (vehiculoId ?? this.vehiculoId),
       subVehiculoMatricula: subVehiculoMatricula ?? this.subVehiculoMatricula,
       subRemolqueMatricula: subRemolqueMatricula ?? this.subRemolqueMatricula,
+      comisionCesion: comisionCesion ?? this.comisionCesion,
       companyId: companyId ?? this.companyId,
       clienteId: clienteId ?? this.clienteId,
       origen: origen ?? this.origen,

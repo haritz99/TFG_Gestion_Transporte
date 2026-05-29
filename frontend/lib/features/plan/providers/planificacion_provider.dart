@@ -11,9 +11,18 @@ class PlanificacionProvider extends ChangeNotifier {
   String? _subcontratadoSeleccionadoId;
   String? get subcontratadoSeleccionadoId => _subcontratadoSeleccionadoId;
 
+  double _comisionSeleccionada = 3;
+  double get comisionSeleccionada => _comisionSeleccionada;
+
+  void seleccionarComision(double comision) {
+    _comisionSeleccionada = comision;
+    notifyListeners();
+  }
+
   void seleccionarCarga(CargaModel? carga) {
     _cargaSeleccionada = carga;
     _subcontratadoSeleccionadoId = null;
+    _comisionSeleccionada = 3.0;
     notifyListeners();
   }
 

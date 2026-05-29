@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -160,18 +161,53 @@ class _DetallesAsignacionContent extends StatelessWidget {
         const Divider(height: 32),
         Text('Ceder carga (Opcional)', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        _buildDropdown<String?>(
-          initialValue: subcontratados.any((s) => s.uid == planProvider.subcontratadoSeleccionadoId)
-              ? planProvider.subcontratadoSeleccionadoId
-              : null,
-          items: [
-            const DropdownMenuItem(value: null, child: Text('---- Seleccionar Subcontratado ---')),
-            ...subcontratados.map((guest) => DropdownMenuItem(
-                      value: guest.uid,
-                      child: Text(guest.nombre, overflow: TextOverflow.ellipsis),
-            )),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child:  _buildDropdown<String?>(
+                initialValue: subcontratados.any((s) => s.uid == planProvider.subcontratadoSeleccionadoId)
+                    ? planProvider.subcontratadoSeleccionadoId
+                    : null,
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('---- Seleccionar Subcontratado ---')),
+                  ...subcontratados.map((guest) => DropdownMenuItem(
+                    value: guest.uid,
+                    child: Text(guest.nombre, overflow: TextOverflow.ellipsis),
+                  )),
+                ],
+                onChanged: planProvider.seleccionarSubcontratado,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 1,
+              child: TextField(
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Comisión',
+                  suffixIcon: PopupMenuButton<double>(
+                    icon: const Icon(Icons.arrow_drop_down),
+                    onSelected: planProvider.seleccionarComision,
+                    itemBuilder: (context) => [3.0, 5.0, 10.0].map((c) =>
+                        PopupMenuItem(value: c, child: Text('${c.toStringAsFixed(0)}%'))
+                    ).toList(),
+                  ),
+                ),
+                onChanged: (value) {
+                  final parsed = int.tryParse(value);
+                  if (parsed != null && parsed <= 100) {
+                    planProvider.seleccionarComision(parsed.toDouble());
+                  }
+                },
+              ),
+            )
           ],
-          onChanged: planProvider.seleccionarSubcontratado,
         ),
         const SizedBox(height: 24),
         ElevatedButton.icon(

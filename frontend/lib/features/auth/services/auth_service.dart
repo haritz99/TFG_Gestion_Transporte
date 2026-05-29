@@ -130,7 +130,7 @@ class AuthService {
     );
   }
 
-  Future<ExternalUserModel> updateExternalProfile(String uid, Map<String, dynamic> data) async {
+  Future<ExternalUserModel> updateExternalProfile(String uid, ExternalUserProfileUpdateModel data) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/ext/profile/$uid');
     final token = await getIdToken();
     final response = await _client.put(
@@ -139,7 +139,7 @@ class AuthService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(data),
+      body: jsonEncode(data.toMap()),
     );
     if (response.statusCode != 200) {
       throw Exception('Error al actualizar el perfil de usuario');

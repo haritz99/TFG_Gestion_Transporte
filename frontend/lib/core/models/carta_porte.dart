@@ -8,6 +8,7 @@ class CartaPorteSnapshotModel {
   final String? subcontratadoDireccion;
   final String? subcontratadoTelefono;
   final String? subcontratadoNumAutorizacion;
+  final double? precioNeto;
   final DateTime? congeladoAt;
 
   const CartaPorteSnapshotModel({
@@ -20,6 +21,7 @@ class CartaPorteSnapshotModel {
     this.subcontratadoDireccion,
     this.subcontratadoTelefono,
     this.subcontratadoNumAutorizacion,
+    this.precioNeto,
     this.congeladoAt,
   });
 
@@ -35,6 +37,7 @@ class CartaPorteSnapshotModel {
       subcontratadoTelefono: map['subcontratadoTelefono'] as String?,
       subcontratadoNumAutorizacion:
           map['subcontratadoNumAutorizacion'] as String?,
+      precioNeto: (map['precioNeto'] as num?)?.toDouble(),
       congeladoAt: map['congeladoAt'] != null
           ? DateTime.parse(map['congeladoAt'] as String)
           : null,
@@ -56,6 +59,7 @@ class CartaPorteSnapshotModel {
         'subcontratadoTelefono': subcontratadoTelefono,
       if (subcontratadoNumAutorizacion != null)
         'subcontratadoNumAutorizacion': subcontratadoNumAutorizacion,
+      if (precioNeto != null) 'precioNeto': precioNeto,
       if (congeladoAt != null)
         'congeladoAt': congeladoAt!.toIso8601String(),
     };
