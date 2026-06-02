@@ -24,7 +24,6 @@ app = FastAPI(
 
 firebase_json_raw = os.getenv("FIREBASE_CREDENTIALS_JSON")
 path = os.getenv("FIREBASE_CREDENTIALS_PATH")
-cred = credentials.Certificate(path)
 
 if firebase_json_raw:
     credentials_data = json.loads(firebase_json_raw)
