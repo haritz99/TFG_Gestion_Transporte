@@ -176,28 +176,38 @@ class RegisterService:
             )
 
         company_id = company_id.strip()
-        if not company_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="companyId es obligatorio",
-            )
-
         roles = normalize_roles(rol)
-        if not roles:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Se requiere al menos un rol",
-            )
 
         claims = {"rol": roles, "companyId": company_id}
 
         try:
+            auth_user = firebase_auth.get_user(uid)
+            current_claims = auth_user.custom_claims or {}
+
+            if current_claims:
+                current_roles = normalize_roles(current_claims.get("rol"))
+                current_company_id = current_claims.get("companyId")
+
+                if current_company_id == company_id and current_roles == roles:
+                    return {
+                        "message": "Los custom claims ya estaban inicializados.",
+                        "uid": uid,
+                        "claims": claims,
+                    }
+
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El usuario ya tiene claims asignados con valores diferentes.",
+                )
+
             firebase_auth.set_custom_user_claims(uid, claims)
             return {
                 "message": "Custom claims inicializados correctamente.",
                 "uid": uid,
                 "claims": claims,
             }
+        except HTTPException:
+            raise
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

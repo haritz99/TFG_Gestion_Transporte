@@ -66,11 +66,30 @@ class _DetallesAsignacionContent extends StatelessWidget {
         .where((t) => !conductoresOcupados.contains(t.uid))
         .toList();
 
+    if (carga.transportistaId != null && !conductoresDisponibles.any((t) => t.uid == carga.transportistaId)) {
+      final actual = transportistaProvider.transportistas
+          .where((t) => t.uid == carga.transportistaId)
+          .firstOrNull;
+      if (actual != null) {
+        conductoresDisponibles.insert(0, actual);
+      }
+    }
+
     final vehiculosDisponibles = vehiculoProvider.vehiculosDisponibles
         .where((v) => !vehiculosOcupados.contains(v.matricula))
         .toList();
 
+    if (carga.vehiculoId != null && !vehiculosDisponibles.any((v) => v.matricula == carga.vehiculoId)) {
+      final actual = vehiculoProvider.vehiculos
+          .where((v) => v.matricula == carga.vehiculoId)
+          .firstOrNull;
+      if (actual != null) {
+        vehiculosDisponibles.insert(0, actual);
+      }
+    }
+
     return ListView(
+      key: ValueKey('panel_list_${carga.id}'),
       padding: const EdgeInsets.all(24),
       children: [
         Row(
@@ -115,6 +134,7 @@ class _DetallesAsignacionContent extends StatelessWidget {
         Text('Conductor Asignado', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         _buildDropdown<String?>(
+          key: ValueKey('dropdown_conductor_${carga.id}'),
           initialValue: carga.transportistaId,
           items: [
             const DropdownMenuItem(value: null, child: Text('Sin asignar')),
@@ -135,6 +155,7 @@ class _DetallesAsignacionContent extends StatelessWidget {
         Text('Vehículo Asignado', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         _buildDropdown<String?>(
+          key: ValueKey('dropdown_vehiculo_${carga.id}'),
           initialValue: carga.vehiculoId,
           items: [
             const DropdownMenuItem(value: null, child: Text('Sin asignar')),
@@ -146,7 +167,12 @@ class _DetallesAsignacionContent extends StatelessWidget {
         const SizedBox(height: 32),
         ElevatedButton.icon(
            onPressed: (carga.transportistaId != null && carga.vehiculoId != null)
-              ? () { /* TODO: Generar carta de porte */ }
+              ? () {
+                  cargaProvider.generarCartaDePorte(carga.id!);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(cargaProvider.errorMessage!))
+                  );
+              }
               : null,
            icon: const Icon(Icons.description_outlined),
            label: const Text('Generar Carta de Porte'),
@@ -167,6 +193,7 @@ class _DetallesAsignacionContent extends StatelessWidget {
             Expanded(
               flex: 3,
               child:  _buildDropdown<String?>(
+                key: ValueKey('dropdown_sub_${carga.id}'),
                 initialValue: subcontratados.any((s) => s.uid == planProvider.subcontratadoSeleccionadoId)
                     ? planProvider.subcontratadoSeleccionadoId
                     : null,
@@ -226,11 +253,13 @@ class _DetallesAsignacionContent extends StatelessWidget {
   }
 
   Widget _buildDropdown<T>({
+    Key? key,
     required T? initialValue,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
+      key: key,
       isExpanded: true,
       initialValue: initialValue,
       decoration: _decoration,

@@ -80,7 +80,7 @@ class PedidosService:
 
         # Actualizar referencias cruzadas y estados de transportistas y vehículos
         if result.get("cargas"):
-            self._actualizar_referencias_cruzadas(result["cargas"])
+            self._actualizar_referencias_cruzadas(result["cargas"]) 
 
         return result
 

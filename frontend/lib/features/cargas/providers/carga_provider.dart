@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/models/carga_model.dart';
+import '../../../core/pdf/pdf_handler.dart';
 import '../../auth/providers/token_provider.dart';
 import '../data/carga_service.dart';
 
@@ -238,6 +239,25 @@ class CargaProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> generarCartaDePorte(String cargaId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      String urlCloudinary = await _service.generarCartaDePorte(cargaId);
+      await PdfHandler.instance.open(
+          urlCloudinary,
+          'Carta_Porte_$cargaId.pdf'
+      );
+    } catch (e) {
+      _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();

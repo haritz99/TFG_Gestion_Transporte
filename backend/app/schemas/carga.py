@@ -72,6 +72,7 @@ class CargaSchema(CargaBaseSchema):
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
     cartaPorteSnapshot: Optional[CartaDePorteSnapshotSchema] = None
+    carta_porte_url: Optional[str] = None
     createdAt: Optional[datetime.datetime] = None
     updatedAt: Optional[datetime.datetime] = None
 

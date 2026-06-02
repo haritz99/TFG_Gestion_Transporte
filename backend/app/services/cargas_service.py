@@ -1,6 +1,7 @@
 import datetime
-import pytz
 from typing import Optional, List
+
+import pytz
 from fastapi import HTTPException, Depends
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from app.crud.cargas_crud import CargasCRUD
@@ -10,6 +11,7 @@ from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
 from google.cloud.firestore import ArrayUnion
+from .carta_porte_service import CartaPorteService
 
 
 class CargasService:
@@ -17,6 +19,13 @@ class CargasService:
         self._crud = crud
         self._pedidos_crud = pedidos_crud
         self._users_crud = users_crud
+        self._carta_porte_service = CartaPorteService(crud=self._crud)
+
+    def get_carta_porte_template_data(self, carga_id: str, company_id: str) -> dict:
+        return self._carta_porte_service.get_carta_porte_template_data(carga_id, company_id)
+
+    def generar_carta_porte_pdf(self, carga_id: str, company_id: str) -> str:
+        return self._carta_porte_service.generar_carta_porte_pdf(carga_id, company_id)
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min) if fecha_inicio else None

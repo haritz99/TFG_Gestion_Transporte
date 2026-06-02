@@ -154,4 +154,23 @@ class CargaService {
       throw Exception('Error al actualizar carga cedida: ${response.statusCode} - ${response.body}');
     }
   }
+
+  Future<String> generarCartaDePorte(String cargaId) async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/$cargaId/carta-porte');
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al generar carta de porte: ${response.statusCode} - ${response.body}');
+    }
+    final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+    return responseData['url'] as String;
+  }
 }

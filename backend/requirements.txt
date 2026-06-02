@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-groq
 firebase-admin
 pydantic
 python-dotenv
@@ -8,3 +7,5 @@ pytest
 pytest-cov
 httpx
 pytz
+jinja2
+weasyprint
