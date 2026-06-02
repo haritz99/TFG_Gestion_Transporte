@@ -8,6 +8,7 @@ from ..dependencies.auth import get_current_encargado, get_current_sub
 from ..dependencies.pedido_valido import get_pedido_from_carga
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from ..schemas.pedido import PedidoSchema
+from ..services.carta_porte_service import CartaPorteService
 from ..services.cargas_service import CargasService
 
 class CargaAssignSchema(BaseModel):
@@ -52,6 +53,16 @@ def get_cargas_subcontratado(
     service: CargasService = Depends(CargasService)
 ):
     return service.fetch_cargas_cedidas(current_user.get("uid"))
+
+
+@router.get("/{carga_id}/carta-porte")
+def get_carta_porte_pdf(
+    carga_id: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: CartaPorteService = Depends(CartaPorteService),
+) -> dict:
+    url_pdf = service.generar_carta_porte_pdf(carga_id, current_user.get("companyId"))
+    return {"url": url_pdf}
 
 
 @router.get("/{carga_id}", response_model=CargaSchema)

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta de Porte Digital - {{ carga.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm 9mm;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10.2px;
+            color: #4b5563; /* Cuerpo/Valores en gris oscuro por defecto */
+            margin: 0;
+            padding: 0;
+            line-height: 1.25;
+        }
+
+        .sheet {
+            width: 100%;
+        }
+
+
+        .title-bar {
+            background: #f5af3e;
+            color: #fff;
+            padding: 8px 10px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .sub-bar {
+            display: table;
+            width: 100%;
+            border: 1px solid #c2410c;
+            border-top: none;
+            border-collapse: collapse;
+        }
+
+        .sub-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 6px 8px;
+            border-right: 1px solid #fed7aa; /* Naranja suave para divisiones internas */
+            vertical-align: top;
+        }
+
+        .sub-cell:last-child { border-right: none; }
+
+        /* Títulos de campos de la cabecera en Negro */
+        .tiny-label {
+            display: block;
+            font-size: 8px;
+            color: #111827;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            letter-spacing: .05em;
+            font-weight: 700;
+        }
+
+        /* Cuerpo en gris */
+        .tiny-value {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4b5563;
+            word-break: break-word;
+        }
+
+        .section {
+            margin-top: 8px;
+            border: 1px solid #c2410c;
+            page-break-inside: avoid;
+        }
+
+        /* Título de sección con fondo crema/naranja sutil y texto Negro */
+        .section-title {
+            background: #fff7ed;
+            color: #111827;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 5px 8px;
+            border-bottom: 1px solid #c2410c;
+            letter-spacing: .04em;
+        }
+
+        .rows { width: 100%; }
+
+        .row {
+            display: table;
+            width: 100%;
+            border-bottom: 1px solid #fed7aa; /* Líneas de fila en naranja suave */
+            table-layout: fixed;
+        }
+
+        .row:last-child { border-bottom: none; }
+
+        .field {
+            display: table-cell;
+            vertical-align: top;
+            border-right: 1px solid #fed7aa; /* Líneas de columna en naranja suave */
+            padding: 5px 6px;
+            min-height: 28px;
+        }
+
+        .field:last-child { border-right: none; }
+
+        .field.full { width: 100%; }
+        .field.half { width: 50%; }
+        .field.third { width: 33.333%; }
+        .field.quarter { width: 25%; }
+
+        /* Títulos de los campos interiores en Negro */
+        .label {
+            display: block;
+            font-size: 8px;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: 2px;
+            font-weight: 700;
+        }
+
+        /* Cuerpo/valores de los campos en Gris */
+        .value {
+            font-size: 10.5px;
+            color: #4b5563;
+            min-height: 12px;
+            word-break: break-word;
+        }
+
+        .placeholder { color: #9ca3af; }
+
+        .mono { font-family: Consolas, Monaco, monospace; }
+
+        .signature-grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        .signature-box {
+            display: table-cell;
+            width: 33.333%;
+            border-right: 1px solid #c2410c;
+            padding: 8px;
+            height: 90px;
+            vertical-align: top;
+            background: #fafafa;
+        }
+
+        .signature-box:last-child { border-right: none; }
+
+        /* Módulos de estado de firma con colores de feedback controlados */
+        .sig-status {
+            margin-top: 15px;
+            font-size: 8.5px;
+            color: #16a34a;
+            font-weight: bold;
+            text-align: center;
+            border: 1px dashed #16a34a;
+            padding: 4px;
+            background: #f0fdf4;
+        }
+
+        .sig-pending {
+            margin-top: 15px;
+            font-size: 8.5px;
+            color: #dc2626;
+            font-weight: bold;
+            text-align: center;
+            border: 1px dashed #dc2626;
+            padding: 4px;
+            background: #fef2f2;
+        }
+
+        .footer {
+            margin-top: 12px;
+            font-size: 8px;
+            color: #6b7280;
+            text-align: justify;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+{# LÓGICA DE DETECCIÓN PARA EL TRANSPORTISTA EFECTIVO #}
+{% set snapshot = carga.carta_porte_snapshot if carga.carta_porte_snapshot else none %}
+{% set t_efectivo_nombre = snapshot.subcontratado_nombre if snapshot and snapshot.subcontratado_nombre else "Mismo que Porteador Contractual" %}
+{% set t_efectivo_nif = snapshot.subcontratado_nif if snapshot and snapshot.subcontratado_nombre else "—" %}
+{% set t_efectivo_dir = snapshot.subcontratado_direccion if snapshot and snapshot.subcontratado_nombre else "—" %}
+
+{% macro display(value, default='—') -%}
+{%- if value is none or value == '' or value is undefined -%}
+{{ default }}
+{%- else -%}
+{{ value }}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro field(label, value, width='quarter', extra_class='') -%}
+<div class="field {{ width }} {{ extra_class }}">
+    <span class="label">{{ label }}</span>
+    <div class="value {% if value in [none, '', '—'] %}placeholder{% endif %}">{{ display(value) }}</div>
+</div>
+{%- endmacro %}
+
+<div class="sheet">
+
+    <div class="title-bar">Carta de Porte Nacional (e-CMR)</div>
+    <div class="sub-bar">
+        <div class="sub-cell"><span class="tiny-label">Nº Único Documento</span><span class="tiny-value mono">{{ display(carga.id) }}</span></div>
+        <div class="sub-cell"><span class="tiny-label">Fecha de Emisión</span><span class="tiny-value">{{ display(carga.created_at) }}</span></div>
+        <div class="sub-cell"><span class="tiny-label">Referencia Pedido</span><span class="tiny-value mono">{{ display(carga.pedido_id) }}</span></div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">1. Sujetos Intervinientes (Origen y Destino)</div>
+        <div class="rows">
+            <div class="row">
+                {{ field('Cargador / Expedidor (Razón Social)', snapshot.cliente_nombre if snapshot else none, 'half') }}
+                {{ field('NIF / CIF Cargador', snapshot.cliente_nif if snapshot else none, 'half', 'mono') }}
+            </div>
+            <div class="row">
+                {{ field('Dirección Origen (Lugar de carga)', snapshot.cliente_direccion if snapshot else none, 'full') }}
+            </div>
+            <div class="row">
+                {{ field('Destinatario (Razón Social)', carga.destino, 'half') }}
+                {{ field('NIF / CIF Destinatario', none, 'half', 'mono') }}
+            </div>
+            <div class="row">
+                {{ field('Dirección Destino (Lugar de entrega)', carga.destino, 'full') }}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">2. Operadores de Transporte del Contrato</div>
+        <div class="rows">
+            <!-- Porteador Contractual: La empresa dueña del software TMS -->
+            <div class="row">
+                {{ field('Porteador Contractual', none, 'half') }}
+                {{ field('NIF Porteador Contractual', none, 'half', 'mono') }}
+            </div>
+            <div class="row">
+                {{ field('Dirección Porteador Contractual', none, 'full') }}
+            </div>
+
+            <!-- Transportista Efectivo: Reflejando fielmente los requerimientos legales -->
+            <div class="row">
+                {{ field('Transportista Efectivo (Razón Social)', t_efectivo_nombre, 'half') }}
+                {{ field('NIF / CIF Transportista', t_efectivo_nif, 'half', 'mono') }}
+            </div>
+            <div class="row">
+                {{ field('Dirección Transportista', t_efectivo_dir, 'full') }}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">3. Datos de la Ruta, Fechas y Vehículo</div>
+        <div class="rows">
+            <div class="row">
+                {{ field('Punto de Carga', carga.origen, 'half') }}
+                {{ field('Fecha / Hora prevista Carga', carga.fecha_carga, 'half') }}
+            </div>
+            <div class="row">
+                {{ field('Punto de Entrega', carga.destino, 'half') }}
+                {{ field('Fecha / Hora prevista Entrega', carga.fecha_descarga, 'half') }}
+            </div>
+            <div class="row">
+                {{ field('Conductor Asignado', carga.conductor_nombre, 'third') }}
+                {{ field('Matrícula Tractora', carga.vehiculoId, 'third', 'mono') }}
+                {{ field('Matrícula Semirremolque', carga.sub_remolque_matricula, 'third', 'mono') }}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">4. Especificación de la Mercancía</div>
+        <div class="rows">
+            <div class="row">
+                {{ field('Naturaleza de los Bienes', carga.mercancia, 'half') }}
+                {{ field('Tipo de Embalaje', none, 'half') }}
+            </div>
+            <div class="row">
+                {{ field('Número de Bultos', carga.num_bultos, 'quarter') }}
+                {{ field('Peso Bruto (KG)', carga.peso, 'quarter') }}
+                {{ field('Volumen / Dimensiones Estimadas', (carga.largo|string + "x" + carga.ancho|string + "x" + carga.alto|string + " m") if carga.largo else none, 'half') }}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">5. Condiciones Económicas del Contrato</div>
+        <div class="rows">
+            <div class="row">
+                {% if none %}
+                <div class="field full">
+                    <span class="label">Precio del Transporte y Gastos Conexos</span>
+                    <div class="value">Facturación por separado según las condiciones del contrato marco de transporte.</div>
+                </div>
+                {% else %}
+                {{ field('Precio del Transporte (Base Imponible)', (carga.precio|string + " €") if carga.precio else none, 'half') }}
+                {{ field('Total Neto Derivado', ((snapshot.precio_neto if snapshot else carga.precio_neto)|string + " €") if (snapshot and snapshot.precio_neto) or carga.precio_neto else none, 'half') }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section">
+        <div class="section-title">6. Firmas y Conformidad (Validación Electrónica)</div>
+        <div class="signature-grid">
+            <div class="signature-box">
+                <span class="label">El Cargador / Expedidor</span>
+                <div class="sig-pending">PENDIENTE DE FIRMA</div>
+            </div>
+            <div class="signature-box">
+                <span class="label">El Porteador Contractual</span>
+                <div class="sig-pending">PENDIENTE DE FIRMA</div>
+            </div>
+            <div class="signature-box">
+                <span class="label">El Destinatario (Recepción)</span>
+                <div class="sig-pending">ESPERANDO RECEPCIÓN</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de página legal obligatorio -->
+    <div class="footer">
+        El presente documento electrónico constituye una Carta de Porte Digital emitida al amparo de la Ley 15/2009, de 11 de noviembre, del contrato de transporte terrestre de mercancías, y cumple rigurosamente con los requisitos del Documento de Control Administrativo exigido por la Orden FOM/2861/2012. Las firmas integradas en este flujo corresponden a firmas electrónicas con plena validez jurídica según el Reglamento (UE) Nº 910/2014 (eIDAS).
+    </div>
+</div>
+</html>
+
+

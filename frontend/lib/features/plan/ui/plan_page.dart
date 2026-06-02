@@ -27,6 +27,7 @@ class _PlanificacionScreenState extends State<PlanificacionScreen> {
       final inviteProvider = context.read<InviteProvider>();
 
       Future.wait([
+        transportistaProvider.loadInitialEquipo(limit: 1000),
         transportistaProvider.fetchTransportistasDisponibles(),
         vehiculoProvider.loadInitialVehiculos(),
         inviteProvider.getGuests(),
