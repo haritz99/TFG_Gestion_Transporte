@@ -22,11 +22,25 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+firebase_json_raw = os.getenv("FIREBASE_CREDENTIALS_JSON")
 path = os.getenv("FIREBASE_CREDENTIALS_PATH")
 cred = credentials.Certificate(path)
-with open(path, "r") as f:
-    credentials_data = json.load(f)
-    project_id = credentials_data.get("project_id")
+
+if firebase_json_raw:
+    credentials_data = json.loads(firebase_json_raw)
+    cred = credentials.Certificate(credentials_data)
+
+elif path and os.path.exists(path):
+    cred = credentials.Certificate(path)
+    with open(path, "r") as f:
+        credentials_data = json.load(f)
+else:
+    raise RuntimeError(
+        "Falta la configuración de Firebase. Configura FIREBASE_CREDENTIALS_JSON o FIREBASE_CREDENTIALS_PATH"
+    )
+
+project_id = credentials_data.get("project_id")
+
 firebase_admin.initialize_app(cred, {
     'storageBucket': f'{project_id}.firebasestorage.app'
 })

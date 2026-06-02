@@ -45,6 +45,8 @@ jobs:
 
   backend-tests:
     name: FastAPI Tests
+    env:
+      FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
