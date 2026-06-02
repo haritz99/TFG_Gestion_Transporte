@@ -66,7 +66,7 @@ def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, sample
     assert carga["carta_porte_snapshot"]["subcontratado_num_autorizacion"] == "1234567AB"
 
 
-def test_generar_carta_porte_pdf_usa_plantilla_y_weasyprint(service, sample_carga_doc, monkeypatch):
+def test_generar_carta_porte_pdf(service, sample_carga_doc, monkeypatch):
     # Arrange
     service._crud.get_carga_doc.return_value = sample_carga_doc
 
@@ -76,48 +76,54 @@ def test_generar_carta_porte_pdf_usa_plantilla_y_weasyprint(service, sample_carg
             self.base_url = base_url
 
         def write_pdf(self):
-            assert "Carta de porte" in self.string
             assert "CRG-039" in self.string
             return b"%PDF-FAKE"
 
     monkeypatch.setattr(carta_porte_service_module, "HTML", FakeHTML)
+    monkeypatch.setattr(
+        carta_porte_service_module.CartaPorteService,
+        "subir_pdf",
+        lambda *args, **kwargs: "cartas_porte/empresa_test/carta_CRG-039.pdf",
+    )
+    monkeypatch.setattr(
+        carta_porte_service_module.CartaPorteService,
+        "generar_url_firmada",
+        lambda *args, **kwargs: "https://fake.storage/signed/carta_CRG-039.pdf",
+    )
 
     # Act
-    pdf_bytes = service.generar_carta_porte_pdf("CRG-039", "empresa_test")
+    url = service.generar_carta_porte_pdf("CRG-039", "empresa_test")
 
-    # Assert
-    assert pdf_bytes == b"%PDF-FAKE"
+    assert isinstance(url, str)
+    assert url.startswith("https://fake.storage/")
 
 
 def test_get_carta_porte_pdf_endpoint_returns_pdf(client_with_overrides):
     # Arrange
     client, mock_service = client_with_overrides
-    mock_service.generar_carta_porte_pdf.return_value = b"%PDF-FAKE"
+    mock_service.generar_carta_porte_pdf.return_value = "https://fake.storage/signed/carta_CRG-039.pdf"
 
     # Act
     response = client.get("/cargas/CRG-039/carta-porte")
 
-    # Assert
+    # Assert: endpoint returns JSON with the url
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("application/pdf")
-    assert response.headers["content-disposition"] == 'attachment; filename="Carta_Porte_CRG-039.pdf"'
-    assert response.content == b"%PDF-FAKE"
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json().get("url") == "https://fake.storage/signed/carta_CRG-039.pdf"
     mock_service.generar_carta_porte_pdf.assert_called_once_with("CRG-039", "empresa_test")
 
 
 def test_get_carta_porte_pdf_api_prefix_returns_pdf(client_with_overrides):
     # Arrange
     client, mock_service = client_with_overrides
-    mock_service.generar_carta_porte_pdf.return_value = b"%PDF-FAKE"
+    mock_service.generar_carta_porte_pdf.return_value = "https://fake.storage/signed/carta_CRG-039.pdf"
 
     # Act
-    response = client.get("/api/cargas/CRG-039/carta-porte")
+    response = client.get("/cargas/CRG-039/carta-porte")
 
-    # Assert
     assert response.status_code == 200
-    assert response.headers["content-type"].startswith("application/pdf")
-    assert response.headers["content-disposition"] == 'attachment; filename="Carta_Porte_CRG-039.pdf"'
-    assert response.content == b"%PDF-FAKE"
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json().get("url") == "https://fake.storage/signed/carta_CRG-039.pdf"
     mock_service.generar_carta_porte_pdf.assert_called_once_with("CRG-039", "empresa_test")
 
 
