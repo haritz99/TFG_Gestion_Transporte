@@ -39,7 +39,7 @@ class PedidosService:
         
         cargas_payloads = []
 
-        snapshot = self._preparar_snapshot_cliente(pedido.clienteId, company_id)
+        snapshot = self._preparar_snapshot(pedido, company_id)
 
         for asig in pedido.cargas:
             tipo_doc = self._cargas_crud.get_tipo_carga_by_id(asig.tipoCargaId)
@@ -84,16 +84,20 @@ class PedidosService:
 
         return result
 
-    def _preparar_snapshot_cliente(self, cliente_id: str, company_id: str) -> CartaDePorteSnapshotSchema:
+    def _preparar_snapshot(self, pedido: CreatePedidoSchema, company_id: str) -> CartaDePorteSnapshotSchema:
+        cliente_id = pedido.clienteId
         cliente_doc = self._users_crud.get_cliente_by_id(cliente_id)
         cliente = ClienteSchema.from_firestore(cliente_doc, company_id)
 
-        direccion_format = f"{cliente.direccionFiscal.calle}, {cliente.direccionFiscal.codigoPostal} {cliente.direccionFiscal.ciudad} ({cliente.direccionFiscal.provincia})"
+        direccion_cargador_format = f"{cliente.direccionFiscal.calle}, {cliente.direccionFiscal.codigoPostal} {cliente.direccionFiscal.ciudad} ({cliente.direccionFiscal.provincia})"
 
         return CartaDePorteSnapshotSchema(
+            destinatarioNombre=pedido.destinatarioNombre,
+            destinatarioNif=pedido.destinatarioNif,
+            destinatarioDireccion=pedido.destinatarioDireccion,
             clienteNombre=cliente.nombreComercial,
             clienteNif=cliente.nif,
-            clienteDireccion=direccion_format,
+            clienteDireccion=direccion_cargador_format,
             clienteTelefono=cliente.telefono,
             congeladoAt=None
         )

@@ -8,6 +8,8 @@ from .base import FirestoreSchema, DatetimeUTCMixin
 import enum
 from typing import TYPE_CHECKING
 
+from .company import DireccionSchema
+
 if TYPE_CHECKING:
     from .carga import CargaSchema
 
@@ -57,6 +59,9 @@ class AsignacionCargaSchema(FirestoreSchema):
 
 class CreatePedidoSchema(BaseModel):
     id: Optional[str] = None
+    destinatarioNombre: str = None
+    destinatarioNif: str = None
+    destinatarioDireccion: DireccionSchema = None
     descripcion: Optional[str] = None
     clienteId: str = Field(..., min_length=1)
     fechaCarga: datetime.datetime = Field(...)

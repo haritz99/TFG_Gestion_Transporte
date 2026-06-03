@@ -58,14 +58,26 @@ class PedidoProvider extends ChangeNotifier {
 
   void actualizarDatosTemporales({
     String? descripcion,
-    ExternalUserModel? cliente,
+    ExternalUserModel? cliente, // en realidad es el cargador
     DateTime? fechaCarga,
     DateTime? fechaDescarga,
+    String? clienteNombre,
+    String? clienteNif,
+    String? clienteCalle,
+    String? clienteCp,
+    String? clienteCiudad,
+    String? clienteProvincia,
   }) {
     if (descripcion != null) _datosTemporalPedido['descripcion'] = descripcion;
     if (cliente != null) _datosTemporalPedido['cliente'] = cliente;
     if (fechaCarga != null) _datosTemporalPedido['fechaCarga'] = fechaCarga;
     if (fechaDescarga != null) _datosTemporalPedido['fechaDescarga'] = fechaDescarga;
+    if (clienteNombre != null) _datosTemporalPedido['clienteNombre'] = clienteNombre;
+    if (clienteNif != null) _datosTemporalPedido['clienteNif'] = clienteNif;
+    if (clienteCalle != null) _datosTemporalPedido['clienteCalle'] = clienteCalle;
+    if (clienteCp != null) _datosTemporalPedido['clienteCp'] = clienteCp;
+    if (clienteCiudad != null) _datosTemporalPedido['clienteCiudad'] = clienteCiudad;
+    if (clienteProvincia != null) _datosTemporalPedido['clienteProvincia'] = clienteProvincia;
     notifyListeners();
   }
 
@@ -115,14 +127,18 @@ class PedidoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> crearPedido({
-    required String descripcion,
-    required String clienteId,
-    required DateTime fechaCarga,
-    required DateTime fechaDescarga,
-    String? notas,
-  }) async {
+  Future<bool> crearPedido() async {
     if (_cargasDelPedido == null) return false;
+
+    final descripcion = _datosTemporalPedido['descripcion'] as String?;
+    final cliente = _datosTemporalPedido['cliente'] as ExternalUserModel?;
+    final fechaCarga = _datosTemporalPedido['fechaCarga'] as DateTime?;
+    final fechaDescarga = _datosTemporalPedido['fechaDescarga'] as DateTime?;
+
+    if (descripcion == null || cliente == null || fechaCarga == null || fechaDescarga == null) {
+      _errorMessage = 'Faltan datos obligatorios del pedido';
+      return false;
+    }
 
     _isLoading = true;
     _errorMessage = null;
@@ -138,9 +154,18 @@ class PedidoProvider extends ChangeNotifier {
         'fechaDescarga': (asig.fechaLimite ?? fechaDescarga).toIso8601String(),
       }).toList();
 
+      final calle = _datosTemporalPedido['clienteCalle'] ?? '';
+      final cp = _datosTemporalPedido['clienteCp'] ?? '';
+      final ciudad = _datosTemporalPedido['clienteCiudad'] ?? '';
+      final provincia = _datosTemporalPedido['clienteProvincia'] ?? '';
+      final direccionCompleta = "$calle, CP: $cp, $ciudad, $provincia".trim();
+
       await _service.crearPedido(
+        destinatarioNombre: _datosTemporalPedido['clienteNombre'] ?? '',
+        destinatarioNif: _datosTemporalPedido['clienteNif'] ?? '',
+        destinatarioDireccion: direccionCompleta,
         descripcion: descripcion,
-        clienteId: clienteId,
+        clienteId: cliente.uid, // en realidad es el cargadorId
         fechaCarga: fechaCarga,
         fechaDescarga: fechaDescarga,
         cargas: cargasPayload,

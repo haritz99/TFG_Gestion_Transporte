@@ -4,13 +4,14 @@ import 'package:gestion_transporte/features/cargas/providers/pedido_provider.dar
 import 'package:gestion_transporte/features/transportistas/providers/transportista_provider.dart';
 import 'package:gestion_transporte/features/vehiculos/providers/vehiculo_provider.dart';
 import 'package:provider/provider.dart';
-import '../../../../../core/models/external_user_model.dart';
 import '../../../../../core/models/pedido_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/features/dashboard/providers/invite_provider.dart';
 import 'package:gestion_transporte/features/dashboard/providers/dashboard_provider.dart';
 import '../../../../auth/providers/auth_provider.dart';
+import '../../../../auth/ui/shared_register.dart';
+import 'datos_cliente.dart';
 import 'nuevo_pedido.dart';
 import 'seleccionar_cargas.dart';
 
@@ -24,16 +25,26 @@ class FormBuilderPedido extends StatefulWidget {
 class _FormBuilderPedidoState extends State<FormBuilderPedido> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  ExternalUserModel? _clienteSeleccionado;
-  String _descripcion = '';
-  DateTime? _fechaCarga;
-  DateTime? _fechaDescarga;
+
+  final GlobalKey<DatosClienteFormState> _datosClienteFormKey = GlobalKey<DatosClienteFormState>();
+  final _nombreController = TextEditingController();
+  final _nifController = TextEditingController();
+  final _direccionControllers = SharedRegisterControllers();
+
   final GlobalKey<NuevoPedidoFormState> _pedidoFormKey = GlobalKey<NuevoPedidoFormState>();
   final GlobalKey<SeleccionarCargasFormState> _cargasFormKey = GlobalKey<SeleccionarCargasFormState>();
 
   @override
   void initState() {
     super.initState();
+    final pedidoProvider = context.read<PedidoProvider>();
+    _nombreController.text = pedidoProvider.datosTemporalPedido['clienteNombre'] ?? '';
+    _nifController.text = pedidoProvider.datosTemporalPedido['clienteNif'] ?? '';
+    _direccionControllers.calle.text = pedidoProvider.datosTemporalPedido['clienteCalle'] ?? '';
+    _direccionControllers.codigoPostal.text = pedidoProvider.datosTemporalPedido['clienteCp'] ?? '';
+    _direccionControllers.ciudad.text = pedidoProvider.datosTemporalPedido['clienteCiudad'] ?? '';
+    _direccionControllers.provincia.text = pedidoProvider.datosTemporalPedido['clienteProvincia'] ?? '';
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<AuthProvider>().user;
       if (user != null) {
@@ -45,19 +56,37 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
   @override
   void dispose() {
     _pageController.dispose();
+    _nombreController.dispose();
+    _nifController.dispose();
+    _direccionControllers.dispose();
     super.dispose();
   }
 
   void _onSiguiente() async {
+    final pedidoProvider = context.read<PedidoProvider>();
+
     if (_currentPage == 0) {
+      if (_datosClienteFormKey.currentState?.validate() ?? false) {
+        pedidoProvider.actualizarDatosTemporales(
+          clienteNombre: _nombreController.text.trim(),
+          clienteNif: _nifController.text.trim(),
+          clienteCalle: _direccionControllers.calle.text.trim(),
+          clienteCp: _direccionControllers.codigoPostal.text.trim(),
+          clienteCiudad: _direccionControllers.ciudad.text.trim(),
+          clienteProvincia: _direccionControllers.provincia.text.trim(),
+        );
+
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() => _currentPage = 1);
+      }
+    } else if (_currentPage == 1) {
       if (_pedidoFormKey.currentState?.validate() ?? false) {
         final formState = _pedidoFormKey.currentState;
         final cliente = formState?.selectedCliente;
-        if (cliente != null && formState != null) {
-          _clienteSeleccionado = cliente;
-          _descripcion = formState.descripcion;
-          _fechaCarga = formState.fechaCarga;
-          _fechaDescarga = formState.fechaDescarga;
+        if (cliente != null) {
           final cargaProvider = context.read<CargaProvider>();
           final transportistaProvider = context.read<TransportistaProvider>();
           final vehiculoProvider = context.read<VehiculoProvider>();
@@ -72,30 +101,24 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
-        setState(() => _currentPage = 1);
+        setState(() => _currentPage = 2);
       }
     } else {
       final pedidoProvider = context.read<PedidoProvider>();
 
-      if (_clienteSeleccionado != null && _fechaCarga != null && _fechaDescarga != null) {
-        final ok = await pedidoProvider.crearPedido(
-          descripcion: _descripcion,
-          clienteId: _clienteSeleccionado!.uid,
-          fechaCarga: _fechaCarga!,
-          fechaDescarga: _fechaDescarga!,
+      final ok = await pedidoProvider.crearPedido();
+      if (!mounted) return;
+      if (ok) {
+        context.read<DashboardProvider>().refresh();
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(pedidoProvider.errorMessage ?? 'Error al crear el pedido'),
+            backgroundColor: Colors.red,
+          ),
         );
-        if (!mounted) return;
-        if (ok) {
-          context.read<DashboardProvider>().refresh();
-          Navigator.of(context).pop();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(pedidoProvider.errorMessage ?? 'Error al crear el pedido'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       }
     }
   }
@@ -133,6 +156,14 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
+                    SingleChildScrollView(
+                      child: DatosClienteForm(
+                        key: _datosClienteFormKey,
+                        nombreController: _nombreController,
+                        nifController: _nifController,
+                        direccionControllers: _direccionControllers,
+                      ),
+                    ),
                     SingleChildScrollView(
                       child: NuevoPedidoForm(
                         key: _pedidoFormKey,

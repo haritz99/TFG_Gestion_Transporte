@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
+from .company import DireccionSchema
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema
@@ -44,6 +45,11 @@ class CartaDePorteSnapshotSchema(BaseModel):
     clienteNif: str
     clienteDireccion: str
     clienteTelefono: Optional[str] = None
+
+    # Datos del cliente (como llamo cliente al cargador, este se llama destinatario)
+    destinatarioNombre: str
+    destinatarioNif: str
+    destinatarioDireccion: DireccionSchema
 
     # Datos del Subcontratado (no siempre aplica)
     subcontratadoNombre: Optional[str] = None
