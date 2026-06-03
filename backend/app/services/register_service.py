@@ -1,18 +1,21 @@
+from __future__ import annotations
 from fastapi import HTTPException, Depends, status
 from typing import Any
 import secrets
 import string
 from datetime import datetime, timezone
 from ..crud.user_crud import UserCRUD
+from ..crud.company_crud import CompanyCRUD
 from ..dependencies.auth import normalize_roles
-from ..schemas.users import UserSchema, UserCreateResponseSchema
+from ..schemas.users import UserSchema, UserCreateResponseSchema, RegisterRequest
 from ..schemas.external_user import ExternalUserSchema
 from firebase_admin import auth as firebase_auth
 
 
 class RegisterService:
-    def __init__(self, crud: UserCRUD = Depends(UserCRUD)):
+    def __init__(self, crud: UserCRUD = Depends(UserCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD)):
         self._crud = crud
+        self._company_crud = company_crud
 
     @staticmethod
     def generate_temp_password(length: int = 12) -> str:
@@ -26,6 +29,51 @@ class RegisterService:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error al generar el enlace: {str(e)}")
+
+    def create_firestore_user_with_company(self, current_user: dict, register_data: RegisterRequest) -> dict:
+        uid = current_user['uid']
+        now = datetime.now(timezone.utc)
+        try:
+            company_data = {
+                'nombre': register_data.empresa.nombre,
+                'razonSocial': register_data.empresa.razon_social,
+                'nif': register_data.empresa.nif,
+                'telefono': register_data.empresa.telefono,
+                'numAutorizacion': register_data.empresa.num_autorizacion,
+                'direccion': register_data.empresa.direccion.model_dump() if register_data.empresa.direccion else None,
+                'createdAt': now,
+            }
+            company_id = self._company_crud.create(company_data)
+
+            user_dict = {
+                'uid': uid,
+                'nombre': register_data.nombre,
+                'apellido': register_data.apellido,
+                'email': register_data.email,
+                'telefono': register_data.telefono,
+                'rol': register_data.rol,
+                'permisosCond': register_data.permisos_cond,
+                'companyId': company_id,
+                'estado': register_data.estado or 'sin_asignar',
+                'vehiculoId': None,
+                'createdAt': now,
+                'updatedAt': now,
+            }
+            self._crud.create(uid, user_dict)
+
+            firebase_auth.set_custom_user_claims(uid, {
+                'companyId': company_id,
+                'rol': register_data.rol,
+            })
+
+            return {'companyId': company_id}
+
+        except Exception as e:
+            try:
+                firebase_auth.delete_user(uid)
+            except Exception:
+                pass
+            raise HTTPException(status_code=500, detail=str(e))
 
     def create_firebase_auth_user(self, email: str, rol: list[str], company_id: str) -> tuple[str, str, str | None]:
         temp_password = self.generate_temp_password()

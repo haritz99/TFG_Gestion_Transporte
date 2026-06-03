@@ -27,48 +27,38 @@ class App extends StatelessWidget {
      return MultiProvider(
       providers: [
         Provider<ConnectivityService>(create: (_) => ConnectivityService()),
-        ChangeNotifierProxyProvider<ConnectivityService, ConnectivityProvider>(
+        ChangeNotifierProvider<ConnectivityProvider>(
           create: (context) => ConnectivityProvider(
             connectivityService: context.read<ConnectivityService>(),
           ),
-          update: (_, connectivityService, previous) =>
-            previous ?? ConnectivityProvider(connectivityService: connectivityService),
         ),
         Provider<AuthService>(create: (_) => AuthService()),
-        ProxyProvider<AuthService, AuthTokenProvider>(
-          update: (_, authService, __) => AuthTokenProvider(authService),
+        Provider<AuthTokenProvider>(
+          create: (context) => AuthTokenProvider(context.read<AuthService>()),
         ),
-        ChangeNotifierProxyProvider<AuthService, AuthProvider>(
+        ChangeNotifierProvider<AuthProvider>(
           create: (context) => AuthProvider(authService: context.read<AuthService>()),
-          update: (_, authService, previous) => previous ?? AuthProvider(authService: authService),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, CargaProvider>(
+        ChangeNotifierProvider<CargaProvider>(
           create: (context) => CargaProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? CargaProvider(tokenProvider: tokenProvider),
         ),
-        ChangeNotifierProxyProvider2<AuthTokenProvider, CargaProvider, DashboardProvider>(
+        ChangeNotifierProvider<DashboardProvider>(
           create: (context) => DashboardProvider(
             tokenProvider: context.read<AuthTokenProvider>(),
-            cargaProvider: context.read<CargaProvider>()
+            cargaProvider: context.read<CargaProvider>(),
           ),
-          update: (_, tokenProvider, cargaProvider, previous) =>
-            previous ?? DashboardProvider(tokenProvider: tokenProvider, cargaProvider: cargaProvider),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, PedidoProvider>(
+        ChangeNotifierProvider<PedidoProvider>(
           create: (context) => PedidoProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? PedidoProvider(tokenProvider: tokenProvider),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, VehiculoProvider>(
+        ChangeNotifierProvider<VehiculoProvider>(
           create: (context) => VehiculoProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? VehiculoProvider(tokenProvider: tokenProvider),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, TransportistaProvider>(
+        ChangeNotifierProvider<TransportistaProvider>(
           create: (context) => TransportistaProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? TransportistaProvider(tokenProvider: tokenProvider),
         ),
-        ChangeNotifierProxyProvider<AuthTokenProvider, InviteProvider>(
+        ChangeNotifierProvider<InviteProvider>(
           create: (context) => InviteProvider(tokenProvider: context.read<AuthTokenProvider>()),
-          update: (_, tokenProvider, previous) => previous ?? InviteProvider(tokenProvider: tokenProvider),
         ),
       ],
       child: Consumer<AuthProvider>(

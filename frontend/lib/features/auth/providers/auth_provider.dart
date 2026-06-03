@@ -1,15 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
+import '../../../core/models/direccion_model.dart';
 import '../services/auth_service.dart';
-import '../services/register_company.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
-  final RegisterCompanyService _registerCompanyService = RegisterCompanyService();
   UserModel? _user;
   ExternalUserModel? _externalUser;
   bool _isLoading = false;
@@ -101,33 +99,45 @@ class AuthProvider extends ChangeNotifier {
     required List<String> permisosCond,
     required String password,
     required String nombreEmpresa,
-    required String estado,
+    String? estado,
+    String? razonSocial,
+    String? nif,
+    String? telefonoEmpresa,
+    String? numAutorizacion,
+    DireccionModel? direccion,
   }) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final companyId = await _registerCompanyService.registerCompany(
-        nombreEmpresa,
-      );
 
-      final userData = UserModel(
-        uid: '', // Ahora es vacio porque aun no se ha creado en firebase auth
-        nombre: nombre,
-        apellido: apellido,
-        email: email,
-        telefono: telefono,
-        rol: rol,
-        permisosCond: permisosCond,
-        companyId: companyId,
-        estado: estado,
-        vehiculoId: null,
-      );
+      final token = await _authService.register(email, password);
 
-      await _authService.register(
-        email,
-        password,
-        userData,
-      );
+      final body = {
+        'nombre': nombre,
+        'apellido': apellido,
+        'email': email,
+        'telefono': telefono,
+        'rol': rol,
+        'permisosCond': permisosCond,
+        'estado': estado,
+        'empresa': {
+          'nombre': nombreEmpresa,
+          'razonSocial': razonSocial,
+          'nif': nif,
+          'telefono': telefonoEmpresa,
+          'numAutorizacion': numAutorizacion,
+          'direccion': direccion?.toMap(),
+        }
+      };
+
+      await _authService.createUserWithCompany(token: token, body: body);
+
+      await _authService.currentUser!.getIdToken(true);
+      _user = await _authService.getUserData(_authService.currentUser!.uid);
+
+    } catch (e) {
+      await FirebaseAuth.instance.currentUser?.delete();
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

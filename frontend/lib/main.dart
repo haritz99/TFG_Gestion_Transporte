@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
@@ -19,8 +18,16 @@ Future<void> main() async{
     SyncfusionLicense.registerLicense(syncfusionKey);
   }
   */
+  /*
   F.appFlavor = Flavor.values.firstWhere(
     (element) => element.name == appFlavor,
+  );
+  */
+  const String flavorString = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+
+  F.appFlavor = Flavor.values.firstWhere(
+        (element) => element.name.toLowerCase() == flavorString.toLowerCase(),
+    orElse: () => Flavor.dev, // Si no hay coincidencias, evita el error 'Bad state'
   );
   await initializeFirebaseApp();
   await initializeDateFormatting('es', null);

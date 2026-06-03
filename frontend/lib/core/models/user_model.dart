@@ -9,7 +9,7 @@ class UserModel {
   final List<String> rol;
   final List<String> permisosCond;
   final String companyId;
-  final String estado;
+  final String? estado;
   final String? vehiculoId;
   final String? cargaId;
   final DateTime? createdAt;
@@ -24,7 +24,7 @@ class UserModel {
     required this.rol,
     required this.permisosCond,
     required this.companyId,
-    required this.estado,
+    this.estado,
     this.vehiculoId,
     this.cargaId,
     this.createdAt,

@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Literal, Optional, TypeVar, Generic
 from datetime import datetime
 from fastapi import HTTPException
-from pydantic import Field, field_validator, model_validator, BaseModel
-
+from pydantic import Field, field_validator, model_validator, BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from .base import FirestoreSchema
+from .company import EmpresaRegisterSchema
 
 
 class UserSchema(FirestoreSchema):
@@ -46,6 +47,16 @@ class UserSchema(FirestoreSchema):
             raise HTTPException(status_code=403, detail='No autorizado para usar este usuario')
         return cls(**data)
 
+class RegisterRequest(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    nombre: str
+    apellido: str
+    email: str
+    telefono: str
+    rol: list[str]
+    permisos_cond: list[str] = []
+    estado: Optional[str] = None
+    empresa: EmpresaRegisterSchema
 class UserPaginatedSchema(FirestoreSchema):
     items: list[UserSchema]
     last_doc_id: Optional[str] = None

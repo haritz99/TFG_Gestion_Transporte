@@ -186,7 +186,7 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         apellido: t.apellido,
         email: t.email,
         telefono: t.telefono,
-        estado: _formatEstado(t.estado),
+        estado: _formatEstado(t.estado ?? ''),
         rol: t.rol,
         licencias: t.permisosCond,
         cargaAsignada: t.cargaId ?? '',

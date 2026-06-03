@@ -10,7 +10,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final http.Client _client;
-
+  final String _baseUrl = '${ApiConfig.baseUrl}/auth';
   AuthService({http.Client? client}) : _client = client ?? http.Client();
 
   User? get currentUser => _auth.currentUser;
@@ -43,11 +43,12 @@ class AuthService {
     throw Exception('No se ha encontrado el usuario');
   }
 
-  Future<UserCredential> register(
+  Future<String> register(
     String email,
     String password,
-    UserModel userData,
+    //UserModel userData,
   ) async {
+
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -61,47 +62,28 @@ class AuthService {
       );
     }
 
-    final token = await user.getIdToken();
+    final token = await user.getIdToken() ?? "";
+    return token;
 
-    final profileData = {
-      'uid': user.uid,  // Se le asigna el uid de firebase auth
-      'nombre': userData.nombre,
-      'apellido': userData.apellido,
-      'email': user.email ?? email,
-      'telefono': userData.telefono,
-      'rol': userData.rol,
-      'permisosCond': userData.permisosCond,
-      'companyId': userData.companyId,
-      'vehiculoId': userData.vehiculoId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    try {
-
-      await _firestore.collection('users').doc(user.uid).set(profileData);
-
-      await inicializarCustomClaims(token, userData.companyId, userData.rol);
-
-      // Refresca y valida que el nuevo token ya contiene los claims esperados.
-      final refreshed = await user.getIdTokenResult(true);
-      final claimCompanyId = refreshed.claims?['companyId'];
-      final claimRol = refreshed.claims?['rol'];
-
-      final currentRoles = (claimRol as List?)?.cast<String>() ?? [];
-      final hasAllExpectedRoles = userData.rol.every((r) => currentRoles.contains(r));
-
-      if (claimCompanyId != userData.companyId || !hasAllExpectedRoles) {
-        throw Exception('El token refrescado no contiene los custom claims esperados');
-      }
-      return credential;
-    } catch (e) {
-      // Evita dejar una cuenta de Auth sin perfil o claims si algo falla durante el alta.
-      await user.delete();
-      rethrow;
-    }
   }
 
+  Future<void> createUserWithCompany({required String token, required Map<String, dynamic> body,}) async {
+    final uri = Uri.parse('$_baseUrl/register');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 201) {
+      final detail = jsonDecode(response.body)['detail'] ?? 'Error desconocido';
+      throw Exception('Error al registrar empresa: $detail');
+    }
+  }
 
   Future<void> inicializarCustomClaims(String? token, String companyId, List<String> rol) async {
     if (token == null || token.isEmpty) {

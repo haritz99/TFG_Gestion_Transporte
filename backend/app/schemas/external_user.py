@@ -6,7 +6,9 @@ from fastapi import HTTPException
 from pydantic import Field
 
 from .base import FirestoreSchema
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+
+from .company import DireccionSchema
 
 
 class ExternalUserSchema(FirestoreSchema):
@@ -53,9 +55,3 @@ class SubcontratadoSchema(ExternalUserSchema):
     direccionFiscal: DireccionSchema
 
 
-class DireccionSchema(BaseModel):
-    calle: str = Field(..., min_length=1)
-    ciudad: str = Field(..., min_length=1)
-    provincia: str = Field(..., min_length=1)
-    codigoPostal: str = Field(..., min_length=4)
-    pais: str = Field(default="España", min_length=1)

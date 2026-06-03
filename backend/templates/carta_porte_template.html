@@ -226,18 +226,18 @@
         <div class="section-title">1. Sujetos Intervinientes (Origen y Destino)</div>
         <div class="rows">
             <div class="row">
-                {{ field('Cargador / Expedidor (Razón Social)', snapshot.cliente_nombre if snapshot else none, 'half') }}
+                {{ field('Cargador / Expedidor', snapshot.cliente_nombre if snapshot else none, 'half') }}
                 {{ field('NIF / CIF Cargador', snapshot.cliente_nif if snapshot else none, 'half', 'mono') }}
             </div>
             <div class="row">
                 {{ field('Dirección Origen (Lugar de carga)', snapshot.cliente_direccion if snapshot else none, 'full') }}
             </div>
             <div class="row">
-                {{ field('Destinatario (Razón Social)', carga.destino, 'half') }}
+                {{ field('Destinatario', carga.destino, 'half') }}
                 {{ field('NIF / CIF Destinatario', none, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Destino (Lugar de entrega)', carga.destino, 'full') }}
+                {{ field('Dirección Destino', carga.destino, 'full') }}
             </div>
         </div>
     </div>

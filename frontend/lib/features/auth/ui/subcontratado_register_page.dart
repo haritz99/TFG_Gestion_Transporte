@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/auth/ui/company_register_page.dart';
 import 'package:gestion_transporte/features/auth/ui/shared_register.dart';
 import 'package:provider/provider.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
@@ -69,22 +70,8 @@ class _SubcontratadoRegisterPageState extends State<SubcontratadoRegisterPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  RegisterInputField(label: 'Nombre Comercial', hint: 'Nombre Comercial', icon: Icons.local_shipping_outlined, controller: _shared.nombreComercial),                  const SizedBox(height: 16),
+                  CompanyRegisterPage(shared: _shared, razonSocialCtr: _razonSocialCtr, numAutorizacionCtr: _numAutorizacionCtr),
 
-                  RegisterInputField(label: 'Razón Social', hint: 'Ej. Trans S.L. (si aplica)', icon: Icons.business, controller: _razonSocialCtr, isRequired: false),                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(child: RegisterInputField(label: 'NIF', hint: '12345678Z', icon: Icons.badge_outlined, controller: _shared.nif)),
-                      const SizedBox(width: 16),
-                      Expanded(child: RegisterInputField(label: 'Teléfono', hint: '+34 600...', icon: Icons.phone_outlined, controller: _shared.telefono)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  RegisterInputField(label: 'Nº Autorización (LOTT)', hint: 'Obligatorio', icon: Icons.verified_user_outlined, controller: _numAutorizacionCtr),                  const SizedBox(height: 32),
-
-                  DireccionFormSection(shared: _shared),
                   const SizedBox(height: 48),
 
                   SizedBox(
