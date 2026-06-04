@@ -38,6 +38,13 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
             initiallyExpanded: true,
             children: List.generate(seleccion.cantidad, (unidadIdx) {
               final asig = seleccion.asignaciones[unidadIdx];
+
+              final conductorValido = transportistaProvider.transportistasDisponibles
+                  .contains(asig.conductor) ? asig.conductor : null;
+
+              final vehiculoValido = vehiculoProvider.vehiculosDisponibles
+                  .contains(asig.vehiculo) ? asig.vehiculo : null;
+
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Container(
@@ -57,7 +64,7 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                           Expanded(
                             child: DropdownButtonFormField<UserModel?>(
                               isExpanded: true,
-                              initialValue: asig.conductor,
+                              initialValue: conductorValido,
                               decoration: _inputDecoration().copyWith(labelText: 'Conductor'),
                               items: [
                                 const DropdownMenuItem(value: null, child: Text('Sin asignar')),
@@ -74,7 +81,7 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                           Expanded(
                             child: DropdownButtonFormField<VehiculoModel?>(
                               isExpanded: true,
-                              initialValue: asig.vehiculo,
+                              initialValue: vehiculoValido,
                               decoration: _inputDecoration().copyWith(labelText: 'Vehículo'),
                               items: [
                                 const DropdownMenuItem(value: null, child: Text('Sin asignar')),

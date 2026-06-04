@@ -31,6 +31,12 @@ class UserModel {
     this.updatedAt,
   });
 
+  @override
+  bool operator ==(Object other) => other is UserModel && other.uid == uid;
+
+  @override
+  int get hashCode => uid.hashCode;
+
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
     final rawRol = map['rol'];
     final normalizedRol = rawRol is List

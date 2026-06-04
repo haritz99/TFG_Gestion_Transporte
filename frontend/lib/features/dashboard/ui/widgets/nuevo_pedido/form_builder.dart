@@ -216,7 +216,7 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
 
   Widget _buildActions(BuildContext context) {
     final pedidoProvider = context.watch<PedidoProvider>();
-    final canNext = pedidoProvider.cargasDelPedido != null;
+    final canNext = pedidoProvider.cargasDelPedido != null || _currentPage == 0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -243,7 +243,7 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
             elevation: 0,
           ),
           onPressed: canNext ? _onSiguiente : null,
-          child: Text(_currentPage == 0 ? 'Siguiente' : 'Finalizar',
+          child: Text(_currentPage != 2 ? 'Siguiente' : 'Finalizar',
               style: AppTextStyles.buttonSmall),
         ),
       ],

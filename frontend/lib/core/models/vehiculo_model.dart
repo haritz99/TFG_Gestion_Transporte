@@ -31,6 +31,12 @@ class VehiculoModel {
     this.cargaId,
   });
 
+  @override
+  bool operator ==(Object other) => other is VehiculoModel && other.matricula == matricula;
+
+  @override
+  int get hashCode => matricula.hashCode;
+
   factory VehiculoModel.fromMap(Map<String, dynamic> map, String id) {
     return VehiculoModel(
       matricula: map['matricula'] ?? '',
