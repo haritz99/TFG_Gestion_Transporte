@@ -45,6 +45,11 @@ class CartaDePorteSnapshotSchema(BaseModel):
     clienteDireccion: str
     clienteTelefono: Optional[str] = None
 
+    # Datos del cliente (como llamo cliente al cargador, este se llama destinatario)
+    destinatarioNombre: Optional[str] = None
+    destinatarioNif: Optional[str] = None
+    destinatarioDireccion: Optional[str] = None
+
     # Datos del Subcontratado (no siempre aplica)
     subcontratadoNombre: Optional[str] = None
     subcontratadoNif: Optional[str] = None

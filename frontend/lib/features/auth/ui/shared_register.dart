@@ -38,7 +38,6 @@ class SharedRegisterControllers {
 class RegisterInputField extends StatelessWidget {
   final String label;
   final String hint;
-  final IconData icon;
   final TextEditingController controller;
   final bool isRequired;
 
@@ -46,7 +45,6 @@ class RegisterInputField extends StatelessWidget {
     super.key,
     required this.label,
     required this.hint,
-    required this.icon,
     required this.controller,
     this.isRequired = true,
   });
@@ -67,7 +65,7 @@ class RegisterInputField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400),
-            prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
+            //prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -102,21 +100,21 @@ class DireccionFormSection extends StatelessWidget {
       children: [
         const Text('Dirección', style: AppTextStyles.headingMd),
         const SizedBox(height: 16),
-        RegisterInputField(label: 'Calle y número', hint: 'Dirección completa', icon: Icons.location_on_outlined, controller: shared.calle),
+        RegisterInputField(label: 'Calle y número', hint: 'Dirección completa', controller: shared.calle),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: RegisterInputField(label: 'Ciudad', hint: 'Ciudad', icon: Icons.location_city_outlined, controller: shared.ciudad)),
+            Expanded(child: RegisterInputField(label: 'Ciudad', hint: 'Ciudad', controller: shared.ciudad)),
             const SizedBox(width: 16),
-            Expanded(child: RegisterInputField(label: 'Código Postal', hint: '00000', icon: Icons.markunread_mailbox_outlined, controller: shared.codigoPostal)),
+            Expanded(child: RegisterInputField(label: 'Código Postal', hint: '00000', controller: shared.codigoPostal)),
           ],
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: RegisterInputField(label: 'Provincia', hint: 'Provincia', icon: Icons.map_outlined, controller: shared.provincia)),
+            Expanded(child: RegisterInputField(label: 'Provincia', hint: 'Provincia', controller: shared.provincia)),
             const SizedBox(width: 16),
-            Expanded(child: RegisterInputField(label: 'País', hint: 'España', icon: Icons.public, controller: shared.pais)),
+            Expanded(child: RegisterInputField(label: 'País', hint: 'España', controller: shared.pais)),
           ],
         ),
       ],

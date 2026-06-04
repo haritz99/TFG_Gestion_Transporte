@@ -12,6 +12,9 @@ class PedidoService {
   PedidoService(this.tokenProvider);
 
   Future<void> crearPedido({
+    required String destinatarioNombre,
+    required String destinatarioNif,
+    required String destinatarioDireccion,
     required String descripcion,
     required String clienteId,
     required DateTime fechaCarga,
@@ -22,6 +25,9 @@ class PedidoService {
     final uri = Uri.parse(_baseUrl);
 
     final body = {
+      'destinatarioNombre': destinatarioNombre,
+      'destinatarioNif': destinatarioNif,
+      'destinatarioDireccion': destinatarioDireccion,
       'descripcion': descripcion,
       'clienteId': clienteId,
       'fechaCarga': fechaCarga.toIso8601String(),

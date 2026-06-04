@@ -57,6 +57,9 @@ class AsignacionCargaSchema(FirestoreSchema):
 
 class CreatePedidoSchema(BaseModel):
     id: Optional[str] = None
+    destinatarioNombre: str = None
+    destinatarioNif: str = None
+    destinatarioDireccion: str = None
     descripcion: Optional[str] = None
     clienteId: str = Field(..., min_length=1)
     fechaCarga: datetime.datetime = Field(...)

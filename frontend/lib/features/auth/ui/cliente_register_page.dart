@@ -68,19 +68,19 @@ class _ClienteRegisterPageState extends State<ClienteRegisterPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  RegisterInputField(label: 'Nombre Comercial', hint: 'Nombre comercial', icon: Icons.business, controller: _shared.nombreComercial),
+                  RegisterInputField(label: 'Nombre Comercial', hint: 'Nombre comercial', controller: _shared.nombreComercial),
                   const SizedBox(height: 16),
 
                   Row(
                     children: [
-                      Expanded(child: RegisterInputField(label: 'NIF / CIF', hint: 'B12345678', icon: Icons.badge_outlined, controller: _shared.nif)),
+                      Expanded(child: RegisterInputField(label: 'NIF / CIF', hint: 'B12345678', controller: _shared.nif)),
                       const SizedBox(width: 16),
-                      Expanded(child: RegisterInputField(label: 'Teléfono', hint: '+34 600...', icon: Icons.phone_outlined, controller: _shared.telefono)),
+                      Expanded(child: RegisterInputField(label: 'Teléfono', hint: '+34 600...', controller: _shared.telefono)),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  RegisterInputField(label: 'Persona de Contacto', hint: 'Ej. Carlos Ruiz', icon: Icons.person_outline, controller: _personaContactoCtr),
+                  RegisterInputField(label: 'Persona de Contacto', hint: 'Ej. Carlos Ruiz', controller: _personaContactoCtr),
                   const SizedBox(height: 32),
 
                   const Text('Dirección Fiscal', style: AppTextStyles.headingMd),
