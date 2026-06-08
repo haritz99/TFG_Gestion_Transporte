@@ -131,14 +131,10 @@ class PedidoProvider extends ChangeNotifier {
     if (_cargasDelPedido == null) return false;
 
     final descripcion = _datosTemporalPedido['descripcion'] as String?;
-    final cliente = _datosTemporalPedido['cliente'] as ExternalUserModel?;
-    final fechaCarga = _datosTemporalPedido['fechaCarga'] as DateTime?;
-    final fechaDescarga = _datosTemporalPedido['fechaDescarga'] as DateTime?;
+    final cliente = _datosTemporalPedido['cliente'] as ExternalUserModel;
+    final fechaCarga = _datosTemporalPedido['fechaCarga'] as DateTime? ?? DateTime.now();
+    final fechaDescarga = _datosTemporalPedido['fechaDescarga'] as DateTime? ?? DateTime.now().add(const Duration(days: 7));
 
-    if (descripcion == null || cliente == null || fechaCarga == null || fechaDescarga == null) {
-      _errorMessage = 'Faltan datos obligatorios del pedido';
-      return false;
-    }
 
     _isLoading = true;
     _errorMessage = null;

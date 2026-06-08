@@ -15,7 +15,7 @@ class PedidoService {
     required String destinatarioNombre,
     required String destinatarioNif,
     required String destinatarioDireccion,
-    required String descripcion,
+    String? descripcion,
     required String clienteId,
     required DateTime fechaCarga,
     required DateTime fechaDescarga,

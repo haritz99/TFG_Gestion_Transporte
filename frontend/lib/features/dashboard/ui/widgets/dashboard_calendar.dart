@@ -15,7 +15,7 @@ class DashboardCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 700,
+      height: 800,
       child: CoreCalendar(
         cargas: cargas,
         onDateSelected: onDateSelected,

@@ -61,7 +61,7 @@ class _CargadorListaPedidosState extends State<CargadorListaPedidos> {
   List<CoreTableColumn<PedidoModel>> _buildColumns(BuildContext context) {
     return [
       CoreTableColumn(label: 'ID / Ref', cellBuilder: (p) => Text(p.id ?? '-', style: AppTextStyles.bodyMd)),
-      CoreTableColumn(label: 'Descripción', cellBuilder: (p) => Text(p.descripcion, style: AppTextStyles.bodyMd)),
+      CoreTableColumn(label: 'Descripción', cellBuilder: (p) => Text(p.descripcion ?? '', style: AppTextStyles.bodyMd)),
       CoreTableColumn(label: 'Fecha de carga', cellBuilder: (p) => Text(DateFormat('dd/MM/yyyy HH:mm').format(p.fechaCarga), style: AppTextStyles.bodyMd)),
       CoreTableColumn(label: 'Fecha límite', cellBuilder: (p) => Text(DateFormat('dd/MM/yyyy HH:mm').format(p.fechaDescarga), style: AppTextStyles.bodyMd)),
       CoreTableColumn(label: 'Estado', cellBuilder: (p) => Text(p.estado.name.toUpperCase(), style: AppTextStyles.bodyMd)),
@@ -72,7 +72,7 @@ class _CargadorListaPedidosState extends State<CargadorListaPedidos> {
   Widget _buildMobileCard(BuildContext context, PedidoModel pedido) {
     return ListTile(
       title: Text('Ref: ${pedido.id ?? "-"}'),
-      subtitle: Text(pedido.descripcion),
+      subtitle: Text(pedido.descripcion ?? ''),
       trailing: IconButton(
         icon: const Icon(Icons.edit, color: Colors.blue),
         onPressed: () => _showEditDialog(context, pedido),

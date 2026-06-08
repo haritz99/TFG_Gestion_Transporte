@@ -1,6 +1,6 @@
 class PedidoModel {
   final String? id;
-  final String descripcion;
+  final String? descripcion;
   final DateTime fechaCarga;
   final DateTime fechaDescarga;
   final List<String> origenes;
@@ -12,7 +12,7 @@ class PedidoModel {
 
   const PedidoModel({
     this.id,
-    required this.descripcion,
+    this.descripcion,
     required this.fechaCarga,
     required this.fechaDescarga,
     required this.origenes,
@@ -26,7 +26,7 @@ class PedidoModel {
   factory PedidoModel.fromMap(Map<String, dynamic> map, String id) {
     return PedidoModel(
       id: id,
-      descripcion: map['descripcion'] as String,
+      descripcion: map['descripcion'] as String?,
       fechaCarga: DateTime.parse(map['fechaCarga'] as String),
       fechaDescarga: DateTime.parse(map['fechaDescarga'] as String),
       origenes: List<String>.from(map['origenes'] as List),
