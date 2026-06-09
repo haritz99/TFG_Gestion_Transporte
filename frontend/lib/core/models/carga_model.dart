@@ -26,6 +26,7 @@ abstract class CargaBaseModel {
 
 enum EstadoCarga {
   pendiente('pendiente'),
+  planificado('planificado'),
   asignado('asignado'),
   enTransito('en_transito'),
   entregado('entregado'),
@@ -90,6 +91,7 @@ class CargaModel extends CargaBaseModel {
   final String? id;
   final EstadoCarga estado;
   final DateTime fechaCarga;
+  final int? bufferHours;
   final DateTime fechaDescarga;
   final String? transportistaId;
   final String? transportistaNombre;
@@ -107,6 +109,7 @@ class CargaModel extends CargaBaseModel {
     required this.estado,
     required this.fechaCarga,
     required this.fechaDescarga,
+    this.bufferHours,
     this.transportistaId,
     this.transportistaNombre,
     this.pedidoId,
@@ -134,6 +137,7 @@ class CargaModel extends CargaBaseModel {
         required DateTime fechaDescarga,
         required String clienteId,
         required String companyId,
+        int? bufferHours,
         String? transportistaId,
         String? vehiculoId,
         double? comisionCesion,
@@ -151,6 +155,7 @@ class CargaModel extends CargaBaseModel {
       alto: tipo.alto,
       fechaCarga: fechaCarga,
       fechaDescarga: fechaDescarga,
+      bufferHours: bufferHours,
       clienteId: clienteId,
       companyId: companyId,
       transportistaId: transportistaId,
@@ -178,6 +183,7 @@ class CargaModel extends CargaBaseModel {
       estado: EstadoCarga.fromString(map['estado'] as String),
       fechaCarga: DateTime.parse(map['fechaCarga'] as String),
       fechaDescarga: DateTime.parse(map['fechaDescarga'] as String),
+      bufferHours: map['bufferHours'] as int?,
       transportistaId: map['transportistaId'] as String?,
       pedidoId: map['pedidoId'] as String?,
       vehiculoId: map['vehiculoId'] as String?,
@@ -209,6 +215,7 @@ class CargaModel extends CargaBaseModel {
       'estado': estado.value,
       'fechaCarga': fechaCarga.toIso8601String(),
       'fechaDescarga': fechaDescarga.toIso8601String(),
+      if (bufferHours != null) 'bufferHours': bufferHours,
       'transportistaId': transportistaId,
       'conductorNombre': transportistaNombre,
       if (pedidoId != null) 'pedidoId': pedidoId,
@@ -228,6 +235,8 @@ class CargaModel extends CargaBaseModel {
     EstadoCarga? estado,
     DateTime? fechaCarga,
     DateTime? fechaDescarga,
+    int? bufferHours,
+    bool clearBufferHours = false,
     String? transportistaId,
     bool clearTransportistaId = false,
     String? transportistaNombre,
@@ -256,6 +265,7 @@ class CargaModel extends CargaBaseModel {
       estado: estado ?? this.estado,
       fechaCarga: fechaCarga ?? this.fechaCarga,
       fechaDescarga: fechaDescarga ?? this.fechaDescarga,
+      bufferHours: clearBufferHours ? null : (bufferHours ?? this.bufferHours),
       transportistaId: clearTransportistaId ? null : (transportistaId ?? this.transportistaId),
       transportistaNombre: clearTransportistaNombre ? null : (transportistaNombre ?? this.transportistaNombre),
       pedidoId: pedidoId ?? this.pedidoId,

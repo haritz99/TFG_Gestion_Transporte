@@ -280,6 +280,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
         runSpacing: 8,
         children: [
           buildLegendItem('Pendiente', AppColors.calendarPendiente),
+          buildLegendItem('Planificado', AppColors.calendarPlanificado),
           buildLegendItem('Asignado', AppColors.calendarAsignado),
           buildLegendItem('En Tránsito', AppColors.calendarEnRuta),
           buildLegendItem('Entregado', AppColors.calendarEntregado),

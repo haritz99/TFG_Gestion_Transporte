@@ -11,7 +11,7 @@ from starlette.responses import JSONResponse, Response
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, limit: int = 10, window_seconds: int = 60, path_prefixes: Iterable[str] | None = None):
+    def __init__(self, app, limit: int = 60, window_seconds: int = 60, path_prefixes: Iterable[str] | None = None):
         super().__init__(app)
         self.limit = limit
         self.window_seconds = window_seconds

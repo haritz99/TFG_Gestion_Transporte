@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../transportistas/providers/transportista_provider.dart';
+import '../../cargas/providers/carga_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'gestion_flota_page.dart';
 import 'models/fleet_table_row_model.dart';
@@ -35,17 +35,16 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   bool _firstLoad = true;
   String _selectedStatus = 'Todos';
 
-  List<VehiculoModel> _filterVehiculos(List<VehiculoModel> source) {
-    switch (_selectedStatus) {
-      case 'Asignado':
-        return source.where((v) => v.estado == 'asignado').toList();
-      case 'Disponible':
-        return source.where((v) => v.estado == 'disponible').toList();
-      case 'Mantenimiento':
-        return source.where((v) => v.estado == 'mantenimiento').toList();
-      default:
-        return source;
-    }
+  List<VehiculoModel> _filterVehiculos(List<VehiculoModel> source, CargaProvider cargaProvider) {
+    if (_selectedStatus == 'Todos') return source;
+    return source.where((v) {
+      final estado = cargaProvider.estadoVehiculo(v.matricula);
+      switch (_selectedStatus) {
+        case 'Asignado':      return estado == 'asignado';
+        case 'Disponible':    return estado == 'disponible';
+        default: return true;
+      }
+    }).toList();
   }
 
   @override
@@ -71,9 +70,7 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
   }
 
   void _promptDeleteVehiculo(String matricula) {
-    final provider = context.read<VehiculoProvider>();
-    final vehiculo = provider.vehiculos.firstWhere((v) => v.matricula == matricula);
-    final conductor = vehiculo.transportistaNombre ?? '';
+    final conductor = context.read<CargaProvider>().conductorDeVehiculo(matricula) ?? 'Sin asignar';
 
     showCupertinoDialog(
       context: context,
@@ -90,13 +87,9 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
 
   Future<void> _promptVehiculoForm(String? matricula) async {
     final vehiculoProvider = context.read<VehiculoProvider>();
-    final transportistaProvider = context.read<TransportistaProvider>();
     final isNew = matricula == null;
 
     final vehiculoActual = isNew ? null : vehiculoProvider.vehiculos.firstWhere((v) => v.matricula == matricula);
-
-    await transportistaProvider.fetchTransportistasDisponibles();
-    final conductores = transportistaProvider.getConductoresDropdown();
 
     if (!mounted) return;
 
@@ -110,7 +103,6 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
             child: SingleChildScrollView(
               child: VehiculoForm(
                 vehiculo: vehiculoActual,
-                conductores: conductores,
                 onSave: (vehiculo) async {
                   final saved = await vehiculoProvider.saveVehiculo(vehiculo, isNew: isNew);
                   if (!mounted || saved == null) return;
@@ -158,8 +150,9 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
     if (_firstLoad) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    final cargaProvider = context.watch<CargaProvider>();
+    final filtered = _filterVehiculos(provider.vehiculos, cargaProvider);
 
-    final filtered = _filterVehiculos(provider.vehiculos);
     final rows = filtered.map((v) {
       return FleetTableRowModel(
         matricula: v.matricula,
@@ -169,10 +162,9 @@ class _GestionFlotaScreenBodyState extends State<_GestionFlotaScreenBody> {
         largo: '${v.largo}m',
         ancho: '${v.ancho}m',
         alto: '${v.alto}m',
-        estado: _formatEstado(v.estado),
-        interno: v.interno ? 'Interno' : 'Subcontratado',
+        estado: _formatEstado(cargaProvider.estadoVehiculo(v.matricula)),
         matriculaRemolque: v.matriculaRemolque ?? '',
-        conductor: v.transportistaNombre ?? 'Sin asignar',
+        conductor: cargaProvider.conductorDeVehiculo(v.matricula) ?? 'Sin asignar',
       );
     }).toList();
 

@@ -11,3 +11,7 @@ class CompanyCRUD:
     def get_by_id(company_id: str):
         return db.collection("empresas").document(company_id).get()
 
+    def update(self, company_id, param):
+        doc_ref = db.collection("empresas").document(company_id)
+        doc_ref.update(param)
+

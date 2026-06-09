@@ -99,6 +99,7 @@ class InviteProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
+      if (_guests.isNotEmpty) return;
       _guests = await _service.fetchGuests();
     } catch (e) {
       rethrow;

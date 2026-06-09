@@ -53,7 +53,6 @@ class TeamTable extends StatelessWidget{
         details: [
           MapEntry('Email', transportista.email),
           MapEntry('Telefono', transportista.telefono),
-          MapEntry('Rol', transportista.rol.join(', ')),
           MapEntry('Licencias', transportista.licencias.join(', ')),
           MapEntry('Estado', transportista.estado),
           MapEntry('Vehículo asignado', transportista.vehiculoAsignado),

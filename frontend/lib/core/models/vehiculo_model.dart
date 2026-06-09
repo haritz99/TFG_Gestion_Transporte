@@ -6,13 +6,8 @@ class VehiculoModel {
   final double largo;
   final double ancho;
   final double alto;
-  final String estado;
-  final bool interno;
   final String? matriculaRemolque;
   final String? companyId;
-  final String? transportistaId;
-  final String? transportistaNombre;
-  final String? cargaId;
 
   VehiculoModel({
     required this.matricula,
@@ -22,13 +17,8 @@ class VehiculoModel {
     required this.largo,
     required this.ancho,
     required this.alto,
-    required this.estado,
-    required this.interno,
     this.matriculaRemolque,
     this.companyId,
-    this.transportistaId,
-    this.transportistaNombre,
-    this.cargaId,
   });
 
   @override
@@ -46,13 +36,8 @@ class VehiculoModel {
       largo: (map['largo'] ?? 0).toDouble(),
       ancho: (map['ancho'] ?? 0).toDouble(),
       alto: (map['alto'] ?? 0).toDouble(),
-      estado: map['estado'] ?? '',
-      interno: map['interno'] ?? false,
       matriculaRemolque: map['matriculaRemolque'],
       companyId: map['companyId'],
-      transportistaId: map['transportistaId'],
-      transportistaNombre: map['transportistaNombre'],
-      cargaId: map['cargaId'],
     );
   }
 
@@ -65,13 +50,6 @@ class VehiculoModel {
       'largo': largo,
       'ancho': ancho,
       'alto': alto,
-      'estado': estado,
-      'interno': interno,
-      'matriculaRemolque': matriculaRemolque?.isEmpty == true ? null : matriculaRemolque,
-      'companyId': companyId?.isEmpty == true ? null : companyId,
-      'transportistaId': transportistaId?.isEmpty == true ? null : transportistaId,
-      'transportistaNombre': transportistaNombre?.isEmpty == true ? null : transportistaNombre,
-      'cargaId': cargaId?.isEmpty == true ? null : cargaId,
     };
   }
 }

@@ -92,8 +92,9 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
           final vehiculoProvider = context.read<VehiculoProvider>();
           await Future.wait([
             cargaProvider.fetchTiposCarga(cliente.uid),
-            transportistaProvider.fetchTransportistasDisponibles(),
+            transportistaProvider.loadInitialEquipo(limit: 1000),
             vehiculoProvider.loadInitialVehiculos(),
+            //cargaProvider.loadCargas()
           ]);
         }
         if (!mounted) return;
@@ -108,8 +109,11 @@ class _FormBuilderPedidoState extends State<FormBuilderPedido> {
 
       final ok = await pedidoProvider.crearPedido();
       if (!mounted) return;
-      if (ok) {
-        context.read<DashboardProvider>().refresh();
+        if (ok) {
+        Future.wait([
+        context.read<DashboardProvider>().refresh(),
+        context.read<CargaProvider>().fetchCargasIniciales(forceRefresh: true),
+        ]);
         Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -18,9 +18,6 @@ class UserSchema(FirestoreSchema):
     rol: list[Literal["encargado", "transportista"]] = Field(..., min_length=1)
     permisosCond: Optional[list[str]] = None
     companyId: str = None
-    vehiculoId: Optional[str] = None        # matricula del vehiculo
-    cargaId: Optional[str] = None
-    estado: Literal['sin_asignar', 'asignacion_parcial', 'asignado', 'en_ruta', 'inactivo'] = 'sin_asignar'
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
 
@@ -61,13 +58,6 @@ class UserPaginatedSchema(FirestoreSchema):
     items: list[UserSchema]
     last_doc_id: Optional[str] = None
     has_more: bool
-
-class UserCountSchema(FirestoreSchema):
-    total_trans: int
-    sin_asignar: int
-    asignacion_parcial: int
-    en_ruta: int
-    inactivos: int
 
 T = TypeVar("T", bound=FirestoreSchema)
 class UserCreateResponseSchema(BaseModel, Generic[T]):

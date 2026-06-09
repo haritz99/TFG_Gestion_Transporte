@@ -3,7 +3,6 @@ import '../../../core/widgets/core_table/core_table_column.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/management_page_layout.dart';
 import 'models/fleet_table_row_model.dart';
-import 'widgets/fleet_kpi_grid.dart';
 import 'widgets/fleet_table.dart';
 import 'widgets/gestion_flota_header.dart';
 
@@ -30,7 +29,6 @@ class GestionFlotaPage extends StatefulWidget {
       CoreTableColumn<FleetTableRowModel>(label: 'ANCHO', flex: 8, cellBuilder: _buildAnchoCell),
       CoreTableColumn<FleetTableRowModel>(label: 'ALTO', flex: 8, cellBuilder: _buildAltoCell),
       CoreTableColumn<FleetTableRowModel>(label: 'ESTADO', flex: 12, cellBuilder: _buildEstadoCell),
-      CoreTableColumn<FleetTableRowModel>(label: 'INTERNO', flex: 13, cellBuilder: _buildInternoCell),
       CoreTableColumn<FleetTableRowModel>(label: 'MATRÍCULA REMOLQUE', flex: 17, cellBuilder: _buildRemolqueCell),
       CoreTableColumn<FleetTableRowModel>(label: 'CONDUCTOR', flex: 17, cellBuilder: _buildConductorCell),
     ],
@@ -103,13 +101,6 @@ class _GestionFlotaPageState extends State<GestionFlotaPage> {
         onAddVehiculo: widget.onAddVehiculo,
         isMobile: isMobile,
       ),
-      kpiGrid: FleetKpiGrid(
-        totalVehiculos: widget.totalVehiculos,
-        asignados: widget.asignados,
-        enMantenimiento: widget.enMantenimiento,
-        disponibles: widget.disponibles,
-        isMobile: isMobile,
-      ),
       table: FleetTable(
         rows: widget.rows,
         columns: tableColumns,
@@ -139,6 +130,5 @@ Widget _buildLargoCell(FleetTableRowModel item) => Text(item.largo, style: AppTe
 Widget _buildAnchoCell(FleetTableRowModel item) => Text(item.ancho, style: AppTextStyles.tableValue);
 Widget _buildAltoCell(FleetTableRowModel item) => Text(item.alto, style: AppTextStyles.tableValue);
 Widget _buildEstadoCell(FleetTableRowModel item) => Text(item.estado, style: AppTextStyles.tableValue);
-Widget _buildInternoCell(FleetTableRowModel item) => Text(item.interno, style: AppTextStyles.tableValue);
 Widget _buildRemolqueCell(FleetTableRowModel item) => Text(item.matriculaRemolque, style: AppTextStyles.tableValue);
 Widget _buildConductorCell(FleetTableRowModel item) => Text(item.conductor, style: AppTextStyles.tableValue);

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../cargas/providers/carga_provider.dart';
+import 'buffer_selector.dart';
 
 class PlanHeader extends StatelessWidget {
   const PlanHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final globalBuffer = context.watch<AuthProvider>().company?.companyBuffer ?? 0;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: const BoxDecoration(
@@ -25,6 +28,14 @@ class PlanHeader extends StatelessWidget {
               color: AppColors.bodyText,
             ),
           ),
+          BufferSelector(
+            title: 'Margen global por defecto',
+            value: globalBuffer,
+            onChanged: (nuevoValor) {
+              context.read<AuthProvider>().cambiarBufferGlobal(nuevoValor);
+            },
+          ),
+          const SizedBox(width: 12),
           Consumer<CargaProvider>(
             builder: (context, provider, child) {
               return OutlinedButton.icon(

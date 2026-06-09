@@ -16,7 +16,13 @@ class CargasSeleccionadas {
   CargasSeleccionadas({
     required this.tipo,
     required this.cantidad,
-  }) : asignaciones = List.generate(cantidad, (_) => AsignacionCarga());
+    DateTime? fechaCarga,
+    DateTime? fechaDescarga,
+  }) : asignaciones = List.generate(cantidad, (_) =>
+      AsignacionCarga(
+        fechaCarga: fechaCarga ?? DateTime.now(),
+        fechaLimite: fechaDescarga ?? DateTime.now(),
+      ));
 
   double get subtotal => tipo.precio * cantidad;
 }
@@ -81,8 +87,8 @@ class PedidoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void anadirCarga(TipoCargaModel tipo, int cantidad) {
-    _cargasDelPedido = CargasSeleccionadas(tipo: tipo, cantidad: cantidad);
+  void anadirCarga(TipoCargaModel tipo, int cantidad, DateTime? fechaCarga, DateTime? fechaDescarga) {
+    _cargasDelPedido = CargasSeleccionadas(tipo: tipo, cantidad: cantidad, fechaCarga: fechaCarga, fechaDescarga: fechaDescarga);
     notifyListeners();
   }
 

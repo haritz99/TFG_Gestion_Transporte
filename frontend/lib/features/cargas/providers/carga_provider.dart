@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 import '../../../../core/models/carga_model.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/models/vehiculo_model.dart';
 import '../../../core/pdf/pdf_handler.dart';
 import '../../auth/providers/token_provider.dart';
 import '../data/carga_service.dart';
@@ -36,6 +39,158 @@ class CargaProvider extends ChangeNotifier {
   List<CargaModel> _cargasCedidas = [];
   List<CargaModel> get cargasCedidas => _cargasCedidas;
 
+  String estadoConductor(String conductorId) {
+    final cargasDelConductor = _cargas.where((c) =>
+    c.transportistaId == conductorId &&
+        c.estado != EstadoCarga.cedido &&
+        c.estado != EstadoCarga.entregado
+    ).toList();
+
+    if (cargasDelConductor.isEmpty) return 'sin_asignar';
+
+    if (cargasDelConductor.any((c) => c.estado == EstadoCarga.enTransito)) {
+      return 'en_ruta';
+    }
+    if (cargasDelConductor.any((c) => c.estado == EstadoCarga.asignado)) {
+      return 'asignado';
+    }
+    if (cargasDelConductor.any((c) => c.estado == EstadoCarga.planificado)) {
+      return 'asignacion_parcial';
+    }
+
+    return 'sin_asignar';
+  }
+
+  String estadoVehiculo(String matricula) {
+    final cargasDelVehiculo = _cargas.where((c) =>
+    c.vehiculoId == matricula &&
+        c.estado != EstadoCarga.cedido &&
+        c.estado != EstadoCarga.entregado
+    ).toList();
+
+    if (cargasDelVehiculo.isEmpty) return 'disponible';
+    if (cargasDelVehiculo.any((c) => c.estado == EstadoCarga.enTransito)) {
+      return 'asignado';
+    }
+    if (cargasDelVehiculo.any((c) => c.estado == EstadoCarga.asignado ||
+        c.estado == EstadoCarga.planificado)) {
+      return 'asignado';
+    }
+    return 'disponible';
+  }
+
+  String? conductorDeVehiculo(String matricula) {
+    final carga = _cargas.firstWhereOrNull((c) =>
+    c.vehiculoId == matricula &&
+        (c.estado == EstadoCarga.asignado ||
+            c.estado == EstadoCarga.enTransito ||
+            c.estado == EstadoCarga.planificado)
+    );
+    return carga?.transportistaNombre;
+  }
+
+  bool _hayColisionHoraria({
+    required DateTime inicioTarget,
+    required DateTime finTarget,
+    required Duration bufferTarget,
+    required DateTime inicioExistente,
+    required DateTime finExistente,
+    required Duration bufferExistente,
+  }) {
+    final finTargetAmpliado = finTarget.add(bufferTarget);
+    final finExistenteAmpliado = finExistente.add(bufferExistente);
+
+    return inicioTarget.isBefore(finExistenteAmpliado) && finTargetAmpliado.isAfter(inicioExistente);
+  }
+
+
+
+  List<UserModel> conductoresDisponibles({
+    required List<UserModel> todosLosConductores,
+    required DateTime fechaInicioTarget,
+    required DateTime fechaFinTarget,
+    required int companyDefaultBuffer,
+    int? targetBufferOverride,
+    String? idCargaActual,
+  }) {
+    final bufferTarget = Duration(hours: targetBufferOverride ?? companyDefaultBuffer);
+
+    final conductoresOcupados = _cargas.where((carga) {
+
+      if (idCargaActual != null && carga.id == idCargaActual) return false;
+
+      if (carga.transportistaId == null) return false;
+
+      final estadoOcupado = carga.estado == EstadoCarga.planificado || carga.estado == EstadoCarga.asignado || carga.estado == EstadoCarga.enTransito;
+
+      if (!estadoOcupado) return false;
+
+      final bufferExistente = Duration(hours: carga.bufferHours ?? companyDefaultBuffer);
+      return _hayColisionHoraria(
+        inicioTarget: fechaInicioTarget,
+        finTarget: fechaFinTarget,
+        bufferTarget: bufferTarget,
+        inicioExistente: carga.fechaCarga,
+        finExistente: carga.fechaDescarga,
+        bufferExistente: bufferExistente,
+      );
+    }).map((carga) => carga.transportistaId!).toSet();
+
+    return todosLosConductores
+        .where((conductor) => !conductoresOcupados.contains(conductor.uid))
+        .toList();
+  }
+
+  List<VehiculoModel> vehiculosDisponibles({
+    required List<VehiculoModel> todosLosVehiculos,
+    required DateTime fechaInicioTarget,
+    required DateTime fechaFinTarget,
+    required int companyDefaultBuffer,
+    int? targetBufferOverride,
+    String? idCargaActual,
+  }) {
+    final bufferTarget = Duration(hours: targetBufferOverride ?? companyDefaultBuffer);
+
+    final vehiculosOcupados = _cargas.where((carga) {
+      if (idCargaActual != null && carga.id == idCargaActual) return false;
+
+      if (carga.vehiculoId == null) return false;
+
+      final estadoOcupado = carga.estado == EstadoCarga.planificado ||
+          carga.estado == EstadoCarga.asignado ||
+          carga.estado == EstadoCarga.enTransito;
+
+      if (!estadoOcupado) return false;
+
+      final bufferExistente = Duration(hours: carga.bufferHours ?? companyDefaultBuffer);
+      return _hayColisionHoraria(
+        inicioTarget: fechaInicioTarget,
+        finTarget: fechaFinTarget,
+        bufferTarget: bufferTarget,
+        inicioExistente: carga.fechaCarga,
+        finExistente: carga.fechaDescarga,
+        bufferExistente: bufferExistente,
+      );
+    }).map((carga) => carga.vehiculoId!).toSet();
+
+    return todosLosVehiculos.where((vehiculo) => !vehiculosOcupados.contains(vehiculo.matricula)).toList();
+  }
+
+  Future<void> actualizarBufferHours(String cargaId, int nuevasHoras) async {
+    try {
+      await _service.updateBufferHours(cargaId, nuevasHoras);
+
+      final index = _cargas.indexWhere((c) => c.id == cargaId);
+      if (index != -1) {
+        _cargas[index] = _cargas[index].copyWith(bufferHours: nuevasHoras);
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = "No se pudo actualizar el margen de tiempo: $e";
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchCargasCedidas() async {
     _isLoading = true;
     notifyListeners();
@@ -52,11 +207,11 @@ class CargaProvider extends ChangeNotifier {
     CargaService? service,
   })  : _service = service ?? CargaService(tokenProvider);
 
-  Future<void> fetchCargasDelMes(DateTime start, DateTime end) async {
+  Future<void> fetchCargasDelMes(DateTime start, DateTime end, {bool forceRefresh = false}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-
+    if (!forceRefresh && _cargas.isNotEmpty) return;
     try {
       _cargas = await _service.getCargasDelMes(start, end);
       _cargasModificadas.clear();
@@ -110,12 +265,15 @@ class CargaProvider extends ChangeNotifier {
         .toList();
   }
 
-  Future<void> fetchCargasIniciales() async {
+  Future<void> fetchCargasIniciales({bool forceRefresh = false}) async {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, 1);
-    final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    final realStart = start.subtract(const Duration(days: 7));
 
-    await fetchCargasDelMes(start, end);
+    final endRaw = start.add(const Duration(days: 35));
+    final end = DateTime(endRaw.year, endRaw.month, endRaw.day, 23, 59, 59);
+
+    await fetchCargasDelMes(realStart, end, forceRefresh: forceRefresh);
   }
 
   Future<void> fetchTiposCarga(String cargadorId) async {
@@ -147,13 +305,26 @@ class CargaProvider extends ChangeNotifier {
     }
   }
 
+  void planificarCarga(String cargaId, DateTime start, DateTime end) {
+    final idx = _cargas.indexWhere((c) => c.id == cargaId);
+    if (idx != -1) {
+      _cargas[idx] = _cargas[idx].copyWith(
+        estado: EstadoCarga.planificado,
+        fechaCarga: start,
+        fechaDescarga: end,
+      );
+      _cargasModificadas.add(cargaId);
+      notifyListeners();
+    }
+  }
+
   void asignarVehiculo(String cargaId, String? matricula) {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {
       final old = _cargas[idx];
       final newEstado = (matricula != null && old.transportistaId != null)
           ? EstadoCarga.asignado
-          : EstadoCarga.pendiente;
+          : EstadoCarga.planificado;
 
       _cargas[idx] = old.copyWith(
         estado: newEstado,
@@ -171,7 +342,7 @@ class CargaProvider extends ChangeNotifier {
       final old = _cargas[idx];
       final newEstado = (conductorId != null && old.vehiculoId != null)
           ? EstadoCarga.asignado
-          : EstadoCarga.pendiente;
+          : EstadoCarga.planificado;
 
       _cargas[idx] = old.copyWith(
         estado: newEstado,
@@ -198,6 +369,7 @@ class CargaProvider extends ChangeNotifier {
         _cargas[idx] = carga.copyWith(
           fechaCarga: nuevaFechaCarga,
           fechaDescarga: nuevaFechaDescarga,
+          estado: EstadoCarga.planificado,
         );
         _cargasModificadas.add(carga.id!);
       }
@@ -217,7 +389,7 @@ class CargaProvider extends ChangeNotifier {
       await _service.updateCargas(cargasAGuardar);
       _cargasModificadas.clear();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = "Ha ocurrido un error al guardar los cambios: ${e.toString()}";
     } finally {
       _isLoading = false;
       notifyListeners();

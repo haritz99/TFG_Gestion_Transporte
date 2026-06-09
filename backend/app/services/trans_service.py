@@ -2,7 +2,7 @@ from typing import Any, Dict
 from fastapi import HTTPException, Depends
 from datetime import datetime, timezone
 from firebase_admin import auth as firebase_auth
-from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema
+from ..schemas.users import UserSchema, UserPaginatedSchema
 from ..crud.trans_crud import TransCRUD
 from ..crud.user_crud import UserCRUD
 
@@ -36,11 +36,11 @@ class TransService:
         doc = self._user_crud.get_by_id(uid)
 
         if not doc.exists:
-            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         user_data = doc.to_dict() or {}
         if user_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         rol = user_data.get("rol", [])
         if isinstance(rol, str):
@@ -51,54 +51,21 @@ class TransService:
         user_data["uid"] = doc.id
         return user_data
 
-    def get_count_trans(self, company_id: str) -> UserCountSchema:
-        try:
-            total_res = self._crud.get_count(company_id)
-            # En algunas versiones de Firestore se devuelve una lista dentro de otra lista, esto acepta ambos casos
-            total = total_res[0][0].value if isinstance(total_res[0], list) else total_res[0].value
-
-            asignados_res = self._crud.get_count_by_estado(company_id, "asignado")
-            asignados = asignados_res[0][0].value if isinstance(asignados_res[0], list) else asignados_res[0].value
-
-            sin_asignar_res = self._crud.get_count_by_estado(company_id, "sin_asignar")
-            sin_asignar = sin_asignar_res[0][0].value if isinstance(sin_asignar_res[0], list) else sin_asignar_res[0].value
-
-            parcial_res = self._crud.get_count_by_estado(company_id, "asignacion_parcial")
-            parcial = parcial_res[0][0].value if isinstance(parcial_res[0], list) else parcial_res[0].value
-
-            en_ruta_res = self._crud.get_count_by_estado(company_id, "en_ruta")
-            en_ruta = en_ruta_res[0][0].value if isinstance(en_ruta_res[0], list) else en_ruta_res[0].value
-
-            inactivos_res = self._crud.get_count_by_estado(company_id, "inactivo")
-            inactivos = inactivos_res[0][0].value if isinstance(inactivos_res[0], list) else inactivos_res[0].value
-
-            return UserCountSchema(
-                total_trans=total,
-                sin_asignar=sin_asignar,
-                asignacion_parcial=parcial,
-                en_ruta=en_ruta,
-                inactivos=inactivos
-            )
-
-        except Exception as e:
-            print(f"Error en get_count: {e}")
-            raise HTTPException(status_code=500, detail=f"Error al contar los transportistas: {str(e)}")
-
     def update_trans(self, uid: str, user_data: UserSchema, company_id: str) -> UserSchema:
         doc = self._user_crud.get_by_id(uid)
 
         if not doc.exists:
-            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         doc_data = doc.to_dict() or {}
         if doc_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Transportista no encontrado")
+            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         rol = doc_data.get("rol", [])
         if isinstance(rol, str):
             rol = [rol]
         if "transportista" not in rol:
-            raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
+            raise HTTPException(status_code=400, detail="El usuario indicado no es conductor")
 
         update_data = user_data.model_dump(exclude_unset=True)
         update_data.pop("companyId", None)
@@ -118,7 +85,7 @@ class TransService:
             except firebase_auth.UserNotFoundError:
                 raise HTTPException(
                     status_code=400,
-                    detail="No se encontró la cuenta de autenticación asociada al transportista"
+                    detail="No se encontró la cuenta de autenticación asociada al conductor"
                 )
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
@@ -132,23 +99,17 @@ class TransService:
         try:
             doc = self._user_crud.get_by_id(uid)
             if not doc.exists:
-                raise HTTPException(status_code=404, detail="Transportista no encontrado")
+                raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             doc_data = doc.to_dict() or {}
             if doc_data.get("companyId") != company_id:
-                raise HTTPException(status_code=404, detail="Transportista no encontrado")
+                raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             rol = doc_data.get("rol", [])
             if isinstance(rol, str):
                 rol = [rol]
             if "transportista" not in rol:
-                raise HTTPException(status_code=400, detail="El usuario indicado no es transportista")
-
-            vehiculo_id = doc_data.get("vehiculoId")
-            if vehiculo_id is not None:
-                vehiculo_doc = self._crud.get_vehiculo(vehiculo_id)
-                if vehiculo_doc.exists:
-                    self._crud.update_vehiculo(vehiculo_id, {"transportistaId": None})
+                raise HTTPException(status_code=400, detail="El usuario indicado no es condcutor")
 
             try:
                 firebase_auth.delete_user(uid)
@@ -157,10 +118,7 @@ class TransService:
 
             self._user_crud.delete(uid)
 
-            if vehiculo_id is not None:
-                return {"message": "Transportista eliminado con éxito y vehículo liberado"}
-
-            return {"message": "Transportista eliminado con éxito"}
+            return {"message": "Conductor eliminado con éxito"}
         except HTTPException:
             raise
         except Exception:

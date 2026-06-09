@@ -14,7 +14,7 @@ class AppSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final user = context.read<AuthProvider>().user;
-
+    final nombreEmpresa = context.read<AuthProvider>().company!.nombre;
     return Container(
       // Container principal
       width: 250,
@@ -24,7 +24,7 @@ class AppSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // La columna principal contiene el header del sidebar, los items y el footer
-          _buildSideBarHeader(),
+          _buildSideBarHeader(nombreEmpresa),
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 16),
           Padding(
@@ -86,7 +86,7 @@ class AppSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildSideBarHeader() {
+  Widget _buildSideBarHeader(String nombreEmpresa) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Row(
@@ -101,18 +101,18 @@ class AppSidebar extends StatelessWidget {
             child: const Icon(Icons.local_shipping, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nombre',
+                nombreEmpresa,
                 style: TextStyle(
                   color: AppColors.titleText,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
-              Text(
+              const Text(
                 'Panel del Encargado',
                 style: TextStyle(
                   color: AppColors.mutedText,

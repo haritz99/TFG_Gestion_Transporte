@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Any
 from ..dependencies.auth import get_current_encargado
-from ..schemas.users import UserSchema, UserCountSchema, UserPaginatedSchema
+from ..schemas.users import UserSchema, UserPaginatedSchema
 from ..services.trans_service import TransService
 
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
@@ -16,16 +16,6 @@ def get_all_trans(
 ):
     company_id = current_user.get("companyId")
     return trans_service.get_all_trans(company_id, solodis=solodis, limit=limit, last_doc_id=lastDocId)
-
-
-@router.get("/count", response_model=UserCountSchema)
-def get_count_trans(
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-    trans_service: TransService = Depends(TransService)
-):
-    company_id = current_user.get("companyId")
-    return trans_service.get_count_trans(company_id)
-
 
 @router.get("/{uid}", response_model=UserSchema)
 def get_trans_by_uid(

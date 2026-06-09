@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/features/cargas/providers/carga_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/models/user_model.dart';
 import '../../../../../core/models/vehiculo_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../auth/providers/auth_provider.dart';
 import '../../../../cargas/providers/pedido_provider.dart';
 import '../../../../transportistas/providers/transportista_provider.dart';
 import '../../../../vehiculos/providers/vehiculo_provider.dart';
@@ -20,8 +22,10 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
   @override
   Widget build(BuildContext context) {
     final pedidoProvider = context.watch<PedidoProvider>();
-    final vehiculoProvider = context.watch<VehiculoProvider>();
-    final transportistaProvider = context.watch<TransportistaProvider>();
+    final todosConductores = context.watch<TransportistaProvider>().transportistas;
+    final todosVehiculos = context.watch<VehiculoProvider>().vehiculos;
+    final cargaProvider = context.watch<CargaProvider>();
+    final companyBuffer = context.read<AuthProvider>().company?.companyBuffer ?? 0;
 
     final seleccion = pedidoProvider.cargasDelPedido;
 
@@ -38,12 +42,26 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
             initiallyExpanded: true,
             children: List.generate(seleccion.cantidad, (unidadIdx) {
               final asig = seleccion.asignaciones[unidadIdx];
+              final fechaInicio = asig.fechaCarga!;
+              final fechaFin = asig.fechaLimite!;
 
-              final conductorValido = transportistaProvider.transportistasDisponibles
-                  .contains(asig.conductor) ? asig.conductor : null;
+              final conductoresDisponibles = cargaProvider.conductoresDisponibles(
+                todosLosConductores: todosConductores,
+                fechaInicioTarget: fechaInicio,
+                fechaFinTarget: fechaFin,
+                companyDefaultBuffer: companyBuffer,
+              );
 
-              final vehiculoValido = vehiculoProvider.vehiculosDisponibles
-                  .contains(asig.vehiculo) ? asig.vehiculo : null;
+              final vehiculosDisponibles = cargaProvider.vehiculosDisponibles(
+                todosLosVehiculos: todosVehiculos,
+                fechaInicioTarget: fechaInicio,
+                fechaFinTarget: fechaFin,
+                companyDefaultBuffer: companyBuffer,
+              );
+
+              final conductorValido = conductoresDisponibles.contains(asig.conductor) ? asig.conductor : null;
+
+              final vehiculoValido = vehiculosDisponibles.contains(asig.vehiculo) ? asig.vehiculo : null;
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -68,13 +86,10 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                               decoration: _inputDecoration().copyWith(labelText: 'Conductor'),
                               items: [
                                 const DropdownMenuItem(value: null, child: Text('Sin asignar')),
-                                ...transportistaProvider.transportistasDisponibles.map((t) =>
+                                ...conductoresDisponibles.map((t) =>
                                     DropdownMenuItem(value: t, child: Text(t.nombre, overflow: TextOverflow.ellipsis))),
                               ],
-                              // Sin cargaIdx
-                              onChanged: (v) => context
-                                  .read<PedidoProvider>()
-                                  .asignarConductor(unidadIdx, v),
+                              onChanged: (v) => context.read<PedidoProvider>().asignarConductor(unidadIdx, v),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -85,7 +100,7 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
                               decoration: _inputDecoration().copyWith(labelText: 'Vehículo'),
                               items: [
                                 const DropdownMenuItem(value: null, child: Text('Sin asignar')),
-                                ...vehiculoProvider.vehiculosDisponibles.map((v) =>
+                                ...vehiculosDisponibles.map((v) =>
                                     DropdownMenuItem(value: v, child: Text(v.matricula))),
                               ],
                               onChanged: (v) => context

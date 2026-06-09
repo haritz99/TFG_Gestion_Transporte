@@ -93,28 +93,31 @@ class CargasService:
         self._crud.update_carga_doc(carga_id, update_data)
         return carga
 
-    def update_carga(self, carga_id: str, carga: CargaSchema, pedido_schema: PedidoSchema, company_id: str) -> CargaSchema:
-        doc = self._crud.get_carga_doc(carga_id)
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Carga no encontrada")
-
-        carga_data = doc.to_dict()
-        if carga_data.get("companyId") != company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
-
-        carga.companyId = company_id
-        carga.id = carga_id
+    """
+     def update_carga(self, carga_id: str, carga: CargaSchema, pedido_schema: PedidoSchema, company_id: str) -> CargaSchema:
+            doc = self._crud.get_carga_doc(carga_id)
+            if not doc.exists:
+                raise HTTPException(status_code=404, detail="Carga no encontrada")
+    
+            carga_data = doc.to_dict()
+            if carga_data.get("companyId") != company_id:
+                raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
+    
+            carga.companyId = company_id
+            carga.id = carga_id
+                
+            try:
+                carga.validar_contra_pedido(pedido_schema)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+    
+            carga.clienteId = pedido_schema.clienteId
+            update_data = carga.model_dump(exclude={'id'})
             
-        try:
-            carga.validar_contra_pedido(pedido_schema)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            self._crud.update_carga_doc(carga_id, update_data)
+            return carga
+    """
 
-        carga.clienteId = pedido_schema.clienteId
-        update_data = carga.model_dump(exclude={'id'})
-        
-        self._crud.update_carga_doc(carga_id, update_data)
-        return carga
 
 
     @staticmethod
@@ -185,8 +188,19 @@ class CargasService:
             batch.update(ref, carga.model_dump(exclude={'id'}))
 
         batch.commit()
-
         return validated
+
+    def update_buffer_hours(self, carga_id: str, buffer_hours: int, company_id: str):
+        doc = self._crud.get_carga_doc(carga_id)
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Carga no encontrada")
+
+        carga_data = doc.to_dict()
+        if carga_data.get("companyId") != company_id:
+            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
+
+        self._crud.update_carga_doc(carga_id, {"bufferHours": buffer_hours, "updatedAt": datetime.datetime.now(datetime.timezone.utc)})
+
 
     def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str, comision: float = 3.0) -> CargaSchema:
         doc = self._crud.get_carga_doc(carga_id)

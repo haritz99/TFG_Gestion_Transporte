@@ -5,9 +5,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_encargado, get_current_sub
-from ..dependencies.pedido_valido import get_pedido_from_carga
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
-from ..schemas.pedido import PedidoSchema
 from ..services.carta_porte_service import CartaPorteService
 from ..services.cargas_service import CargasService
 
@@ -98,6 +96,7 @@ def bulk_update_cargas(
 ):
     return service.bulk_update_cargas(cargas, current_user.get("companyId"))
 
+"""
 @router.put("/{carga_id}", response_model=CargaSchema)
 def update_carga(carga_id: str, 
                  carga: CargaSchema, 
@@ -105,6 +104,15 @@ def update_carga(carga_id: str,
                  current_user: dict[str, Any] = Depends(get_current_encargado),
                  service: CargasService = Depends(CargasService)):
     return service.update_carga(carga_id, carga, pedido_schema, current_user.get("companyId"))
+"""
+
+
+@router.put("/{carga_id}/buffer-hours")
+def update_buffer_hours(carga_id: str,
+        buffer_hours: int = Query(..., ge=0, description="Horas de buffer para la carga"),
+        current_user: dict[str, Any] = Depends(get_current_encargado),
+        service: CargasService = Depends(CargasService)):
+    return service.update_buffer_hours(carga_id, buffer_hours, current_user.get("companyId"))
 
 @router.put("/sub/{carga_id}", response_model=CargaSchema)
 def update_carga_sub(carga_id: str,

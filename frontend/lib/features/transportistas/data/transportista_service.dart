@@ -101,9 +101,6 @@ class TransportistaService {
       'telefono': userData.telefono,
       'rol': userData.rol,
       'permisosCond': userData.permisosCond,
-      'vehiculoId': userData.vehiculoId,
-      'cargaId': userData.cargaId,
-      'estado': userData.estado,
     };
 
     final response = await _client.put(

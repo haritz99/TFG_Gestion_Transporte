@@ -8,7 +8,6 @@ class FleetTableRowModel {
     this.ancho = '',
     this.alto = '',
     this.estado = '',
-    this.interno = '',
     this.matriculaRemolque = '',
     this.conductor = '',
   });
@@ -21,7 +20,6 @@ class FleetTableRowModel {
   final String ancho;
   final String alto;
   final String estado;
-  final String interno;
   final String matriculaRemolque;
   final String conductor;
 }

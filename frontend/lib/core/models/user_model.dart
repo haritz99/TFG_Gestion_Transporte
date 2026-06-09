@@ -9,9 +9,6 @@ class UserModel {
   final List<String> rol;
   final List<String> permisosCond;
   final String companyId;
-  final String? estado;
-  final String? vehiculoId;
-  final String? cargaId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -24,9 +21,6 @@ class UserModel {
     required this.rol,
     required this.permisosCond,
     required this.companyId,
-    this.estado,
-    this.vehiculoId,
-    this.cargaId,
     this.createdAt,
     this.updatedAt,
   });
@@ -52,9 +46,6 @@ class UserModel {
       rol: normalizedRol,
       permisosCond: List<String>.from(map['permisosCond'] ?? []),
       companyId: map['companyId'] ?? '',
-      estado: map['estado'] ?? '',
-      vehiculoId: map['vehiculoId'],
-      cargaId: map['cargaId'],
       createdAt: ModelUtils.parseDateTime(map['createdAt']),
       updatedAt: ModelUtils.parseDateTime(map['updatedAt']),
     );
@@ -70,9 +61,6 @@ class UserModel {
       'rol': rol,
       'permisosCond': permisosCond,
       'companyId': companyId,
-      'estado': estado,
-      'vehiculoId': vehiculoId,
-      'cargaId': cargaId,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };

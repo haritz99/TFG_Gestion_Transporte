@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_transporte/features/transportistas/ui/widgets/team_kpi_grid.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -25,7 +24,6 @@ class GestionEquipoPage extends StatefulWidget {
     ],
     this.columns = const [
       CoreTableColumn<TransportistaRowModel>(label: 'NOMBRE', flex: 20, cellBuilder: _buildNombreCell),
-      CoreTableColumn<TransportistaRowModel>(label: 'ROL', flex: 15, cellBuilder: _buildRolCell),
       CoreTableColumn<TransportistaRowModel>(label: 'LICENCIA', flex: 10, cellBuilder: _buildLicenciaCell),
       CoreTableColumn<TransportistaRowModel>(label: 'TELÉFONO', flex: 15, cellBuilder: _buildTelefonoCell),
       CoreTableColumn<TransportistaRowModel>(label: 'ESTADO', flex: 12, cellBuilder: _buildEstadoCell),
@@ -100,14 +98,6 @@ class _GestionEquipoPageState extends State<GestionEquipoPage> {
         onAddMiembro: widget.onAddMiembro,
         isMobile: isMobile,
       ),
-      kpiGrid: TeamKpiGrid(
-        totalEquipo: widget.totalEquipo,
-        enRuta: widget.enRuta,
-        sinAsignar: widget.sinAsignar,
-        asignacionParcial: widget.asignacionParcial,
-        inactivos: widget.inactivos, 
-        isMobile: isMobile,
-      ),
       table: TeamTable(
         rows: widget.rows,
         columns: tableColumns,
@@ -143,7 +133,6 @@ Widget _buildNombreCell(TransportistaRowModel item) => Row(
     Text('${item.nombre} ${item.apellido}', style: AppTextStyles.tableValueStrong),
   ],
 );
-Widget _buildRolCell(TransportistaRowModel item) => Text(item.rol.join(', '), style: AppTextStyles.tableValue);
 Widget _buildLicenciaCell(TransportistaRowModel item) => Container(
   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
   decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),

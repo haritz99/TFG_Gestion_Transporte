@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, Query, status
 
 from ..dependencies.auth import get_current_encargado
 from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
-from ..schemas.vehiculos import VehiculoCountSchema, VehiculoAssignSchema
 from ..services.vehiculo_service import VehiculoService
 
 router = APIRouter(prefix="/vehi", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
@@ -18,15 +17,6 @@ def get_vehiculos(
 ):
     company_id = current_user.get("companyId")
     return service.get_all(company_id, limit=limit, last_doc_id=lastDocId)
-
-
-@router.get("/count", response_model=VehiculoCountSchema)
-def get_vehiculos_count(
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(VehiculoService),
-):
-    company_id = current_user.get("companyId")
-    return service.get_count(company_id)
 
 
 @router.get("/{matr}", response_model=VehiculoSchema)
@@ -66,16 +56,5 @@ def delete_vehiculo(
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: VehiculoService = Depends(VehiculoService),
 ):
-    company_id = current_user.get("companyId")
-    service.delete(matr.upper(), company_id)
+    service.delete(matr.upper())
     return None
-
-
-@router.post("/assign", response_model=VehiculoSchema)
-def assign_vehiculo(
-    data: VehiculoAssignSchema,
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: VehiculoService = Depends(VehiculoService),
-):
-    company_id = current_user.get("companyId")
-    return service.assign(data.matricula.upper(), data.uid, company_id)

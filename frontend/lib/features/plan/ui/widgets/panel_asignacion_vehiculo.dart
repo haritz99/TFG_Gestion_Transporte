@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/carga_model.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../providers/planificacion_provider.dart';
 import '../../../transportistas/providers/transportista_provider.dart';
 import '../../../vehiculos/providers/vehiculo_provider.dart';
 import '../../../cargas/providers/carga_provider.dart';
 import '../../../dashboard/providers/invite_provider.dart';
+import 'buffer_selector.dart';
 
 class PanelAsignacionVehiculo extends StatelessWidget {
   const PanelAsignacionVehiculo({super.key});
@@ -49,6 +51,9 @@ class _DetallesAsignacionContent extends StatelessWidget {
     final transportistaProvider = context.watch<TransportistaProvider>();
     final inviteProvider = context.watch<InviteProvider>();
 
+    final bufferGlobal = context.watch<AuthProvider>().company?.companyBuffer ?? 0;
+    final currentBuffer = carga.bufferHours ?? bufferGlobal;
+
     final subcontratados = inviteProvider.guests
         .where((guest) => guest.rol.any((r) => r.toLowerCase().contains('subcontratado')))
         .toList();
@@ -62,9 +67,13 @@ class _DetallesAsignacionContent extends StatelessWidget {
       if (c.vehiculoId != null) vehiculosOcupados.add(c.vehiculoId!);
     }
 
-    final conductoresDisponibles = transportistaProvider.transportistasDisponibles
-        .where((t) => !conductoresOcupados.contains(t.uid))
-        .toList();
+    final conductoresDisponibles = cargaProvider.conductoresDisponibles(
+      todosLosConductores: transportistaProvider.transportistas,
+      fechaInicioTarget: carga.fechaCarga,
+      fechaFinTarget: carga.fechaDescarga,
+      companyDefaultBuffer: bufferGlobal,
+      targetBufferOverride: carga.bufferHours,
+    );
 
     if (carga.transportistaId != null && !conductoresDisponibles.any((t) => t.uid == carga.transportistaId)) {
       final actual = transportistaProvider.transportistas
@@ -75,9 +84,13 @@ class _DetallesAsignacionContent extends StatelessWidget {
       }
     }
 
-    final vehiculosDisponibles = vehiculoProvider.vehiculosDisponibles
-        .where((v) => !vehiculosOcupados.contains(v.matricula))
-        .toList();
+    final vehiculosDisponibles = cargaProvider.vehiculosDisponibles(
+      todosLosVehiculos: vehiculoProvider.vehiculos,
+      fechaInicioTarget: carga.fechaCarga,
+      fechaFinTarget: carga.fechaDescarga,
+      companyDefaultBuffer: bufferGlobal,
+      targetBufferOverride: carga.bufferHours,
+    );
 
     if (carga.vehiculoId != null && !vehiculosDisponibles.any((v) => v.matricula == carga.vehiculoId)) {
       final actual = vehiculoProvider.vehiculos
@@ -146,7 +159,7 @@ class _DetallesAsignacionContent extends StatelessWidget {
                 )),
           ],
           onChanged: (id) {
-            final t = transportistaProvider.transportistasDisponibles.where((x) => x.uid == id).firstOrNull;
+            final t = conductoresDisponibles.where((x) => x.uid == id).firstOrNull;
             final nombreCompleto = t != null ? '${t.nombre} ${t.apellido}'.trim() : null;
             cargaProvider.asignarConductor(carga.id!, id, nombreCompleto);
           },
@@ -163,6 +176,14 @@ class _DetallesAsignacionContent extends StatelessWidget {
                 DropdownMenuItem(value: v.matricula, child: Text(v.matricula))),
           ],
           onChanged: (matricula) => cargaProvider.asignarVehiculo(carga.id!, matricula),
+        ),
+        const SizedBox(height: 24),
+        BufferSelector(
+          title: 'Tiempo de retorno',
+          value: currentBuffer,
+          onChanged: (nuevoValor) {
+            context.read<CargaProvider>().actualizarBufferHours(carga.id!, nuevoValor);
+          },
         ),
         const SizedBox(height: 32),
         ElevatedButton.icon(

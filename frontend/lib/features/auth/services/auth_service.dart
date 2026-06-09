@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestion_transporte/core/models/company_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -128,6 +129,39 @@ class AuthService {
     }
     return ExternalUserModel.fromMap(jsonDecode(response.body), uid);
   }
+
+  Future<CompanyModel> getCompanyData(String companyId) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/auth/company');
+    final token = await getIdToken();
+    final response = await _client.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al obtener los datos de la empresa');
+    }
+    return CompanyModel.fromMap(jsonDecode(response.body), companyId);
+  }
+
+  Future<void> updateCompanyBuffer(String companyId, int buffer) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/auth/company/$companyId/buffer-hours');
+    final token = await getIdToken();
+    final response = await _client.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'bufferHours': buffer}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar el buffer de la empresa');
+    }
+  }
+
 
   Future<void> signOut() async {
     await _auth.signOut();

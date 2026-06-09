@@ -28,9 +28,9 @@ class _PlanificacionScreenState extends State<PlanificacionScreen> {
 
       Future.wait([
         transportistaProvider.loadInitialEquipo(limit: 1000),
-        transportistaProvider.fetchTransportistasDisponibles(),
         vehiculoProvider.loadInitialVehiculos(),
         inviteProvider.getGuests(),
+        //cargaProvider.loadCargas()
       ]);
     });
   }

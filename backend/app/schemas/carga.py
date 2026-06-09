@@ -20,6 +20,7 @@ _MATRICULA_REGEX = re.compile(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$")
 
 class EstadoCarga(str, enum.Enum):
     PENDIENTE = 'pendiente'
+    PLANIFICADO = 'planificado' # en calendario pero sin asignar aun
     ASIGNADO = 'asignado'
     EN_TRANSITO = 'en_transito'
     ENTREGADO = 'entregado'
@@ -67,6 +68,7 @@ class CargaSchema(CargaBaseSchema):
     estado: EstadoCarga = Field(default=EstadoCarga.PENDIENTE)
     fechaCarga: datetime.datetime = Field(...)
     fechaDescarga: datetime.datetime = Field(...)
+    bufferHours: Optional[int] = None
     transportistaId: Optional[str] = None
     conductorNombre: Optional[str] = None # Desnormalizacion para prevenir n+1
     pedidoId: Optional[str] = None

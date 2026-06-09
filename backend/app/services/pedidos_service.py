@@ -115,12 +115,11 @@ class PedidosService:
             vehiculo_id = carga.get("vehiculoId")
 
             if transportista_id or vehiculo_id:
+                estado_veh = "asignado"
                 if transportista_id and vehiculo_id:
                     estado_trans = "asignado"
-                    estado_veh = "asignado"
                 else:
                     estado_trans = "asignacion_parcial"
-                    estado_veh = "asignado"
 
                 if transportista_id:
                     from ..firebase_config import db

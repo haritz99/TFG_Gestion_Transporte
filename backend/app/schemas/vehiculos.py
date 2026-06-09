@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import re
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
 from .base import FirestoreSchema
 
@@ -17,14 +17,8 @@ class VehiculoSchema(FirestoreSchema):
     largo: float = Field(..., gt=0)
     ancho: float = Field(..., gt=0)
     alto: float = Field(..., gt=0)
-    estado: Literal['asignado', 'disponible', 'mantenimiento']
-    interno: bool  # subcontratado
     matriculaRemolque: Optional[str] = Field(default=None, min_length=3)
     companyId: Optional[str] = Field(default=None, min_length=1)
-    transportistaId: Optional[str] = None
-    transportistaNombre: Optional[str] = None
-    cargaId: Optional[str] = None
-
 
     @field_validator('matricula')
     @classmethod
@@ -46,22 +40,6 @@ class VehiculoSchema(FirestoreSchema):
             raise ValueError('La matrícula de remolque no cumple con el formato requerido')
         return value
 
-    @model_validator(mode='after')
-    def check_estado(self) -> 'VehiculoSchema':
-        if self.estado == 'asignado':
-            if self.transportistaId is None:
-                raise ValueError('Un vehículo asignado debe tener transportistaId')
-            if not self.transportistaNombre:
-                raise ValueError('Un vehículo asignado debe tener transportistaNombre')
-        elif self.estado == 'disponible':
-            if self.transportistaId or self.transportistaNombre or self.cargaId:
-                raise ValueError('Un vehículo disponible no puede tener transportista ni carga asignados')
-
-        if self.interno and not self.matriculaRemolque:
-            raise ValueError('matriculaRemolque es obligatoria cuando interno es true')
-
-        return self
-
     @classmethod
     def from_firestore(cls, doc, company_id: str):
         if not doc.exists:
@@ -72,17 +50,10 @@ class VehiculoSchema(FirestoreSchema):
             raise HTTPException(status_code=403, detail='No autorizado para usar este vehículo')
         return cls(**data)
 
-
 class VehiculoPaginatedSchema(FirestoreSchema):
     items: list[VehiculoSchema]
     last_doc_id: Optional[str] = None
     has_more: bool
-
-class VehiculoCountSchema(FirestoreSchema):
-    asignados: int
-    enMantenimiento: int
-    disponibles: int
-    totalVehiculos: int
 
 class VehiculoAssignSchema(FirestoreSchema):
     matricula: str = Field(..., min_length=3)

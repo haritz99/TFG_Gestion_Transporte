@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
+import '../../../core/models/company_model.dart';
 import '../../../core/models/direccion_model.dart';
 import '../services/auth_service.dart';
 
@@ -12,12 +13,14 @@ class AuthProvider extends ChangeNotifier {
   ExternalUserModel? _externalUser;
   bool _isLoading = false;
   String? _idToken;
+  CompanyModel? _company;
 
   UserModel? get user => _user;
   ExternalUserModel? get externalUser => _externalUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _idToken != null;
   String? get idToken => _idToken;
+  CompanyModel? get company => _company;
 
   AuthProvider({required AuthService authService}) : _authService = authService {
     _authService.authStateChanges.listen(_onAuthStateChanged);
@@ -37,10 +40,11 @@ class AuthProvider extends ChangeNotifier {
         _user = results[0] as UserModel?;
         _idToken = results[1] as String?;
         if (_user == null) {
-          _externalUser = await _authService.getExternalUserData(firebaseUser.uid)
-              .catchError((e) {
+          _externalUser = await _authService.getExternalUserData(firebaseUser.uid).catchError((e) {
             return null;
           });
+        } else {
+          await cargarConfiguracionEmpresa(_user!.companyId);
         }
       } else {
         _user = null;
@@ -63,11 +67,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.signIn(email, password);
       await _waitForSessionHydration();
-
     } catch (e) {
       rethrow;
     }
-
     finally {
       _isLoading = false;
       notifyListeners();
@@ -155,6 +157,33 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> cargarConfiguracionEmpresa(String empresaId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final data = await _authService.getCompanyData(empresaId);
+      _company = data;
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> cambiarBufferGlobal(int nuevasHoras) async {
+    final estadoAnterior = _company!;
+    _company = _company!.copyWith(bufferHours: nuevasHoras);
+    notifyListeners();
+    try {
+      await _authService.updateCompanyBuffer(_company!.id, nuevasHoras);
+    } catch (e) {
+      _company = estadoAnterior;
+      notifyListeners();
+      rethrow;
     }
   }
 

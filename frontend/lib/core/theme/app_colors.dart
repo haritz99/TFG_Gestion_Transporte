@@ -14,7 +14,8 @@ class AppColors {
   static const Color warningBackground = Color(0xFFFEE2E2);
 
   static const Color calendarEntregado = Color(0xFF66BB6A);
+  static const Color calendarPlanificado = Color(0xFF64748B);
   static const Color calendarAsignado = Color(0xFF42A5F5);
   static const Color calendarEnRuta = Color(0xFFFFA726);
-  static const Color calendarPendiente = Color(0xFF78909C);
+  static const Color calendarPendiente = Color(0xFFCBD5E1);
 }

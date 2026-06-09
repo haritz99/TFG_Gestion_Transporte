@@ -173,4 +173,23 @@ class CargaService {
 
     return responseData['url'] as String;
   }
+
+  Future<void> updateBufferHours(String cargaId, int bufferHours) async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/$cargaId/buffer-hours');
+
+    final response = await http.put(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'bufferHours': bufferHours}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al actualizar horas de buffer: ${response.statusCode} - ${response.body}');
+    }
+  }
+
 }

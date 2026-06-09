@@ -406,7 +406,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
 
   void _addCarga() {
     if (_selectedTipo == null) return;
-    context.read<PedidoProvider>().anadirCarga(_selectedTipo!, _cantidad);
+    context.read<PedidoProvider>().anadirCarga(_selectedTipo!, _cantidad, _fechaCarga, _fechaDescarga);
     setState(() {
       _selectedTipo = null;
       _cantidad = 1;

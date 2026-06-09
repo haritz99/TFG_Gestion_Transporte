@@ -29,8 +29,6 @@ class _VehiculoFormState extends State<VehiculoForm> {
   late final TextEditingController _altoController;
   late final TextEditingController _matriculaRemolqueController;
 
-  bool _interno = true;
-  String? _conductorAsignado;
 
   @override
   void initState() {
@@ -46,8 +44,6 @@ class _VehiculoFormState extends State<VehiculoForm> {
     _altoController = TextEditingController(text: (v?.alto ?? '').toString());
     _matriculaRemolqueController = TextEditingController(text: v?.matriculaRemolque ?? '');
 
-    _interno = v?.interno ?? true;
-    _conductorAsignado = v?.transportistaId;
   }
 
   @override
@@ -65,19 +61,6 @@ class _VehiculoFormState extends State<VehiculoForm> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      String? conductorNombre;
-      String? finalConductorId = _conductorAsignado == 'Sin asignar' ? null : _conductorAsignado;
-
-      if (finalConductorId != null) {
-        final entry = widget.conductores.where((e) => e.value == finalConductorId).firstOrNull;
-        if (entry != null) {
-          conductorNombre = entry.label;
-        } else if (finalConductorId == widget.vehiculo?.transportistaId) {
-          conductorNombre = widget.vehiculo?.transportistaNombre;
-        }
-      }
-
-      final nuevoEstado = finalConductorId != null ? 'asignado' : 'disponible';
 
       final nuevoVehiculo = VehiculoModel(
         matricula: _matriculaController.text.trim().toUpperCase(),
@@ -87,11 +70,7 @@ class _VehiculoFormState extends State<VehiculoForm> {
         largo: double.tryParse(_largoController.text) ?? 0.0,
         ancho: double.tryParse(_anchoController.text) ?? 0.0,
         alto: double.tryParse(_altoController.text) ?? 0.0,
-        interno: _interno,
         matriculaRemolque: _matriculaRemolqueController.text.trim().toUpperCase(),
-          estado: nuevoEstado,
-        transportistaId: finalConductorId,
-        transportistaNombre: conductorNombre,
         companyId: widget.vehiculo?.companyId,
       );
 
@@ -108,12 +87,6 @@ class _VehiculoFormState extends State<VehiculoForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Añadimos la opción "Sin asignar" al inicio de la lista
-    final List<DropdownMenuEntry<String>> opcionesConductores = [
-      const DropdownMenuEntry(value: 'Sin asignar', label: 'Ninguno / Desasignar'),
-      ...widget.conductores,
-    ];
-
     return Form(
       key: _formKey,
       child: Column(
@@ -130,20 +103,6 @@ class _VehiculoFormState extends State<VehiculoForm> {
                     if (v == null || v.trim().isEmpty) return 'Requerido';
                     if (!RegExp(r'^[0-9]{4}[a-zA-Z]{3}$').hasMatch(v.trim())) return 'Formato: 1234ABC';
                     return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: DropdownMenu<String>(
-                  initialSelection: _conductorAsignado ?? 'Sin asignar',
-                  dropdownMenuEntries: opcionesConductores,
-                  label: const Text('Conductor Asignado'),
-                  expandedInsets: EdgeInsets.zero,
-                  onSelected: (value) {
-                    setState(() {
-                      _conductorAsignado = value;
-                    });
                   },
                 ),
               ),
@@ -176,21 +135,10 @@ class _VehiculoFormState extends State<VehiculoForm> {
                 controller: _matriculaRemolqueController,
                 decoration: const InputDecoration(labelText: 'Matrícula Remolque (opcional)', border: OutlineInputBorder()),
                 validator: (v) {
-                  if (_interno && (v == null || v.trim().isEmpty)) return 'Requerido (vehículo interno)';
                   if (v != null && v.trim().isNotEmpty && !RegExp(r'^[0-9]{4}[a-zA-Z]{3}$').hasMatch(v.trim())) return 'Formato: 1234ABC';
                   return null;
                 },
               )),
-              const SizedBox(width: 12),
-              Expanded(
-                child: CheckboxListTile(
-                  title: const Text('Vehículo Interno'),
-                  value: _interno,
-                  onChanged: (val) => setState(() => _interno = val ?? true),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 24),

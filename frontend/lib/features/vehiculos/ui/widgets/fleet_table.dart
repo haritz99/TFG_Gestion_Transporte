@@ -54,7 +54,6 @@ class FleetTable extends StatelessWidget {
           MapEntry('Capacidad', vehiculo.capacidad),
           MapEntry('Dimensiones', '${vehiculo.largo} x ${vehiculo.ancho} x ${vehiculo.alto}'),
           MapEntry('Estado', vehiculo.estado),
-          MapEntry('Interno', vehiculo.interno),
           MapEntry('Remolque', vehiculo.matriculaRemolque),
           MapEntry('Conductor', vehiculo.conductor),
         ],

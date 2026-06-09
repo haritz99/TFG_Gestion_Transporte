@@ -17,6 +17,28 @@ class RegisterService:
         self._crud = crud
         self._company_crud = company_crud
 
+    def get_company_info(self, company_id: str) -> dict:
+        if not company_id:
+            raise HTTPException(status_code=400, detail="companyId es obligatorio en el token")
+
+        try:
+            company_doc = self._company_crud.get_by_id(company_id)
+            if not company_doc.exists:
+                raise HTTPException(status_code=404, detail="Empresa no encontrada")
+            return company_doc.to_dict()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error al obtener la información de la empresa: {str(e)}")
+
+    def update_buffer_hours(self, company_id: str, buffer_hours: int):
+        if buffer_hours < 0:
+            raise HTTPException(status_code=400, detail="bufferHours debe ser un número entero no negativo")
+
+        try:
+            self._company_crud.update(company_id, {"bufferHours": buffer_hours})
+            return {"message": "Buffer hours actualizadas correctamente"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error al actualizar buffer hours: {str(e)}")
+
     @staticmethod
     def generate_temp_password(length: int = 12) -> str:
         characters = string.ascii_letters + string.digits + "!@#$%^&*"

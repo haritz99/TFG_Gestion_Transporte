@@ -29,7 +29,6 @@ void main() {
     rol: ['transportista'],
     permisosCond: ['C', 'C+E'],
     companyId: 'empresa_123',
-    estado: 'Sin Asignar',
   );
 
   setUp(() {
@@ -150,7 +149,6 @@ void main() {
         telefono: '+34600111222',
         rol: ['transportista'],
         permisosCond: ['C', 'C+E'],
-        estado: 'Sin Asignar',
       );
 
       expect(updated, isNull);

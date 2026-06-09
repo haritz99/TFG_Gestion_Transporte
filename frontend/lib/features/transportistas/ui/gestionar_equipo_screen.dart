@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestion_equipo_page.dart';
 import 'package:provider/provider.dart';
-
+import 'package:collection/collection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/models/carga_model.dart';
 import '../../../core/models/user_model.dart';
+import '../../cargas/providers/carga_provider.dart';
 import '../providers/transportista_provider.dart';
 import 'models/transportista_row_model.dart';
 import 'widgets/confirm_delete_member.dart';
@@ -33,21 +35,19 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   bool _firstLoad = true;
   String _selectedStatus = 'Todos';
 
-  List<UserModel> _filterTransportistas(List<UserModel> source) {
-    switch (_selectedStatus) {
-      case 'En Ruta':
-        return source.where((t) => t.estado == 'en_ruta').toList();
-      case 'Sin Asignar':
-        return source.where((t) => t.estado == 'sin_asignar').toList();
-      case 'Asignado':
-        return source.where((t) => t.estado == 'asignado').toList();
-      case 'Asignado Parcial':
-        return source.where((t) => t.estado == 'asignacion_parcial').toList();
-      case 'Inactivo':
-        return source.where((t) => t.estado == 'inactivo').toList();
-      default:
-        return source;
-    }
+  List<UserModel> _filterTransportistas(List<UserModel> source, CargaProvider cargaProvider) {
+    if (_selectedStatus == 'Todos') return source;
+
+    return source.where((t) {
+      final estado = cargaProvider.estadoConductor(t.uid);
+      switch (_selectedStatus) {
+        case 'En Ruta':        return estado == 'en_ruta';
+        case 'Sin Asignar':    return estado == 'sin_asignar';
+        case 'Asignado':       return estado == 'asignado';
+        case 'Asignado Parcial': return estado == 'asignacion_parcial';
+        default:               return true;
+      }
+    }).toList();
   }
 
   @override
@@ -82,7 +82,6 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Miembro eliminado correctamente')),
       );
-      await _transportistaProvider.fetchEquipoKpis();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_transportistaProvider.errorMessage ?? 'Error al eliminar')),
@@ -106,12 +105,11 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         ),
       ),
     );
-    await _transportistaProvider.fetchEquipoKpis();
   }
 
   Future<void> _promptEditMiembro(String uid) async {
     final member = _transportistaProvider.transportistas.firstWhere((t) => t.uid == uid);
-    final updated = await showDialog<UserModel?>(
+    await showDialog<UserModel?>(
       context: context,
       builder: (modalContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -126,9 +124,6 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
         ),
       ),
     );
-    if (updated != null && mounted) {
-      await _transportistaProvider.fetchEquipoKpis();
-    }
   }
 
   Future<void> _promptDeleteMiembro(String uid) async {
@@ -173,36 +168,35 @@ class _GestionarEquipoScreenBodyState extends State<_GestionEquipoScreenBody> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransportistaProvider>();
+    final cargaProvider = context.read<CargaProvider>();
+    final filtered = _filterTransportistas(provider.transportistas, cargaProvider);
 
     if (_firstLoad) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final filtered = _filterTransportistas(provider.transportistas);
     final rows = filtered.map((t) {
+      final cargaActiva = cargaProvider.cargas.firstWhereOrNull((c) =>
+      c.transportistaId == t.uid &&
+          (c.estado == EstadoCarga.asignado || c.estado == EstadoCarga.enTransito || c.estado == EstadoCarga.planificado));
+
       return TransportistaRowModel(
         uid: t.uid,
         nombre: t.nombre,
         apellido: t.apellido,
         email: t.email,
         telefono: t.telefono,
-        estado: _formatEstado(t.estado ?? ''),
-        rol: t.rol,
+        estado: _formatEstado(cargaProvider.estadoConductor(t.uid )),
         licencias: t.permisosCond,
-        cargaAsignada: t.cargaId ?? '',
-        vehiculoAsignado: t.vehiculoId ?? '',
+        cargaAsignada: cargaActiva?.id ?? '',
+        vehiculoAsignado: cargaActiva?.vehiculoId ?? '',
         fechaDeAlta: t.createdAt,
       );
     }).toList();
     return Scaffold(
       body: GestionEquipoPage(
-        totalEquipo: provider.totalEquipo ?? 0,
-        enRuta: provider.enRuta ?? 0,
-        sinAsignar: provider.sinAsignar ?? 0,
-        asignacionParcial: provider.asignacionParcial ?? 0,
-        inactivos: provider.inactivos ?? 0,
         selectedStatus: _selectedStatus,
-        statusOptions: const ['Todos', 'Sin Asignar', 'En Ruta', 'Asignado', 'Asignado Parcial', 'Inactivo'],
+        statusOptions: const ['Todos', 'Sin Asignar', 'En Ruta', 'Asignado', 'Asignado Parcial'],
         rows: rows,
         hasMore: provider.hasMore,
         isLoadingMore: provider.isLoadingPage,

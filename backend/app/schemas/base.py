@@ -21,7 +21,7 @@ class DatetimeUTCMixin:
 class FirestoreSchema(BaseModel):
 
     class Config:
-        extra = "forbid"
+        extra = "allow"
 
 
 DocumentMap = Dict[str, DocT]

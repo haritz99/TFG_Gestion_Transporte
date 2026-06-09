@@ -41,8 +41,6 @@ class VehiculoProvider extends ChangeNotifier {
   int? get enMantenimiento => _enMantenimiento;
 
   List<VehiculoModel> get vehiculos => _vehiculos;
-  List<VehiculoModel> get vehiculosDisponibles =>
-      _vehiculos.where((v) => v.estado == 'disponible').toList();   // esta hardcodeado, tengo que cambiarlo...
   bool get hasMore => _hasMore;
   bool get isLoadingPage => _isLoadingPage;
 
@@ -60,21 +58,6 @@ class VehiculoProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchKpis() async {
-    try {
-      final token = await _tokenProvider.getRequiredToken();
-      final counts = await _service.fetchVehiculosCount(token: token);
-      _totalVehiculos = counts['totalVehiculos'];
-      _asignados = counts['asignados'];
-      _disponibles = counts['disponibles'];
-      _enMantenimiento = counts['enMantenimiento'];
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = "Error al obtener KPIs: $e";
-      notifyListeners();
-    }
-  }
-
   Future<void> loadInitialVehiculos({
     int limit = AppConstants.paginationPageSize,
   }) async {
@@ -83,7 +66,6 @@ class VehiculoProvider extends ChangeNotifier {
     _lastDocId = null;
     _hasMore = true;
     notifyListeners();
-    await fetchKpis();
     await loadNextPage(limit: limit, reset: true);
     _lastFetchTime = DateTime.now();
   }
@@ -159,7 +141,6 @@ class VehiculoProvider extends ChangeNotifier {
         token: token,
         vehiculoData: vehiculoData,
       );
-      await fetchKpis();
       _upsertVehiculo(model);
       return model;
     } catch (e) {
@@ -191,7 +172,6 @@ class VehiculoProvider extends ChangeNotifier {
         matricula: matricula,
         vehiculoData: vehiculo,
       );
-      await fetchKpis();
       _upsertVehiculo(updated);
       return updated;
     } catch (e) {
@@ -215,7 +195,6 @@ class VehiculoProvider extends ChangeNotifier {
         matricula: matricula,
       );
       _vehiculos = _vehiculos.where((v) => v.matricula != matricula).toList(growable: false);
-      await fetchKpis();
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
     } finally {

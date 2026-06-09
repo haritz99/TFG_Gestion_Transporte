@@ -14,16 +14,9 @@ class TransportistaProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  int? _totalEquipo;
-  int? _enRuta;
-  int? _sinAsignar;
-  int? _asignacionParcial;
-  int? _inactivos;
-
   Map<String, dynamic>? _createResponse;
   String? _lastCreatedEmail;
   List<UserModel> _transportistas = [];
-  List<UserModel> _transportistasDisponibles = [];
   bool _hasMore = true;
   bool _isLoadingPage = false;
   String? _lastDocId;
@@ -41,36 +34,12 @@ class TransportistaProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get createResponse => _createResponse;
   List<UserModel> get transportistas => _transportistas;
-  List<UserModel> get transportistasDisponibles => _transportistasDisponibles;
   bool get hasMore => _hasMore;
   bool get isLoadingPage => _isLoadingPage;
 
   bool get shouldReload {
     if (_lastFetchTime == null) return true;
     return DateTime.now().difference(_lastFetchTime!) > _ttl;
-  }
-
-  int? get totalEquipo => _totalEquipo;
-  int? get enRuta => _enRuta;
-  int? get sinAsignar => _sinAsignar;
-  int? get asignacionParcial => _asignacionParcial;
-  int? get inactivos => _inactivos;
-
-  List<DropdownMenuEntry<String>> get conductoresDropdown {
-    return _transportistasDisponibles
-        .map((t) => DropdownMenuEntry<String>(
-            value: t.uid,
-            label: _buildNombreCompleto(t),
-          ),
-        )
-        .toList(growable: false);
-  }
-
-  String _buildNombreCompleto(UserModel t) {
-    final nombre = t.nombre.trim();
-    final apellido = t.apellido.trim();
-    final fullName = '$nombre $apellido'.trim();
-    return fullName;
   }
 
   Future<PaginatedResponse<UserModel>> fetchEquipoPage({
@@ -97,7 +66,6 @@ class TransportistaProvider extends ChangeNotifier {
     _lastDocId = null;
     _hasMore = true;
     notifyListeners();
-    await fetchEquipoKpis();
     await loadNextPage(limit: limit, reset: true);
     _lastFetchTime = DateTime.now();
   }
@@ -140,50 +108,6 @@ class TransportistaProvider extends ChangeNotifier {
       _transportistas[index] = item;
       _transportistas = [..._transportistas];
     }
-  }
-
-  Future<void> fetchEquipoKpis() async {
-    try {
-      final token = await _tokenProvider.getRequiredToken();
-      final counts = await _service.fetchEquipoCount(token: token);
-      _totalEquipo = counts['totalEquipo'];
-      _enRuta = counts['en_ruta'];
-      _sinAsignar = counts['sin_asignar'];
-      _asignacionParcial = counts['asignacion_parcial'];
-      _inactivos = counts['inactivos'];
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = "Error al obtener KPIs: $e";
-      notifyListeners();
-    }
-  }
-
-  Future<List<UserModel>> fetchTransportistasDisponibles() async {
-    // Solo devuelve los transportistas sin asignar a un vehículo
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final token = await _tokenProvider.getRequiredToken();
-      final response = await _service.fetchTransportistas(
-        token: token,
-        soloDisponibles: true,
-        limit: 1000,
-      );
-      _transportistasDisponibles = response.items;
-      return _transportistasDisponibles;
-    } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      return [];
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  List<DropdownMenuEntry<String>> getConductoresDropdown() {
-    return conductoresDropdown;
   }
 
   Future<UserModel?> createTransportista({
@@ -243,9 +167,6 @@ class TransportistaProvider extends ChangeNotifier {
     required String telefono,
     required List<String> rol,
     required List<String> permisosCond,
-    required String estado,
-    String? vehiculoId,
-    String? cargaId,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -265,9 +186,6 @@ class TransportistaProvider extends ChangeNotifier {
         rol: rol,
         permisosCond: permisosCond,
         companyId: companyId,
-        estado: estado,
-        vehiculoId: vehiculoId,
-        cargaId: cargaId,
       );
 
       final updated = await _service.updateTransportista(

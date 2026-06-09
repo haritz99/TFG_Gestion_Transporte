@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:collection/collection.dart';
+import '../../../../core/models/carga_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../cargas/providers/carga_provider.dart';
 import '../../providers/transportista_provider.dart';
 
 class TeamMemberForm extends StatefulWidget {
@@ -23,7 +26,6 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
   List<String> _licencias = [];
   String? _vehiculoId;
   String? _cargaId;
-  bool _inactivo = false;
 
   final List<String> _licenciasOptions = [
     'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE',
@@ -42,9 +44,20 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
       _telefono = widget.member!.telefono;
       _rol = List.from(widget.member!.rol);
       _licencias = List.from(widget.member!.permisosCond);
-      _vehiculoId = widget.member!.vehiculoId;
-      _cargaId = widget.member!.cargaId;
-      _inactivo = widget.member!.estado == 'inactivo';
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final cargaProvider = context.read<CargaProvider>();
+        final cargaActiva = cargaProvider.cargas.firstWhereOrNull((c) =>
+        c.transportistaId == widget.member!.uid &&
+            (c.estado == EstadoCarga.asignado ||
+                c.estado == EstadoCarga.enTransito ||
+                c.estado == EstadoCarga.planificado)
+        );
+        setState(() {
+          _vehiculoId = cargaActiva?.vehiculoId;
+          _cargaId = cargaActiva?.id;
+        });
+      });
     } else {
       _nombre = '';
       _apellido = '';
@@ -52,7 +65,6 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
       _telefono = '';
       _vehiculoId = null;
       _cargaId = null;
-      _inactivo = false;
     }
   }
 
@@ -60,23 +72,6 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final provider = context.read<TransportistaProvider>();
-
-      String vId = _vehiculoId?.trim() ?? '';
-      String cId = _cargaId?.trim() ?? '';
-
-      String finalVehiculoId = vId.isNotEmpty ? vId : '';
-      String finalCargaId = cId.isNotEmpty ? cId : '';
-
-      String nuevoEstado = 'sin_asignar';
-      if (_inactivo) {
-        nuevoEstado = 'inactivo';
-      } else {
-        if (finalVehiculoId.isNotEmpty && finalCargaId.isNotEmpty) {
-          nuevoEstado = 'asignado';
-        } else if (finalVehiculoId.isNotEmpty || finalCargaId.isNotEmpty) {
-          nuevoEstado = 'asignacion_parcial';
-        }
-      }
 
       UserModel? result;
       if (widget.member == null) {
@@ -97,9 +92,6 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
           telefono: _telefono,
           rol: _rol,
           permisosCond: _licencias,
-          vehiculoId: finalVehiculoId.isNotEmpty ? finalVehiculoId : null,
-          cargaId: finalCargaId.isNotEmpty ? finalCargaId : null,
-          estado: nuevoEstado,
         );
       }
 
@@ -165,6 +157,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                       initialValue: _nombre,
                       decoration: const InputDecoration(labelText: 'Nombre'),
                       validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+                      enabled: widget.member == null,
                       onSaved: (value) => _nombre = value!,
                     ),
                   ),
@@ -173,6 +166,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                     child: TextFormField(
                       initialValue: _apellido,
                       decoration: const InputDecoration(labelText: 'Apellido'),
+                      enabled: widget.member == null,
                       validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
                       onSaved: (value) => _apellido = value!,
                     ),
@@ -267,6 +261,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                       child: TextFormField(
                         initialValue: _vehiculoId,
                         decoration: const InputDecoration(labelText: 'Matrícula Vehículo'),
+                        enabled: false,
                         onSaved: (value) => _vehiculoId = value,
                       ),
                     ),
@@ -275,6 +270,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                       child: TextFormField(
                         initialValue: _cargaId,
                         decoration: const InputDecoration(labelText: 'ID Carga'),
+                        enabled: false,
                         onSaved: (value) => _cargaId = value,
                       ),
                     ),

@@ -39,6 +39,7 @@ class CargaDataSource extends CalendarDataSource {
 
   static Color getColorByEstado(String estado) {
     if (estado == EstadoCarga.entregado.value) return AppColors.calendarEntregado;
+    if (estado == EstadoCarga.planificado.value) return AppColors.calendarPlanificado;
     if (estado == EstadoCarga.asignado.value) return AppColors.calendarAsignado;
     if (estado == EstadoCarga.enTransito.value) return AppColors.calendarEnRuta;
     return AppColors.calendarPendiente;

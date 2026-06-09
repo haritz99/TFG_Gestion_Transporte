@@ -30,10 +30,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
     final cargaProvider = context.watch<CargaProvider>();
 
     final cargasVisibles = cargaProvider.cargas.where((c) {
-      final planificando = c.estado == EstadoCarga.pendiente && planProvider.cargasPlanificadasIds.contains(c.id);
-      final estaEnProgreso = c.estado != EstadoCarga.pendiente && c.estado != EstadoCarga.cedido;
-
-      return planificando || estaEnProgreso;
+      return c.estado != EstadoCarga.pendiente && c.estado != EstadoCarga.cedido;
     }).toList();
 
     final Set<String> pedidoIdsMostrados = cargasVisibles
@@ -45,7 +42,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
 
       final displayName = pInfo != null
           ? '${pInfo.id?.toUpperCase() ?? ''} - ${pInfo.descripcion}'
-          : 'Pedido ${pId != 'sin-pedido' && pId.length > 8 ? pId.substring(0,8).toUpperCase() : pId.toUpperCase()}';
+          : '${pId != 'sin-pedido' && pId.length > 8 ? pId.substring(0,8).toUpperCase() : pId.toUpperCase()}';
 
       return CalendarResource(
         id: pId,
@@ -82,10 +79,10 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
           onAcceptWithDetails: (details) {
             final carga = details.data;
             planProvider.marcarComoPlanificada(carga.id!);
-            cargaProvider.actualizarFechasCarga(
+            cargaProvider.planificarCarga(
               carga.id!,
               DateTime.now(),
-              DateTime.now().add(const Duration(hours: 4))
+              DateTime.now().add(const Duration(hours: 4)),
             );
           },
           builder: (context, candidateData, rejectedData) {

@@ -3,7 +3,6 @@ import '../theme/app_colors.dart';
 
 class ManagementPageLayout extends StatelessWidget {
   final Widget header;
-  final Widget kpiGrid;
   final Widget table;
   final Future<void> Function()? onMobileLoadMore;
   final bool hasMore;
@@ -13,7 +12,6 @@ class ManagementPageLayout extends StatelessWidget {
   const ManagementPageLayout({
     super.key,
     required this.header,
-    required this.kpiGrid,
     required this.table,
     this.onMobileLoadMore,
     this.hasMore = false,
@@ -44,8 +42,6 @@ class ManagementPageLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   header,
-                  const SizedBox(height: 16),
-                  kpiGrid,
                   const SizedBox(height: 16),
                   table,
                 ],

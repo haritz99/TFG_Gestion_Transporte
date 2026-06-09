@@ -19,10 +19,7 @@ class ListaCargasPanel extends StatelessWidget {
     final pedidos = pedidoProvider.pedidos;
     final todasCargas = cargaProvider.cargas.where((c) => c.estado != EstadoCarga.cedido);
     final cargasSemanaAnterior = cargaProvider.cargasSemanaAnterior;
-    final cargasPendientes = todasCargas.where((c) =>
-      c.estado == EstadoCarga.pendiente &&
-      !planProvider.cargasPlanificadasIds.contains(c.id)
-    ).toList();
+    final cargasPendientes = todasCargas.where((c) => c.estado == EstadoCarga.pendiente).toList();
 
     final Map<String, List<CargaModel>> cargasPorPedido = {};
     for (var c in cargasPendientes) {
