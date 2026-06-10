@@ -60,7 +60,8 @@ class VehiculoService:
             return vehiculo_data
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
+            print(f"Error al actualizar el vehículo: {e}")
             raise HTTPException(status_code=500, detail="Error al actualizar el vehículo")
 
     def delete(self, matr: str) -> None:

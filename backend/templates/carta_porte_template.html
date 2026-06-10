@@ -214,30 +214,39 @@
 
 <div class="sheet">
 
-    <div class="title-bar">Carta de Porte Nacional (e-CMR)</div>
+    <div class="title-bar" style="position: relative;">
+        Carta de Porte Digital
+        {% if carga.qr %}
+        <div style="position: absolute; right: 0; top: 0;">
+            <img src="data:image/png;base64,{{ carga.qr }}"
+                 width="68" height="68"
+                 style="display: block; border: 2px solid #fff; padding: 2px; background: #fff;" alt=""/>
+        </div>
+        {% endif %}
+    </div>
     <div class="sub-bar">
-        <div class="sub-cell"><span class="tiny-label">Nº Único Documento</span><span class="tiny-value mono">{{ display(carga.id) }}</span></div>
-        <div class="sub-cell"><span class="tiny-label">Fecha de Emisión</span><span class="tiny-value">{{ display(carga.created_at) }}</span></div>
+        <div class="sub-cell"><span class="tiny-label">Nº Documento</span><span class="tiny-value mono">{{ display(carga.id) }}</span></div>
+        <div class="sub-cell"><span class="tiny-label">Fecha de Emisión</span><span class="tiny-value">{{ display(carga.fecha_emision) }}</span></div>
         <div class="sub-cell"><span class="tiny-label">Referencia Pedido</span><span class="tiny-value mono">{{ display(carga.pedido_id) }}</span></div>
     </div>
 
 
     <div class="section">
-        <div class="section-title">1. Sujetos Intervinientes (Origen y Destino)</div>
+        <div class="section-title">1. Sujetos Intervinientes</div>
         <div class="rows">
             <div class="row">
                 {{ field('Cargador / Expedidor', snapshot.cliente_nombre if snapshot else none, 'half') }}
                 {{ field('NIF / CIF Cargador', snapshot.cliente_nif if snapshot else none, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Origen (Lugar de carga)', snapshot.cliente_direccion if snapshot else none, 'full') }}
+                {{ field('Dirección de carga', snapshot.cliente_direccion if snapshot else none, 'full') }}
             </div>
             <div class="row">
-                {{ field('Destinatario', carga.destino, 'half') }}
-                {{ field('NIF / CIF Destinatario', none, 'half', 'mono') }}
+                {{ field('Destinatario', snapshot.destinatario_nombre, 'half') }}
+                {{ field('NIF / CIF Destinatario', snapshot.destinatario_nif, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Destino', carga.destino, 'full') }}
+                {{ field('Dirección Destino', carga.destino if carga.destino else snapshot.destinatario_direccion, 'full') }}
             </div>
         </div>
     </div>
@@ -246,22 +255,21 @@
     <div class="section">
         <div class="section-title">2. Operadores de Transporte del Contrato</div>
         <div class="rows">
-            <!-- Porteador Contractual: La empresa dueña del software TMS -->
             <div class="row">
-                {{ field('Porteador Contractual', none, 'half') }}
-                {{ field('NIF Porteador Contractual', none, 'half', 'mono') }}
+                {{ field('Porteador Contractual', carga.porteador.razon_social, 'half') }}
+                {{ field('NIF Porteador Contractual', carga.porteador.nif, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Porteador Contractual', none, 'full') }}
+                {{ field('Dirección Porteador Contractual', carga.porteador.direccion, 'half') }}
+                {{ field('Nº Autorización Transporte', carga.porteador.num_autorizacion, 'half', 'mono') }}
             </div>
-
-            <!-- Transportista Efectivo: Reflejando fielmente los requerimientos legales -->
             <div class="row">
                 {{ field('Transportista Efectivo (Razón Social)', t_efectivo_nombre, 'half') }}
-                {{ field('NIF / CIF Transportista', t_efectivo_nif, 'half', 'mono') }}
+                {{ field('NIF / CIF Transportista Efectivo', t_efectivo_nif, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Transportista', t_efectivo_dir, 'full') }}
+                {{ field('Dirección Transportista Efectivo', t_efectivo_dir, 'half') }}
+                {{ field('Nº Autorización Transportista Efectivo', snapshot.subcontratado_num_autorizacion if snapshot else none, 'half', 'mono') }}
             </div>
         </div>
     </div>
@@ -271,16 +279,16 @@
         <div class="section-title">3. Datos de la Ruta, Fechas y Vehículo</div>
         <div class="rows">
             <div class="row">
-                {{ field('Punto de Carga', carga.origen, 'half') }}
+                {{ field('Punto de Carga', snapshot.cliente_direccion if snapshot else none, 'half') }}
                 {{ field('Fecha / Hora prevista Carga', carga.fecha_carga, 'half') }}
             </div>
             <div class="row">
-                {{ field('Punto de Entrega', carga.destino, 'half') }}
+                {{ field('Punto de Entrega', snapshot.destinatario_direccion if snapshot else none, 'half') }}
                 {{ field('Fecha / Hora prevista Entrega', carga.fecha_descarga, 'half') }}
             </div>
             <div class="row">
                 {{ field('Conductor Asignado', carga.conductor_nombre, 'third') }}
-                {{ field('Matrícula Tractora', carga.vehiculoId, 'third', 'mono') }}
+                {{ field('Matrícula Tractora', carga.vehiculo_id, 'third', 'mono') }}
                 {{ field('Matrícula Semirremolque', carga.sub_remolque_matricula, 'third', 'mono') }}
             </div>
         </div>
@@ -333,13 +341,12 @@
                 <div class="sig-pending">PENDIENTE DE FIRMA</div>
             </div>
             <div class="signature-box">
-                <span class="label">El Destinatario (Recepción)</span>
+                <span class="label">El Destinatario</span>
                 <div class="sig-pending">ESPERANDO RECEPCIÓN</div>
             </div>
         </div>
     </div>
 
-    <!-- Pie de página legal obligatorio -->
     <div class="footer">
         El presente documento electrónico constituye una Carta de Porte Digital emitida al amparo de la Ley 15/2009, de 11 de noviembre, del contrato de transporte terrestre de mercancías, y cumple rigurosamente con los requisitos del Documento de Control Administrativo exigido por la Orden FOM/2861/2012. Las firmas integradas en este flujo corresponden a firmas electrónicas con plena validez jurídica según el Reglamento (UE) Nº 910/2014 (eIDAS).
     </div>

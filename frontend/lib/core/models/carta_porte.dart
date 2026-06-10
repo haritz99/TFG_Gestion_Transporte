@@ -3,6 +3,9 @@ class CartaPorteSnapshotModel {
   final String clienteNif;
   final String clienteDireccion;
   final String? clienteTelefono;
+  final String? destinatarioNombre;
+  final String? destinatarioNif;
+  final String? destinatarioDireccion;
   final String? subcontratadoNombre;
   final String? subcontratadoNif;
   final String? subcontratadoDireccion;
@@ -16,6 +19,9 @@ class CartaPorteSnapshotModel {
     required this.clienteNif,
     required this.clienteDireccion,
     this.clienteTelefono,
+    this.destinatarioNombre,
+    this.destinatarioNif,
+    this.destinatarioDireccion,
     this.subcontratadoNombre,
     this.subcontratadoNif,
     this.subcontratadoDireccion,
@@ -31,12 +37,15 @@ class CartaPorteSnapshotModel {
       clienteNif: map['clienteNif'] as String,
       clienteDireccion: map['clienteDireccion'] as String,
       clienteTelefono: map['clienteTelefono'] as String?,
+      destinatarioNombre: map['destinatarioNombre'] as String?,
+      destinatarioNif: map['destinatarioNif'] as String?,
+      destinatarioDireccion: map['destinatarioDireccion'] as String?,
       subcontratadoNombre: map['subcontratadoNombre'] as String?,
       subcontratadoNif: map['subcontratadoNif'] as String?,
       subcontratadoDireccion: map['subcontratadoDireccion'] as String?,
       subcontratadoTelefono: map['subcontratadoTelefono'] as String?,
       subcontratadoNumAutorizacion:
-          map['subcontratadoNumAutorizacion'] as String?,
+      map['subcontratadoNumAutorizacion'] as String?,
       precioNeto: (map['precioNeto'] as num?)?.toDouble(),
       congeladoAt: map['congeladoAt'] != null
           ? DateTime.parse(map['congeladoAt'] as String)
@@ -50,18 +59,17 @@ class CartaPorteSnapshotModel {
       'clienteNif': clienteNif,
       'clienteDireccion': clienteDireccion,
       if (clienteTelefono != null) 'clienteTelefono': clienteTelefono,
-      if (subcontratadoNombre != null)
-        'subcontratadoNombre': subcontratadoNombre,
+      if (destinatarioNombre != null) 'destinatarioNombre': destinatarioNombre,
+      if (destinatarioNif != null) 'destinatarioNif': destinatarioNif,
+      if (destinatarioDireccion != null) 'destinatarioDireccion': destinatarioDireccion,
+      if (subcontratadoNombre != null) 'subcontratadoNombre': subcontratadoNombre,
       if (subcontratadoNif != null) 'subcontratadoNif': subcontratadoNif,
-      if (subcontratadoDireccion != null)
-        'subcontratadoDireccion': subcontratadoDireccion,
-      if (subcontratadoTelefono != null)
-        'subcontratadoTelefono': subcontratadoTelefono,
+      if (subcontratadoDireccion != null) 'subcontratadoDireccion': subcontratadoDireccion,
+      if (subcontratadoTelefono != null) 'subcontratadoTelefono': subcontratadoTelefono,
       if (subcontratadoNumAutorizacion != null)
         'subcontratadoNumAutorizacion': subcontratadoNumAutorizacion,
       if (precioNeto != null) 'precioNeto': precioNeto,
-      if (congeladoAt != null)
-        'congeladoAt': congeladoAt!.toIso8601String(),
+      if (congeladoAt != null) 'congeladoAt': congeladoAt!.toIso8601String(),
     };
   }
 }
