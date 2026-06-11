@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gestion_transporte/core/models/company_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../../core/config/api_config.dart';
 import '../../../core/models/external_user_model.dart';
+import '../../../secrets.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -102,6 +105,27 @@ class AuthService {
     );
     if (response.statusCode != 200) {
       throw Exception('Error al inicializar los claims: ${response.body}');
+    }
+  }
+
+  Future<void> guardarFcmToken() async {
+    try {
+      final token = await getIdToken();
+      final messageToken = await FirebaseMessaging.instance.getToken(
+        vapidKey: kIsWeb ? Secrets.fcmVapidKey : null,
+      );
+      final uri = Uri.parse('${ApiConfig.baseUrl}/auth/fcm-token');
+      if (messageToken != null) {
+        await _client.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            ' Authorization': 'Bearer $token',
+          },
+          body: {'token': messageToken});
+      }
+    } catch (e) {
+      debugPrint('Error guardando FCM token: $e');
     }
   }
 

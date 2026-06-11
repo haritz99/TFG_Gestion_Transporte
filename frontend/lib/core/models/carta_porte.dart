@@ -11,6 +11,8 @@ class CartaPorteSnapshotModel {
   final String? subcontratadoDireccion;
   final String? subcontratadoTelefono;
   final String? subcontratadoNumAutorizacion;
+  final String? subVehiculoMatricula;
+  final String? subRemolqueMatricula;
   final double? precioNeto;
   final DateTime? congeladoAt;
 
@@ -27,6 +29,8 @@ class CartaPorteSnapshotModel {
     this.subcontratadoDireccion,
     this.subcontratadoTelefono,
     this.subcontratadoNumAutorizacion,
+    this.subVehiculoMatricula,
+    this.subRemolqueMatricula,
     this.precioNeto,
     this.congeladoAt,
   });
@@ -44,8 +48,9 @@ class CartaPorteSnapshotModel {
       subcontratadoNif: map['subcontratadoNif'] as String?,
       subcontratadoDireccion: map['subcontratadoDireccion'] as String?,
       subcontratadoTelefono: map['subcontratadoTelefono'] as String?,
-      subcontratadoNumAutorizacion:
-      map['subcontratadoNumAutorizacion'] as String?,
+      subcontratadoNumAutorizacion: map['subcontratadoNumAutorizacion'] as String?,
+      subVehiculoMatricula: map['subVehiculoMatricula'] as String?,
+      subRemolqueMatricula: map['subRemolqueMatricula'] as String?,
       precioNeto: (map['precioNeto'] as num?)?.toDouble(),
       congeladoAt: map['congeladoAt'] != null
           ? DateTime.parse(map['congeladoAt'] as String)
@@ -66,8 +71,9 @@ class CartaPorteSnapshotModel {
       if (subcontratadoNif != null) 'subcontratadoNif': subcontratadoNif,
       if (subcontratadoDireccion != null) 'subcontratadoDireccion': subcontratadoDireccion,
       if (subcontratadoTelefono != null) 'subcontratadoTelefono': subcontratadoTelefono,
-      if (subcontratadoNumAutorizacion != null)
-        'subcontratadoNumAutorizacion': subcontratadoNumAutorizacion,
+      if (subcontratadoNumAutorizacion != null) 'subcontratadoNumAutorizacion': subcontratadoNumAutorizacion,
+      if (subVehiculoMatricula != null) 'subVehiculoMatricula': subVehiculoMatricula,
+      if (subRemolqueMatricula != null) 'subRemolqueMatricula': subRemolqueMatricula,
       if (precioNeto != null) 'precioNeto': precioNeto,
       if (congeladoAt != null) 'congeladoAt': congeladoAt!.toIso8601String(),
     };

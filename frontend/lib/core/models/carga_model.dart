@@ -97,8 +97,6 @@ class CargaModel extends CargaBaseModel {
   final String? transportistaNombre;
   final String? pedidoId;
   final String? vehiculoId;
-  final String? subVehiculoMatricula;
-  final String? subRemolqueMatricula;
   final double? comisionCesion;
   final String? companyId;
   final String? clienteId;
@@ -114,8 +112,6 @@ class CargaModel extends CargaBaseModel {
     this.transportistaNombre,
     this.pedidoId,
     this.vehiculoId,
-    this.subVehiculoMatricula,
-    this.subRemolqueMatricula,
     this.comisionCesion,
     this.companyId,
     this.clienteId,
@@ -187,8 +183,6 @@ class CargaModel extends CargaBaseModel {
       transportistaId: map['transportistaId'] as String?,
       pedidoId: map['pedidoId'] as String?,
       vehiculoId: map['vehiculoId'] as String?,
-      subVehiculoMatricula: map['subVehiculoMatricula'] as String?,
-      subRemolqueMatricula: map['subRemolqueMatricula'] as String?,
       comisionCesion: (map['comisionCesion'] as num?)?.toDouble(),
       transportistaNombre: map['conductorNombre'] as String? ?? map['transportistaNombre'] as String?,
       companyId: map['companyId'] as String?,
@@ -220,8 +214,6 @@ class CargaModel extends CargaBaseModel {
       'conductorNombre': transportistaNombre,
       if (pedidoId != null) 'pedidoId': pedidoId,
       'vehiculoId': vehiculoId,
-      'subVehiculoMatricula': subVehiculoMatricula,
-      'subRemolqueMatricula': subRemolqueMatricula,
       if (comisionCesion != null) 'comisionCesion': comisionCesion,
       if (companyId != null) 'companyId': companyId,
       if (clienteId != null) 'clienteId': clienteId,
@@ -270,8 +262,6 @@ class CargaModel extends CargaBaseModel {
       transportistaNombre: clearTransportistaNombre ? null : (transportistaNombre ?? this.transportistaNombre),
       pedidoId: pedidoId ?? this.pedidoId,
       vehiculoId: clearVehiculoId ? null : (vehiculoId ?? this.vehiculoId),
-      subVehiculoMatricula: subVehiculoMatricula ?? this.subVehiculoMatricula,
-      subRemolqueMatricula: subRemolqueMatricula ?? this.subRemolqueMatricula,
       comisionCesion: comisionCesion ?? this.comisionCesion,
       companyId: companyId ?? this.companyId,
       clienteId: clienteId ?? this.clienteId,

@@ -33,6 +33,8 @@ frontend/lib/firebase_options_dev.dart
 frontend/lib/firebase_options_staging.dart
 frontend/lib/firebase_options_prod.dart
 
+frontend/web/firebase-messaging-sw.js
+
 features.md
 Planifación de orden de cargas-Flujo de trabajo descentralizado.md
 

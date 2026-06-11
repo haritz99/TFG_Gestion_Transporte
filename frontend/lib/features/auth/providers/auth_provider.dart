@@ -46,6 +46,7 @@ class AuthProvider extends ChangeNotifier {
         } else {
           await cargarConfiguracionEmpresa(_user!.companyId);
         }
+        await _authService.guardarFcmToken();
       } else {
         _user = null;
         _externalUser = null;

@@ -16,6 +16,7 @@ from datetime import timedelta
 
 from app.crud.company_crud import CompanyCRUD
 from app.schemas.company import EmpresaRegisterSchema
+from app.services.notification_service import NotificacionService
 
 try:
 	from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -33,7 +34,8 @@ except Exception:
 class CartaPorteService:
 	_TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "templates"
 
-	def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD), vehiculos_crud: VehiculoCRUD = Depends(VehiculoCRUD)):
+	def __init__(self, notificacion_service: NotificacionService = Depends(NotificacionService), crud: CargasCRUD = Depends(CargasCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD), vehiculos_crud: VehiculoCRUD = Depends(VehiculoCRUD)):
+		self._notificacion_service = notificacion_service
 		self._vehiculos_crud = vehiculos_crud
 		self._crud = crud
 		self._company_crud = company_crud
@@ -152,6 +154,19 @@ class CartaPorteService:
 		except Exception as e:
 			print(f"Error al actualizar la carga con la URL de la carta de porte: {e}")
 
+		self._notificacion_service.notificar(user_id=carga.get("cliente_id"), role="cargador",
+			titulo="Carta de porte generada!",
+			cuerpo=f"La carta de porte de la carga {carga_id} ha sido generada.",
+			data={"cargaId": carga_id},
+		)
+
+		subcontratado_id = carga.get("subcontratado_id")
+		if subcontratado_id:
+			self._notificacion_service.notificar(user_id=subcontratado_id, role="subcontratado",
+				titulo="Carta de porte generada!",
+				cuerpo=f"Se ha generado la carta de porte de tu carga cedida: {carga_id}.",
+				data={"cargaId": carga_id},
+		)
 		return url_firmada
 
 	@staticmethod

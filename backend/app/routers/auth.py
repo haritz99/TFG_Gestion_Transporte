@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_user, get_current_encargado
 from ..schemas.users import RegisterRequest
+from ..services.notification_service import NotificacionService
 from ..services.register_service import RegisterService
 
 router = APIRouter(prefix="/auth", tags=["custom-claims"])
@@ -46,3 +47,20 @@ def register(
         service: RegisterService = Depends(RegisterService)
 ):
     return service.create_firestore_user_with_company(current_user, data)
+
+
+class FcmTokenSchema(BaseModel):
+    token: str
+
+@router.post("/fcm-token")
+async def guardar_fcm_token(
+        body: FcmTokenSchema,
+        current_user: dict = Depends(get_current_user),
+        service: NotificacionService = Depends(NotificacionService),
+):
+    service.guardar_fcm_token(
+        uid=current_user["uid"],
+        role=current_user.get("role"),
+        token=body.token,
+    )
+    return {"ok": True}

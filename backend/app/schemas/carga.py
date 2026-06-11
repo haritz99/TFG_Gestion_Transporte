@@ -58,6 +58,9 @@ class CartaDePorteSnapshotSchema(BaseModel):
     subcontratadoTelefono: Optional[str] = None
     subcontratadoNumAutorizacion: Optional[str] = None
 
+    subVehiculoMatricula: Optional[str] = None
+    subRemolqueMatricula: Optional[str] = None
+
     precioNeto: Optional[float] = None # lo que cobra el subcontratado (despues de la comision)
     # Snapshot de marcas de tiempo
     congeladoAt: Optional[datetime.datetime] = None
@@ -73,11 +76,10 @@ class CargaSchema(CargaBaseSchema):
     conductorNombre: Optional[str] = None # Desnormalizacion para prevenir n+1
     pedidoId: Optional[str] = None
     vehiculoId: Optional[str] = None
-    subVehiculoMatricula: Optional[str] = None
-    subRemolqueMatricula: Optional[str] = None
     comisionCesion: Optional[float] = Field(default=None, ge=0, le=100)
     companyId: Optional[str] = None
     clienteId: Optional[str] = None
+    subcontratadoId: Optional[str] = None
     cartaPorteSnapshot: Optional[CartaDePorteSnapshotSchema] = None
     carta_porte_url: Optional[str] = None
     createdAt: Optional[datetime.datetime] = None

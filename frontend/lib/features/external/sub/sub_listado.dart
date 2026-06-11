@@ -127,11 +127,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
       ),
       CoreTableColumn<CargaModel>(
         label: 'Vehículo',
-        cellBuilder: (carga) => Text(carga.subVehiculoMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.cartaPorteSnapshot?.subVehiculoMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Remolque',
-        cellBuilder: (carga) => Text(carga.subRemolqueMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.cartaPorteSnapshot?.subRemolqueMatricula ?? 'Sin asignar', style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Estado',
@@ -182,8 +182,8 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
   void _showEditDialog(BuildContext context, CargaModel carga) {
     _conductorCtrl.text = carga.transportistaNombre ?? '';
     _transportistaCtrl.text = carga.transportistaId ?? '';
-    _vehiculoCtrl.text = carga.subVehiculoMatricula ?? '';
-    _remolqueCtrl.text = carga.subRemolqueMatricula ?? '';
+    _vehiculoCtrl.text = carga.cartaPorteSnapshot?.subRemolqueMatricula ?? '';
+    _remolqueCtrl.text = carga.cartaPorteSnapshot?.subRemolqueMatricula ?? '';
     showDialog(
       context: context,
       builder: (ctx) {

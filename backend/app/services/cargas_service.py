@@ -243,6 +243,7 @@ class CargasService:
             "updatedAt": datetime.datetime.now(datetime.timezone.utc),
             "transportistaId": None,
             "conductorNombre": None,
+            "subcontratadoId": subcontratado.uid,
             "subVehiculoMatricula": None,
             "subRemolqueMatricula": None,
             'comisionCesion': comision,

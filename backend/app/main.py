@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .middleware.rate_limit import RateLimitMiddleware
 from .routers import trans, external_users, pedidos, dashboard, cargas
 from .routers import vehiculos
-from .routers import custom_claims
+from .routers import auth
 import os
 import firebase_admin
 from firebase_admin import credentials
@@ -69,7 +69,7 @@ app.add_middleware(
     path_prefixes=["/auth", "/trans", "/vehi", "/ext", "/pedidos", "/cargas", "/dashboard"],
 )
 
-app.include_router(custom_claims.router)
+app.include_router(auth.router)
 app.include_router(trans.router)
 app.include_router(vehiculos.router)
 app.include_router(external_users.router)
