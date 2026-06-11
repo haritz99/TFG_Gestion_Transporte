@@ -154,7 +154,7 @@ class CartaPorteService:
 		except Exception as e:
 			print(f"Error al actualizar la carga con la URL de la carta de porte: {e}")
 
-		self._notificacion_service.notificar(user_id=carga.get("cliente_id"), role="cargador",
+		self._notificacion_service.notificar(user_id=carga.get("cliente_id"), roles=["cliente"],
 			titulo="Carta de porte generada!",
 			cuerpo=f"La carta de porte de la carga {carga_id} ha sido generada.",
 			data={"cargaId": carga_id},
@@ -162,7 +162,7 @@ class CartaPorteService:
 
 		subcontratado_id = carga.get("subcontratado_id")
 		if subcontratado_id:
-			self._notificacion_service.notificar(user_id=subcontratado_id, role="subcontratado",
+			self._notificacion_service.notificar(user_id=subcontratado_id, roles=["subcontratado"],
 				titulo="Carta de porte generada!",
 				cuerpo=f"Se ha generado la carta de porte de tu carga cedida: {carga_id}.",
 				data={"cargaId": carga_id},

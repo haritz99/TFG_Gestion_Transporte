@@ -120,9 +120,9 @@ class AuthService {
           uri,
           headers: {
             'Content-Type': 'application/json',
-            ' Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $token',
           },
-          body: {'token': messageToken});
+          body: jsonEncode({'token': messageToken}));
       }
     } catch (e) {
       debugPrint('Error guardando FCM token: $e');

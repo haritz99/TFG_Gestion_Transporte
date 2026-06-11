@@ -60,7 +60,7 @@ async def guardar_fcm_token(
 ):
     service.guardar_fcm_token(
         uid=current_user["uid"],
-        role=current_user.get("role"),
+        roles=current_user.get("rol"),
         token=body.token,
     )
     return {"ok": True}
