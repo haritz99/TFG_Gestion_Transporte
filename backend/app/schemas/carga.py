@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
+from .direccion import UbicacionSchema
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema
@@ -28,8 +29,8 @@ class EstadoCarga(str, enum.Enum):
 
 
 class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
-    origen: str = Field(..., min_length=1)
-    destino: str = Field(..., min_length=1)
+    origen: UbicacionSchema
+    destino: UbicacionSchema
     mercancia: str = Field(..., min_length=1)
     numBultos: int = Field(..., gt=0)
     peso: float = Field(..., gt=0)

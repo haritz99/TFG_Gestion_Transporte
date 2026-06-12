@@ -208,7 +208,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Origen: ${carga.origen} - Destino: ${carga.destino}',
+                    'Origen: ${carga.origenTexto} - Destino: ${carga.destinoTexto}',
                     style: AppTextStyles.bodySm,
                   ),
                   const SizedBox(height: 2),

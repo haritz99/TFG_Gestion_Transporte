@@ -85,11 +85,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
       ),
       CoreTableColumn<CargaModel>(
         label: 'Origen',
-        cellBuilder: (carga) => Text(carga.origen, style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.origenTexto, style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Destino',
-        cellBuilder: (carga) => Text(carga.destino, style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.destinoTexto, style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Fecha Carga',

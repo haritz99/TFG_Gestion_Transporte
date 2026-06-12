@@ -1,8 +1,9 @@
 import 'carta_porte.dart';
+import 'direccion_model.dart';
 
 abstract class CargaBaseModel {
-  final String origen;
-  final String destino;
+  final UbicacionModel origen;
+  final UbicacionModel destino;
   final String mercancia;
   final int numBultos;
   final double peso;
@@ -22,6 +23,9 @@ abstract class CargaBaseModel {
     this.ancho,
     this.alto,
   });
+
+  String get origenTexto => origen.direccionTexto;
+  String get destinoTexto => destino.direccionTexto;
 }
 
 enum EstadoCarga {
@@ -49,6 +53,7 @@ class TipoCargaModel extends CargaBaseModel {
   final String? descripcion;
   final double pesoMax;
   final String companyId;
+  final String clienteId;
 
   const TipoCargaModel({
     required this.id,
@@ -56,6 +61,7 @@ class TipoCargaModel extends CargaBaseModel {
     this.descripcion,
     required this.pesoMax,
     required this.companyId,
+    required this.clienteId,
     required super.origen,
     required super.destino,
     required super.mercancia,
@@ -74,8 +80,9 @@ class TipoCargaModel extends CargaBaseModel {
       descripcion: map['descripcion'] as String?,
       pesoMax: (map['pesoMax'] as num).toDouble(),
       companyId: map['companyId'] as String,
-      origen: map['origen'] as String,
-      destino: map['destino'] as String,
+      clienteId: map['clienteId'] as String,
+      origen: map['origen'] as UbicacionModel,
+      destino: map['destino'] as UbicacionModel,
       mercancia: map['mercancia'] as String,
       numBultos: map['numBultos'] as int,
       peso: (map['peso'] as num).toDouble(),
@@ -84,6 +91,25 @@ class TipoCargaModel extends CargaBaseModel {
       ancho: (map['ancho'] as num?)?.toDouble(),
       alto: (map['alto'] as num?)?.toDouble(),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'nombre': nombre,
+      if (descripcion != null) 'descripcion': descripcion,
+      'pesoMax': pesoMax,
+      'companyId': companyId,
+      'clienteId': clienteId,
+      'origen': origen.toMap(),
+      'destino': destino.toMap(),
+      'mercancia': mercancia,
+      'numBultos': numBultos,
+      'peso': peso,
+      'precio': precio,
+      if (largo != null) 'largo': largo,
+      if (ancho != null) 'ancho': ancho,
+      if (alto != null) 'alto': alto,
+    };
   }
 }
 
@@ -167,8 +193,8 @@ class CargaModel extends CargaBaseModel {
   factory CargaModel.fromMap(Map<String, dynamic> map, String id) {
     return CargaModel(
       id: id,
-      origen: map['origen'] as String,
-      destino: map['destino'] as String,
+      origen: UbicacionModel.fromMap(map['origen'] as Map<String, dynamic>),
+      destino: UbicacionModel.fromMap(map['destino'] as Map<String, dynamic>),
       mercancia: map['mercancia'] as String,
       numBultos: map['numBultos'] as int,
       peso: (map['peso'] as num).toDouble(),
@@ -197,8 +223,8 @@ class CargaModel extends CargaBaseModel {
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,
-      'origen': origen,
-      'destino': destino,
+      'origen': origen.toMap(),
+      'destino': destino.toMap(),
       'mercancia': mercancia,
       'numBultos': numBultos,
       'peso': peso,
@@ -241,8 +267,8 @@ class CargaModel extends CargaBaseModel {
     double? comisionCesion,
     String? companyId,
     String? clienteId,
-    String? origen,
-    String? destino,
+    UbicacionModel? origen,
+    UbicacionModel? destino,
     String? mercancia,
     int? numBultos,
     double? peso,

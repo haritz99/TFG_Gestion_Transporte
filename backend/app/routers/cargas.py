@@ -45,6 +45,14 @@ def get_tipos_carga(
 
     return service.get_tipos_carga(current_user.get("companyId"), cliente_id)
 
+@router.post("/tipos", response_model=TipoCargaSchema)
+def create_tipo_carga(
+        tipo_carga: TipoCargaSchema,
+        current_user: dict[str, Any] = Depends(get_current_encargado),
+        service: CargasService = Depends(CargasService)):
+
+    return service.create_tipo_carga(current_user.get("companyId"), tipo_carga)
+
 @router.get("/subcontratado", response_model=list[CargaSchema])
 def get_cargas_subcontratado(
     current_user: dict[str, Any] = Depends(get_current_sub),

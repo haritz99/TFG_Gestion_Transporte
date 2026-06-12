@@ -1,12 +1,9 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Any
 from pydantic.alias_generators import to_camel
-class DireccionSchema(BaseModel):
-    calle: str = Field(..., min_length=1)
-    ciudad: str = Field(..., min_length=1)
-    provincia: str = Field(..., min_length=1)
-    codigoPostal: str = Field(..., min_length=4)
-    pais: str = Field(default="España", min_length=1)
+
+from app.schemas.direccion import DireccionSchema
+
 
 class EmpresaRegisterSchema(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)

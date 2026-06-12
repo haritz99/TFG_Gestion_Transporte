@@ -293,6 +293,13 @@ class CargaProvider extends ChangeNotifier {
     }
   }
 
+  Future<TipoCargaModel> crearTipoCarga(TipoCargaModel tipo) async {
+      final creado = await _service.createTipoCarga(tipo);
+      _tiposCarga.add(creado);
+      notifyListeners();
+      return creado;
+  }
+
   void actualizarFechasCarga(String cargaId, DateTime start, DateTime end) {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {

@@ -39,6 +39,13 @@ class CargasService:
         print("docs: ", docs)
         return [TipoCargaSchema.from_firestore(doc, company_id) for doc in docs]
 
+    def create_tipo_carga(self, company_id: str, tipo_carga: TipoCargaSchema):
+        payload = tipo_carga.model_dump()
+        payload["companyId"] = company_id
+        doc = self._crud.create_tipo_carga(payload)
+        return TipoCargaSchema.from_firestore(doc, company_id)
+
+
     def calculate_asignados(self, company_id: str):
         result = self._crud.get_cargas_count(company_id, EstadoCarga.ASIGNADO.value)
         if result and len(result) > 0 and len(result[0]) > 0:

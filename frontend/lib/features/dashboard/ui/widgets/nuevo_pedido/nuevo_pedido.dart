@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../../../cargas/providers/pedido_provider.dart';
 import '../../../../cargas/providers/carga_provider.dart';
+import 'nuevo_tipo_carga.dart';
 
 class NuevoPedidoForm extends StatefulWidget {
   final List<ExternalUserModel> clientes;
@@ -53,6 +55,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
           rol: user.rol,
           datosCompletos: true,
           email: user.email,
+          companyId: user.companyId,
         );
         pedidoProvider.actualizarDatosTemporales(cliente: _selectedCliente);
       }
@@ -142,14 +145,6 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Descripción', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold, color: AppColors.titleText)),
-          const SizedBox(height: 3),
-          TextFormField(
-            controller: _descripcionController,
-            style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
-            onChanged: (val) => context.read<PedidoProvider>().actualizarDatosTemporales(descripcion: val),
-          ),
-          const SizedBox(height: 16),
           Text('Cargador', style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold, color: AppColors.titleText)),
           const SizedBox(height: 8),
           _buildCargadorDropDown(widget.clientes),
@@ -188,7 +183,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
           const SizedBox(height: 8),
           Text('${_selectedTipo!.precio}€/ud', style: AppTextStyles.bodySm),
           const SizedBox(height: 8),
-          Text('Origen: ${_selectedTipo!.origen} - Destino: ${_selectedTipo!.destino}',
+          Text('Origen: ${_selectedTipo!.origenTexto} - Destino: ${_selectedTipo!.destinoTexto}',
               style: AppTextStyles.bodySm),
         ],
       ),
@@ -339,10 +334,30 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
   Widget _buildTipoYCantidad() {
     return Row(
       children: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: CupertinoColors.extraLightBackgroundGray,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: _selectedCliente != null ? _openNuevoTipoCargaDialog : null,
+          child: const Text('Añadir', style: AppTextStyles.buttonSmall),
+        ),
         _buildTipo(),
         const SizedBox(width: 8),
         _buildCantidadYAccion(),
       ],
+    );
+  }
+
+  Future<void> _openNuevoTipoCargaDialog() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: NuevoTipoCarga(cliente: _selectedCliente!),
+        );
+      },
     );
   }
 

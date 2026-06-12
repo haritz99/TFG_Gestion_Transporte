@@ -62,6 +62,28 @@ class CargaService {
     return data.map((e) => TipoCargaModel.fromMap(e, e['id'])).toList();
   }
 
+  Future<TipoCargaModel> createTipoCarga(TipoCargaModel tipo) async {
+    final token = await tokenProvider.getRequiredToken();
+
+    final uri = Uri.parse('$_baseUrl/tipos');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(tipo.toMap()),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Error al crear tipo de carga: ${response.statusCode} - ${response.body}');
+    }
+
+    final Map<String, dynamic> data = jsonDecode(response.body);
+    return TipoCargaModel.fromMap(data, data['id']);
+  }
+
   Future<void> updateCargas(List<CargaModel> cargas) async {
     final token = await tokenProvider.getRequiredToken();
 

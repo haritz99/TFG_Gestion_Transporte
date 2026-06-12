@@ -8,9 +8,11 @@ class ExternalUserModel {
   final String nombre;
   final List<String> rol;
   final bool datosCompletos;
+  final String companyId;
   final bool activo;
   final DateTime? createdAt;
   final List<String> cargasCedidas;
+
 
   ExternalUserModel({
     required this.uid,
@@ -18,6 +20,7 @@ class ExternalUserModel {
     required this.nombre,
     required this.rol,
     required this.datosCompletos,
+    required this.companyId,
     this.activo = true,
     this.createdAt,
     this.cargasCedidas = const [],
@@ -50,6 +53,7 @@ class ExternalUserModel {
       nombre: map['nombreComercial'] ?? 'Sin nombre',
       rol: normalizedRol,
       datosCompletos: map['datosCompletos'] ?? false,
+      companyId: map['companyId'] ?? '',
       activo: map['activo'] ?? true,
       createdAt: date,
       cargasCedidas: cargasCedidas,
@@ -62,6 +66,7 @@ class ExternalUserModel {
       'nombreComercial': nombre,
       'rol': rol,
       'datosCompletos': datosCompletos,
+      'companyId': companyId,
       'activo': activo,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'cargasCedidas': cargasCedidas,
