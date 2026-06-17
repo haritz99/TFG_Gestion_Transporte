@@ -45,7 +45,7 @@ def get_tipos_carga(
 
     return service.get_tipos_carga(current_user.get("companyId"), cliente_id)
 
-@router.post("/tipos", response_model=TipoCargaSchema)
+@router.post("/tipos", response_model=TipoCargaSchema, status_code=status.HTTP_201_CREATED)
 def create_tipo_carga(
         tipo_carga: TipoCargaSchema,
         current_user: dict[str, Any] = Depends(get_current_encargado),

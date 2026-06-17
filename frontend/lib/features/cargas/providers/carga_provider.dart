@@ -287,6 +287,7 @@ class CargaProvider extends ChangeNotifier {
       _tiposCarga = await _service.fetchTiposCarga(cargadorId);
     } catch (e) {
       _errorMessage = e.toString();
+      print("Error al obtener tipos de carga: $_errorMessage");
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -28,16 +28,7 @@ class EstadoCarga(str, enum.Enum):
     CEDIDO = 'cedido'
 
 
-class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
-    origen: UbicacionSchema
-    destino: UbicacionSchema
-    mercancia: str = Field(..., min_length=1)
-    numBultos: int = Field(..., gt=0)
-    peso: float = Field(..., gt=0)
-    precio: float = Field(..., gt=0)
-    largo: Optional[float] = Field(default=None, gt=0)
-    ancho: Optional[float] = Field(default=None, gt=0)
-    alto: Optional[float] = Field(default=None, gt=0)
+
 
 
 class CartaDePorteSnapshotSchema(BaseModel):
@@ -66,6 +57,16 @@ class CartaDePorteSnapshotSchema(BaseModel):
     # Snapshot de marcas de tiempo
     congeladoAt: Optional[datetime.datetime] = None
 
+class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
+    origen: UbicacionSchema
+    destino: UbicacionSchema
+    mercancia: str = Field(..., min_length=1)
+    numBultos: int = Field(..., gt=0)
+    peso: float = Field(..., gt=0)
+    precio: float = Field(..., gt=0)
+    largo: Optional[float] = Field(default=None, gt=0)
+    ancho: Optional[float] = Field(default=None, gt=0)
+    alto: Optional[float] = Field(default=None, gt=0)
 
 class CargaSchema(CargaBaseSchema):
     id: Optional[str] = None

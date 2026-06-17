@@ -5,6 +5,7 @@ from fastapi import HTTPException, Depends
 from ..crud.cargas_crud import CargasCRUD
 from ..crud.user_crud import UserCRUD
 from ..schemas.carga import TipoCargaSchema, CargaSchema, EstadoCarga, CartaDePorteSnapshotSchema
+from ..schemas.direccion import DireccionSchema
 from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from app.crud.pedidos_crud import PedidosCRUD
 from app.services.cargas_service import CargasService
@@ -89,7 +90,7 @@ class PedidosService:
         cliente_doc = self._users_crud.get_cliente_by_id(cliente_id)
         cliente = ClienteSchema.from_firestore(cliente_doc, company_id)
 
-        direccion_cargador_format = f"{cliente.direccionFiscal.calle}, {cliente.direccionFiscal.codigoPostal} {cliente.direccionFiscal.ciudad} ({cliente.direccionFiscal.provincia})"
+        direccion_cargador_format = DireccionSchema.format_direccion(cliente.direccionFiscal.model_dump() if cliente.direccion else None)
 
         return CartaDePorteSnapshotSchema(
             destinatarioNombre=pedido.destinatarioNombre,

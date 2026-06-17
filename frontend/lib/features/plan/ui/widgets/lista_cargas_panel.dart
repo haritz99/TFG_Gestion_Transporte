@@ -155,12 +155,12 @@ class ListaCargasPanel extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${carga.origen} → ${carga.destino}',
+            '${carga.origen.direccion.ciudad} → ${carga.destino.direccion.ciudad}',
             style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText),
           ),
           const SizedBox(height: 4),
           Text(
-            '${carga.peso}t · ${carga.numBultos} bultos',
+            '${carga.peso}kg - ${carga.numBultos} bultos',
             style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText),
           ),
         ],

@@ -15,6 +15,17 @@ class DireccionModel {
     this.pais = 'España',
   });
 
+  String formatDireccion(DireccionModel? direccion) {
+    if (direccion == null) return '';
+
+    final calle = direccion.calle;
+    final cp = direccion.codigoPostal;
+    final ciudad = direccion.ciudad;
+    final provincia = direccion.provincia;
+
+    return '$calle, $cp $ciudad ($provincia)'.trim();
+  }
+
   factory DireccionModel.fromMap(Map<String, dynamic> map) {
     return DireccionModel(
       calle: map['calle'] as String,

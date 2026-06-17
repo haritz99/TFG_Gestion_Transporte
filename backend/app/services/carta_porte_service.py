@@ -15,7 +15,7 @@ from app.crud.vehiculos_crud import VehiculoCRUD
 from datetime import timedelta
 
 from app.crud.company_crud import CompanyCRUD
-from app.schemas.company import EmpresaRegisterSchema
+from app.schemas.direccion import DireccionSchema
 from app.services.notification_service import NotificacionService
 
 try:
@@ -103,7 +103,7 @@ class CartaPorteService:
 		company_doc = self._company_crud.get_by_id(company_id)
 		if company_doc.exists:
 			company_data = self._normalize_for_template(company_doc.to_dict() or {})
-			company_data["direccion"] = EmpresaRegisterSchema.format_direccion(company_data.get("direccion"))
+			company_data["direccion"] = DireccionSchema.format_direccion(company_data.get("direccion"))
 			carga_data["porteador"] = company_data
 
 		vehiculo_id = carga_data.get("vehiculo_id")
@@ -133,6 +133,7 @@ class CartaPorteService:
 			loader=FileSystemLoader(str(template_dir)),
 			autoescape=select_autoescape(["html", "xml"]),
 		)
+		env.filters['format_direccion'] = DireccionSchema.format_direccion
 
 		blob_path = f"cartas_porte/{company_id}/carta_{carga_id}.pdf"
 		url_firmada = self.generar_url_firmada(blob_path)

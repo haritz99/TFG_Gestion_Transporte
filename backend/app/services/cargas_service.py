@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone, time
 from typing import Optional, List
 
 import pytz
@@ -28,8 +28,8 @@ class CargasService:
         return self._carta_porte_service.generar_carta_porte_pdf(carga_id, company_id)
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
-        dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min) if fecha_inicio else None
-        dt_fin = datetime.datetime.combine(fecha_fin, datetime.time.max) if fecha_fin else None
+        dt_inicio = datetime.combine(fecha_inicio, time.min) if fecha_inicio else None
+        dt_fin = datetime.combine(fecha_fin, time.max) if fecha_fin else None
         
         docs = self._crud.get_todas_las_cargas(company_id, cliente_id, pedido_id, transportista_id, estado.value if estado else None, dt_inicio, dt_fin)
         return [CargaSchema.from_firestore(doc, company_id) for doc in docs]
@@ -42,8 +42,11 @@ class CargasService:
     def create_tipo_carga(self, company_id: str, tipo_carga: TipoCargaSchema):
         payload = tipo_carga.model_dump()
         payload["companyId"] = company_id
-        doc = self._crud.create_tipo_carga(payload)
-        return TipoCargaSchema.from_firestore(doc, company_id)
+        now = datetime.now(timezone.utc)
+        payload["createdAt"] = now
+        payload["updatedAt"] = now
+        data = self._crud.create_tipo_carga(payload)
+        return TipoCargaSchema(**data)
 
 
     def calculate_asignados(self, company_id: str):
@@ -58,7 +61,7 @@ class CargasService:
             return result[0][0].value
         return 0
 
-    def calculate_cargas_hoy(self, company_id: str, sod: datetime.datetime, eod: datetime.datetime, estado: Optional[EstadoCarga] = None):
+    def calculate_cargas_hoy(self, company_id: str, sod: datetime, eod: datetime, estado: Optional[EstadoCarga] = None):
         if sod.tzinfo is None: sod = pytz.utc.localize(sod)
         if eod.tzinfo is None: eod = pytz.utc.localize(eod)
         result = self._crud.get_cargas_hoy_count(company_id, sod, eod, estado.value if estado else None)
@@ -156,7 +159,7 @@ class CargasService:
             raise HTTPException(status_code=400, detail="No hay campos para actualizar")
 
         update_data["estado"] = self._calcular_estado_sub(carga, carga_data)
-        update_data["updatedAt"] = datetime.datetime.now(datetime.timezone.utc)
+        update_data["updatedAt"] = datetime.now(timezone.utc)
 
         self._crud.update_carga_doc(carga_id, update_data)
 
@@ -195,7 +198,7 @@ class CargasService:
         if carga_data.get("companyId") != company_id:
             raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
 
-        self._crud.update_carga_doc(carga_id, {"bufferHours": buffer_hours, "updatedAt": datetime.datetime.now(datetime.timezone.utc)})
+        self._crud.update_carga_doc(carga_id, {"bufferHours": buffer_hours, "updatedAt": datetime.now(timezone.utc)})
 
 
     def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str, comision: float = 3.0) -> CargaSchema:
@@ -242,12 +245,12 @@ class CargasService:
         snapshot.subcontratadoTelefono = subcontratado.telefono
         snapshot.subcontratadoNumAutorizacion = subcontratado.numeroAutorizacion
         snapshot.precioNeto = precio_neto
-        #snapshot.congeladoAt = datetime.datetime.now(datetime.timezone.utc)
+        #snapshot.congeladoAt = datetime.now(timezone.utc)
 
         update_payload = {
             "cartaPorteSnapshot": snapshot.model_dump(),
             "estado": EstadoCarga.CEDIDO.value,
-            "updatedAt": datetime.datetime.now(datetime.timezone.utc),
+            "updatedAt": datetime.now(timezone.utc),
             "transportistaId": None,
             "conductorNombre": None,
             "subcontratadoId": subcontratado.uid,
@@ -282,4 +285,5 @@ class CargasService:
         if not cargas_cedidas_ids:
             return []
         docs = self._crud.get_cargas_by_ids(cargas_cedidas_ids)
+        print("DOCS:" + docs)
         return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]

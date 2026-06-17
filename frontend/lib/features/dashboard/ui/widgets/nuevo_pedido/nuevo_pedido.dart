@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -332,20 +331,27 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
   }
 
   Widget _buildTipoYCantidad() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: CupertinoColors.extraLightBackgroundGray,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.mutedText,
+              padding: const EdgeInsets.all(14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: _selectedCliente != null ? _openNuevoTipoCargaDialog : null,
+            child: const Text('Crear nuevo tipo', style: AppTextStyles.buttonSmall),
           ),
-          onPressed: _selectedCliente != null ? _openNuevoTipoCargaDialog : null,
-          child: const Text('Añadir', style: AppTextStyles.buttonSmall),
-        ),
-        _buildTipo(),
-        const SizedBox(width: 8),
-        _buildCantidadYAccion(),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildTipo()),
+              const SizedBox(width: 8),
+              _buildCantidadYAccion(),
+            ],
+          ),
       ],
     );
   }
@@ -355,7 +361,10 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       context: context,
       builder: (context) {
         return Dialog(
-          child: NuevoTipoCarga(cliente: _selectedCliente!),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: NuevoTipoCarga(cliente: _selectedCliente!),
+          )
         );
       },
     );
@@ -363,9 +372,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
 
   Widget _buildTipo() {
     final cargaProvider = context.watch<CargaProvider>();
-    return Expanded(
-      flex: 2,
-      child: DropdownButtonFormField<TipoCargaModel>(
+    return DropdownButtonFormField<TipoCargaModel>(
         initialValue: _selectedTipo,
         hint: const Text('Tipo de carga'),
         decoration: _inputDecoration('Tipo de carga'),
@@ -387,7 +394,6 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
           });
           context.read<PedidoProvider>().eliminarCarga();
         },
-      ),
     );
   }
 

@@ -56,11 +56,12 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
     }
 
     final List<Appointment> appointments = cargasVisibles.map((c) {
+      final subject = '${c.mercancia} - ${c.origen.direccion.ciudad} → ${c.destino.direccion.ciudad}';
       return Appointment(
         id: c.id,
         startTime: c.fechaCarga,
         endTime: c.fechaDescarga,
-        subject: c.mercancia,
+        subject: subject,
         color: _getColorPorEstado(c),
         resourceIds: [c.pedidoId ?? 'unknown'],
       );

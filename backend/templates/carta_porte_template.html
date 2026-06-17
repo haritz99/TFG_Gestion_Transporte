@@ -239,14 +239,14 @@
                 {{ field('NIF / CIF Cargador', snapshot.cliente_nif if snapshot else none, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección de carga', snapshot.cliente_direccion if snapshot else none, 'full') }}
+                {{ field('Dirección del cargador', snapshot.cliente_direccion if snapshot else none, 'full') }}
             </div>
             <div class="row">
                 {{ field('Destinatario', snapshot.destinatario_nombre, 'half') }}
                 {{ field('NIF / CIF Destinatario', snapshot.destinatario_nif, 'half', 'mono') }}
             </div>
             <div class="row">
-                {{ field('Dirección Destino', carga.destino if carga.destino else snapshot.destinatario_direccion, 'full') }}
+                {{ field('Dirección Destinatario', snapshot.destinatario_direccion if snapshot else none, 'full') }}
             </div>
         </div>
     </div>
@@ -279,11 +279,11 @@
         <div class="section-title">3. Datos de la Ruta, Fechas y Vehículo</div>
         <div class="rows">
             <div class="row">
-                {{ field('Punto de Carga', snapshot.cliente_direccion if snapshot else none, 'half') }}
+                {{ field('Punto de Carga', (carga.origen.direccion | format_direccion) if snapshot else none, 'half') }}
                 {{ field('Fecha / Hora prevista Carga', carga.fecha_carga, 'half') }}
             </div>
             <div class="row">
-                {{ field('Punto de Entrega', snapshot.destinatario_direccion if snapshot else none, 'half') }}
+                {{ field('Punto de Entrega', (carga.destino.direccion | format_direccion) if snapshot else none, 'half') }}
                 {{ field('Fecha / Hora prevista Entrega', carga.fecha_descarga, 'half') }}
             </div>
             <div class="row">

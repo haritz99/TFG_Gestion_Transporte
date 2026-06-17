@@ -149,6 +149,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
     final mismoDia = _esMismoDia(carga.fechaCarga, carga.fechaDescarga);
 
     final isCarga = entry.op == Operacion.carga;
+    final operacion = isCarga ? 'Carga' : 'Descarga';
     final horaCarga = DateFormat('HH:mm').format(carga.fechaCarga);
     final horaDescarga = DateFormat('HH:mm').format(carga.fechaDescarga);
     final fechaDescargaCompleta = DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaDescarga);
@@ -200,7 +201,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '#${carga.pedidoId} - ${carga.id}',
+                    '#${carga.pedidoId} - ${carga.id} - $operacion',
                     style: AppTextStyles.bodySm.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.bodyText,
@@ -208,7 +209,12 @@ class _CoreCalendarState extends State<CoreCalendar> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Origen: ${carga.origenTexto} - Destino: ${carga.destinoTexto}',
+                    'Origen: ${carga.origenTexto}',
+                    style: AppTextStyles.bodySm,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Destino: ${carga.destinoTexto}',
                     style: AppTextStyles.bodySm,
                   ),
                   const SizedBox(height: 2),

@@ -1,8 +1,6 @@
 from ..firebase_config import db
 from google.cloud import firestore
 
-from ..schemas.carga import TipoCargaSchema
-
 
 class CargasCRUD:
     def get_todas_las_cargas(self, company_id: str, cliente_id=None, pedido_id=None, transportista_id=None, estado=None, dt_inicio=None, dt_fin=None):
@@ -33,7 +31,10 @@ class CargasCRUD:
                 .where("clienteId", "==", cliente_id)).get()
 
     def create_tipo_carga(self, tipo_carga_data: dict):
-        db.collection("tipos_carga").add(tipo_carga_data)
+        doc_ref = db.collection("tipos_carga").document()
+        tipo_carga_data["id"] = doc_ref.id
+        doc_ref.set(tipo_carga_data)
+        return tipo_carga_data
 
     def get_tipo_carga_by_id(self, tipo_id: str) -> list:
         return db.collection("tipos_carga").document(tipo_id).get()

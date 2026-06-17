@@ -7,6 +7,19 @@ class DireccionSchema(BaseModel):
     codigoPostal: str = Field(..., min_length=4)
     pais: str = Field(default="España", min_length=1)
 
+    @staticmethod
+    def format_direccion(direccion: dict) -> str:
+
+        if not direccion:
+            return ""
+
+        calle = direccion.get("calle", "")
+        cp = direccion.get("codigo_postal", "")
+        ciudad = direccion.get("ciudad", "")
+        provincia = direccion.get("provincia", "")
+
+        return f"{calle}, {cp} {ciudad} ({provincia})".strip()
+
 
 class UbicacionSchema(BaseModel):
     direccion: DireccionSchema

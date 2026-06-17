@@ -189,6 +189,7 @@ class _NuevoTipoCargaState extends State<NuevoTipoCarga> {
                   const SizedBox(height: 16),
                   _seccionUbicacion(titulo: 'Origen', controllers: _origenUbicacion),
                   _seccionUbicacion(titulo: 'Destino', controllers: _destinoUbicacion),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(child: _campoNumero(_numBultosController, 'Nº bultos', _validatorEntero)),

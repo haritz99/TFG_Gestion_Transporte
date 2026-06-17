@@ -10,7 +10,6 @@ Future<List<SugerenciaDireccion>> buscarDirecciones(String query) async {
   final uri = Uri.https('photon.komoot.io', '/api/', {
     'q': texto,
     'limit': '5',
-    'lang': 'es',
   });
 
   try {

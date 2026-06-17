@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/carga_model.dart';
+import '../../../core/models/direccion_model.dart';
 import '../../../core/models/external_user_model.dart';
 import '../../../core/models/pedido_model.dart';
 import '../../../core/models/user_model.dart';
@@ -156,11 +157,15 @@ class PedidoProvider extends ChangeNotifier {
         'fechaDescarga': (asig.fechaLimite ?? fechaDescarga).toIso8601String(),
       }).toList();
 
-      final calle = _datosTemporalPedido['clienteCalle'] ?? '';
-      final cp = _datosTemporalPedido['clienteCp'] ?? '';
-      final ciudad = _datosTemporalPedido['clienteCiudad'] ?? '';
-      final provincia = _datosTemporalPedido['clienteProvincia'] ?? '';
-      final direccionCompleta = "$calle, CP: $cp, $ciudad, $provincia".trim();
+      final direccion = DireccionModel(
+        calle: _datosTemporalPedido['clienteCalle'] ?? '',
+        ciudad: _datosTemporalPedido['clienteCiudad'] ?? '',
+        provincia: _datosTemporalPedido['clienteProvincia'] ?? '',
+        codigoPostal: _datosTemporalPedido['clienteCp'] ?? '',
+        pais: _datosTemporalPedido['clientePais'] ?? 'España',
+      );
+
+      final direccionCompleta = direccion.formatDireccion(direccion);
 
       await _service.crearPedido(
         destinatarioNombre: _datosTemporalPedido['clienteNombre'] ?? '',
