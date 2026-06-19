@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
+import '../../../features/auth/providers/auth_provider.dart';
 import 'app_sidebar.dart';
 
 class AppNavigationShell extends StatelessWidget {
@@ -12,12 +14,12 @@ class AppNavigationShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveBreakpoints.of(context).smallerOrEqualTo(TABLET);
-
+    final nombreEmpresa = context.read<AuthProvider>().company!.nombre;
     if (isMobile) {
       // En movil se usa un Drawer
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Nombre', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          title: Text(nombreEmpresa, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           elevation: 0,
         ),
         drawer: const Drawer(

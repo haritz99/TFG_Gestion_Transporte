@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:gestion_transporte/core/models/external_user_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../../../core/models/carga_model.dart';
@@ -144,21 +145,10 @@ class CargaService {
 
   Future<CargaModel> updateCargaSubcontratado({
     required String cargaId,
-    EstadoCarga? estado,
-    String? transportistaId,
-    String? conductorNombre,
-    String? subVehiculoMatricula,
-    String? subRemolqueMatricula,
+    required UpdateCargaSubcontratadoDto dto,
   }) async {
     final token = await tokenProvider.getRequiredToken();
     final uri = Uri.parse('$_baseUrl/sub/$cargaId');
-
-    final Map<String, dynamic> body = {};
-    if (estado != null) body['estado'] = estado.value;
-    if (transportistaId != null) body['transportistaId'] = transportistaId;
-    if (conductorNombre != null) body['conductorNombre'] = conductorNombre;
-    if (subVehiculoMatricula != null) body['subVehiculoMatricula'] = subVehiculoMatricula;
-    if (subRemolqueMatricula != null) body['subRemolqueMatricula'] = subRemolqueMatricula;
 
     final response = await http.put(
       uri,
@@ -166,7 +156,7 @@ class CargaService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(body),
+      body: jsonEncode(dto.toMap()),
     );
 
     if (response.statusCode == 200) {

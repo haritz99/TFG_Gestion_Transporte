@@ -30,7 +30,7 @@ class DashboardKpiGrid extends StatelessWidget {
           value: provider.cargasAsignadas.toString(),
         ),
         DashboardKpiCard(
-          label: 'Cargas sin asignar',
+          label: 'Cargas pendientes',
           value: provider.cargasSinAsignar.toString(),
           bottomContent: Align(
             alignment: Alignment.bottomRight,

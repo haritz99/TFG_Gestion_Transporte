@@ -76,29 +76,10 @@ class CartaPorteService:
 		carga_data["id"] = doc.id
 		carga_data = self._normalize_for_template(carga_data)
 
-		if isinstance(carga_data, dict):
-			snapshot = carga_data.get("carta_porte_snapshot")
-			if isinstance(snapshot, dict):
-				for key in (
-					"cliente_nombre",
-					"cliente_nif",
-					"cliente_direccion",
-					"cliente_telefono",
-					"subcontratado_nombre",
-					"subcontratado_nif",
-					"subcontratado_direccion",
-					"subcontratado_telefono",
-					"subcontratado_num_autorizacion",
-					"precio_neto",
-					"congelado_at",
-				):
-					if carga_data.get(key) is None and snapshot.get(key) is not None:
-						carga_data[key] = snapshot.get(key)
-
-			precio = carga_data.get("precio")
-			comision = carga_data.get("comision_cesion")
-			if carga_data.get("precio_neto") is None and isinstance(precio, (int, float)) and isinstance(comision, (int, float)):
-				carga_data["precio_neto"] = round(precio * (1 - comision / 100), 2)
+		precio = carga_data.get("precio")
+		comision = carga_data.get("comision_cesion")
+		if carga_data.get("precio_neto") is None and isinstance(precio, (int, float)) and isinstance(comision, (int, float)):
+			carga_data["precio_neto"] = round(precio * (1 - comision / 100), 2)
 
 		company_doc = self._company_crud.get_by_id(company_id)
 		if company_doc.exists:

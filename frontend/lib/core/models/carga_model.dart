@@ -1,3 +1,5 @@
+import 'dart:ui';
+import '../theme/app_colors.dart';
 import 'carta_porte.dart';
 import 'direccion_model.dart';
 
@@ -302,5 +304,13 @@ class CargaModel extends CargaBaseModel {
       alto: alto ?? this.alto,
       cartaPorteSnapshot: cartaPorteSnapshot ?? this.cartaPorteSnapshot,
     );
+  }
+
+  static Color getColorByEstado(String estado) {
+    if (estado == EstadoCarga.entregado.value) return AppColors.calendarEntregado;
+    if (estado == EstadoCarga.planificado.value) return AppColors.calendarPlanificado;
+    if (estado == EstadoCarga.asignado.value) return AppColors.calendarAsignado;
+    if (estado == EstadoCarga.enTransito.value) return AppColors.calendarEnRuta;
+    return AppColors.calendarPendiente;
   }
 }

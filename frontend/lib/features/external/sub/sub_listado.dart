@@ -26,8 +26,6 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
 
   static final RegExp _nombreApellidosRegex =
       RegExp(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+$");
-  static final RegExp _dniNieRegex =
-      RegExp(r"^(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])$");
   static final RegExp _matriculaRegex =
       RegExp(r"^\d{4}[ABCDFGHJKLMNPRSTVWXYZ]{3}$");
 
@@ -170,7 +168,7 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
 
   Widget _buildMobileCard(BuildContext context, CargaModel carga) {
     return ListTile(
-      title: Text('${carga.origen} → ${carga.destino}'),
+      title: Text('${carga.origenTexto} → ${carga.destinoTexto}'),
       subtitle: Text('Mercancía: ${carga.mercancia}\nConductor: ${carga.transportistaNombre ?? "Sin asignar"}'),
       trailing: IconButton(
         icon: const Icon(Icons.edit, color: Colors.blue),
@@ -182,7 +180,7 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
   void _showEditDialog(BuildContext context, CargaModel carga) {
     _conductorCtrl.text = carga.transportistaNombre ?? '';
     _transportistaCtrl.text = carga.transportistaId ?? '';
-    _vehiculoCtrl.text = carga.cartaPorteSnapshot?.subRemolqueMatricula ?? '';
+    _vehiculoCtrl.text = carga.cartaPorteSnapshot?.subVehiculoMatricula ?? '';
     _remolqueCtrl.text = carga.cartaPorteSnapshot?.subRemolqueMatricula ?? '';
     showDialog(
       context: context,
@@ -197,14 +195,12 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                   controller: _conductorCtrl,
                   decoration: const InputDecoration(labelText: 'Nombre y apellidos del Conductor'),
                 ),
-                TextField(
-                  controller: _transportistaCtrl,
-                  decoration: const InputDecoration(labelText: 'DNI/NIE del Conductor'),
-                ),
+                SizedBox(height: 4),
                 TextField(
                   controller: _vehiculoCtrl,
                   decoration: const InputDecoration(labelText: 'Matrícula del Vehículo'),
                 ),
+                SizedBox(height: 4),
                 TextField(
                   controller: _remolqueCtrl,
                   decoration: const InputDecoration(labelText: 'Matrícula del Remolque'),
@@ -220,16 +216,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
             ElevatedButton(
               onPressed: () {
                 final nombre = _conductorCtrl.text.trim();
-                final dniNie = _transportistaCtrl.text.trim().toUpperCase();
                 final vehiculo = _normalizarMatricula(_vehiculoCtrl.text);
                 final remolque = _normalizarMatricula(_remolqueCtrl.text);
 
                 if (nombre.isNotEmpty && !_nombreApellidosRegex.hasMatch(nombre)) {
                   _mostrarError('El conductor debe tener nombre y apellidos válidos.');
-                  return;
-                }
-                if (dniNie.isNotEmpty && !_dniNieRegex.hasMatch(dniNie)) {
-                  _mostrarError('El DNI/NIE no tiene formato válido.');
                   return;
                 }
                 if (vehiculo.isNotEmpty && !_matriculaRegex.hasMatch(vehiculo)) {
@@ -244,7 +235,6 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                 context.read<CargaProvider>().updateCargaSubcontratado(
                   cargaId: carga.id!,
                   conductorNombre: nombre.isNotEmpty ? nombre : null,
-                  transportistaId: dniNie.isNotEmpty ? dniNie : null,
                   subVehiculoMatricula: vehiculo.isNotEmpty ? vehiculo : null,
                   subRemolqueMatricula: remolque.isNotEmpty ? remolque : null,
                 );

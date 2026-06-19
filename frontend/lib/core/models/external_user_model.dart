@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'carga_model.dart';
 import 'direccion_model.dart';
 
 class ExternalUserModel {
@@ -102,6 +103,29 @@ class ExternalUserProfileUpdateModel {
       if (razonSocial != null) 'razonSocial': razonSocial,
       if (numeroAutorizacion != null) 'numeroAutorizacion': numeroAutorizacion,
       'direccionFiscal': direccion.toMap(),
+    };
+  }
+}
+
+class UpdateCargaSubcontratadoDto {
+  final EstadoCarga? estado;
+  final String? conductorNombre;
+  final String? subVehiculoMatricula;
+  final String? subRemolqueMatricula;
+
+  const UpdateCargaSubcontratadoDto({
+    this.estado,
+    this.conductorNombre,
+    this.subVehiculoMatricula,
+    this.subRemolqueMatricula,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (estado != null) 'estado': estado!.value,
+      if (conductorNombre != null) 'conductorNombre': conductorNombre,
+      if (subVehiculoMatricula != null) 'subVehiculoMatricula': subVehiculoMatricula,
+      if (subRemolqueMatricula != null) 'subRemolqueMatricula': subRemolqueMatricula,
     };
   }
 }

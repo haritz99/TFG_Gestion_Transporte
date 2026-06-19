@@ -30,7 +30,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
     final cargaProvider = context.watch<CargaProvider>();
 
     final cargasVisibles = cargaProvider.cargas.where((c) {
-      return c.estado != EstadoCarga.pendiente && c.estado != EstadoCarga.cedido;
+      return c.estado != EstadoCarga.pendiente;
     }).toList();
 
     final Set<String> pedidoIdsMostrados = cargasVisibles
@@ -62,7 +62,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
         startTime: c.fechaCarga,
         endTime: c.fechaDescarga,
         subject: subject,
-        color: _getColorPorEstado(c),
+        color: CargaModel.getColorByEstado(c.estado.value),
         resourceIds: [c.pedidoId ?? 'unknown'],
       );
     }).toList();
@@ -119,6 +119,14 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
               onDragEnd: (AppointmentDragEndDetails details) {
                 if (details.appointment != null) {
                   final appointment = details.appointment as Appointment;
+                  final carga = cargaProvider.cargas.firstWhere((c) => c.id == appointment.id);
+                  if (carga.estado == EstadoCarga.cedido) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Las cargas cedidas no se pueden mover')),
+                    );
+                    cargaProvider.refresh();
+                    return;
+                  }
                   cargaProvider.actualizarFechasCarga(
                     appointment.id as String,
                     details.droppingTime ?? appointment.startTime,
@@ -147,6 +155,14 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
               onAppointmentResizeEnd: (AppointmentResizeEndDetails details) {
                 final appointment = details.appointment as Appointment?;
                 if (appointment == null) return;
+                final carga = cargaProvider.cargas.firstWhere((c) => c.id == appointment.id);
+                if (carga.estado == EstadoCarga.cedido) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Las cargas cedidas no se pueden mover')),
+                  );
+                  cargaProvider.refresh();
+                  return;
+                }
                 final start = details.startTime ?? appointment.startTime;
                 final end = details.endTime ?? appointment.endTime;
                 if (!end.isAfter(start)) return;
@@ -162,13 +178,7 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
       ),
     );
   }
-
-  Color _getColorPorEstado(CargaModel carga) {
-    if (carga.estado == EstadoCarga.asignado) return Colors.blue.shade300;
-    if (carga.estado == EstadoCarga.enTransito) return Colors.orange.shade300;
-    if (carga.estado == EstadoCarga.entregado) return Colors.green.shade300;
-    return AppColors.primary.withValues(alpha: 0.6);
-  }
+  
 }
 
 class CargasDataSource extends CalendarDataSource {

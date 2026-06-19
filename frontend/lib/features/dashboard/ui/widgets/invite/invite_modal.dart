@@ -105,15 +105,6 @@ class _InviteModalState extends State<InviteModal> {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    'NUEVA INVITACIÓN',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.mutedText,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,

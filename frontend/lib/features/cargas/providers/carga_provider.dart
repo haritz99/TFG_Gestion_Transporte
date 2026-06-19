@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
 import '../../../../core/models/carga_model.dart';
+import '../../../core/models/external_user_model.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/models/vehiculo_model.dart';
 import '../../../core/pdf/pdf_handler.dart';
@@ -38,6 +39,8 @@ class CargaProvider extends ChangeNotifier {
 
   List<CargaModel> _cargasCedidas = [];
   List<CargaModel> get cargasCedidas => _cargasCedidas;
+
+  void refresh() => notifyListeners();
 
   String estadoConductor(String conductorId) {
     final cargasDelConductor = _cargas.where((c) =>
@@ -235,14 +238,17 @@ class CargaProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    final dto = UpdateCargaSubcontratadoDto(
+      estado: estado,
+      conductorNombre: conductorNombre,
+      subVehiculoMatricula: subVehiculoMatricula,
+      subRemolqueMatricula: subRemolqueMatricula,
+    );
+
     try {
       final updatedCarga = await _service.updateCargaSubcontratado(
         cargaId: cargaId,
-        estado: estado,
-        transportistaId: transportistaId,
-        conductorNombre: conductorNombre,
-        subVehiculoMatricula: subVehiculoMatricula,
-        subRemolqueMatricula: subRemolqueMatricula,
+        dto: dto,
       );
 
       final idx = _cargasCedidas.indexWhere((c) => c.id == cargaId);

@@ -88,13 +88,6 @@ def create_carga(carga: CargaSchema,
     return service.create_carga(carga, pedido_schema, current_user.get("companyId"))
 """
 
-@router.post("/assign", response_model=CargaSchema)
-def assign_carga_transportista(
-    data: CargaAssignSchema, 
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: CargasService = Depends(CargasService)
-):
-    return service.assign_carga_transportista(data.cargaId, data.transportistaId, current_user.get("companyId"))
 
 @router.put("/bulk", response_model=list[CargaSchema])
 def bulk_update_cargas(

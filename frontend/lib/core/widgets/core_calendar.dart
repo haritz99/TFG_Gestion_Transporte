@@ -144,7 +144,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
     if (details.appointments.isEmpty) return const SizedBox();
     final CargaCalendar entry = details.appointments.first;
     CargaModel carga = entry.carga;
-    final Color eventColor = CargaDataSource.getColorByEstado(carga.estado.value);
+    final Color eventColor = CargaModel.getColorByEstado(carga.estado.value);
 
     final mismoDia = _esMismoDia(carga.fechaCarga, carga.fechaDescarga);
 

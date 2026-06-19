@@ -101,6 +101,12 @@ class _DetallesAsignacionContent extends StatelessWidget {
       }
     }
 
+    final puedeGenerarCarta = carga.estado == EstadoCarga.cedido || (carga.transportistaId != null && carga.vehiculoId != null);
+
+    if (carga.estado == EstadoCarga.cedido) {
+      return _panelCedido(context, carga, cargaProvider);
+    }
+
     return ListView(
       key: ValueKey('panel_list_${carga.id}'),
       padding: const EdgeInsets.all(24),
@@ -187,14 +193,7 @@ class _DetallesAsignacionContent extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         ElevatedButton.icon(
-           onPressed: (carga.transportistaId != null && carga.vehiculoId != null)
-              ? () {
-                  cargaProvider.generarCartaDePorte(carga.id!);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(cargaProvider.errorMessage!))
-                  );
-              }
-              : null,
+           onPressed: puedeGenerarCarta ? () => _generarCartaPorte(context, carga, cargaProvider) : null,
            icon: const Icon(Icons.description_outlined),
            label: const Text('Generar Carta de Porte'),
            style: ElevatedButton.styleFrom(
@@ -271,6 +270,37 @@ class _DetallesAsignacionContent extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _panelCedido(BuildContext context,CargaModel cargaSeleccionada, cargaProvider) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text('Carga cedida', style: AppTextStyles.bodyMd.copyWith(color: AppColors.primary.withValues(alpha: 0.8))),
+        const SizedBox(height: 8),
+        const Text('Esta carga ha sido cedida a una empresa subcontratada.'),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: () => _generarCartaPorte(context, carga, cargaProvider),
+          icon: const Icon(Icons.description_outlined),
+          label: const Text('Generar Carta de Porte'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _generarCartaPorte(BuildContext context, CargaModel carga, CargaProvider cargaProvider) async {
+    await cargaProvider.generarCartaDePorte(carga.id!);
+    if (!context.mounted) return;
+    final msg = cargaProvider.errorMessage ?? 'Carta de porte generada correctamente';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Widget _buildDropdown<T>({

@@ -75,74 +75,6 @@ class CargasService:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
         return CargaSchema.from_firestore(doc, company_id)
 
-    def assign_carga_transportista(self, carga_id: str, transportista_id: str, company_id: str) -> CargaSchema:
-        doc = self._crud.get_carga_doc(carga_id)
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Carga no encontrada")
-
-        carga = CargaSchema.from_firestore(doc, company_id)
-
-        trans_doc = self._crud.get_trans_doc(transportista_id)
-        trans_data = trans_doc.to_dict() if (trans_doc and trans_doc.exists) else None
-        if not trans_data or trans_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Transportista no encontrado")
-
-        roles = trans_data.get("roles", trans_data.get("rol", []))
-        if isinstance(roles, str):
-            roles = [roles]
-        if not roles or "transportista" not in roles:
-            raise HTTPException(status_code=403, detail="El usuario no tiene rol de transportista")
-            
-        carga.transportistaId = transportista_id
-        update_data = {"transportistaId": transportista_id}
-
-        if carga.estado == EstadoCarga.PENDIENTE:
-            carga.estado = EstadoCarga.ASIGNADO
-            update_data["estado"] = EstadoCarga.ASIGNADO.value
-            
-        self._crud.update_carga_doc(carga_id, update_data)
-        return carga
-
-    """
-     def update_carga(self, carga_id: str, carga: CargaSchema, pedido_schema: PedidoSchema, company_id: str) -> CargaSchema:
-            doc = self._crud.get_carga_doc(carga_id)
-            if not doc.exists:
-                raise HTTPException(status_code=404, detail="Carga no encontrada")
-    
-            carga_data = doc.to_dict()
-            if carga_data.get("companyId") != company_id:
-                raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
-    
-            carga.companyId = company_id
-            carga.id = carga_id
-                
-            try:
-                carga.validar_contra_pedido(pedido_schema)
-            except ValueError as e:
-                raise HTTPException(status_code=400, detail=str(e))
-    
-            carga.clienteId = pedido_schema.clienteId
-            update_data = carga.model_dump(exclude={'id'})
-            
-            self._crud.update_carga_doc(carga_id, update_data)
-            return carga
-    """
-
-
-
-    @staticmethod
-    def _calcular_estado_sub(carga: CargaUpdateSubSchema, carga_data: dict) -> str:
-        if carga.estado is not None:
-            return carga.estado.value
-
-        conductor_id = carga.transportistaId or carga_data.get("transportistaId")
-        vehiculo_sub = carga.subVehiculoMatricula or carga_data.get("subVehiculoMatricula")
-
-        if conductor_id and vehiculo_sub:
-            return EstadoCarga.ASIGNADO.value
-        return carga_data.get("estado", EstadoCarga.CEDIDO.value)
-
-
     def update_carga_sub(self, carga_id: str, carga: CargaUpdateSubSchema, sub_company_id: str) -> CargaSchema:
 
         doc = self._crud.get_carga_doc(carga_id)
@@ -158,7 +90,13 @@ class CargasService:
         if not update_data:
             raise HTTPException(status_code=400, detail="No hay campos para actualizar")
 
-        update_data["estado"] = self._calcular_estado_sub(carga, carga_data)
+        snapshot_fields = {}
+        for field in ['conductorNombre', 'subVehiculoMatricula', 'subRemolqueMatricula']:
+            if field in update_data:
+                snapshot_fields[field] = update_data.pop(field)
+
+        snapshot_actual = carga_data.get('cartaPorteSnapshot', {}) or {}
+        update_data['cartaPorteSnapshot'] = {**snapshot_actual, **snapshot_fields}
         update_data["updatedAt"] = datetime.now(timezone.utc)
 
         self._crud.update_carga_doc(carga_id, update_data)
@@ -285,5 +223,4 @@ class CargasService:
         if not cargas_cedidas_ids:
             return []
         docs = self._crud.get_cargas_by_ids(cargas_cedidas_ids)
-        print("DOCS:" + docs)
         return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]

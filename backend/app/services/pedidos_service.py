@@ -80,8 +80,11 @@ class PedidosService:
         pedido.id = result["pedidoId"]
 
         # Actualizar referencias cruzadas y estados de transportistas y vehículos
+        """
         if result.get("cargas"):
             self._actualizar_referencias_cruzadas(result["cargas"]) 
+        """
+
 
         return result
 
@@ -90,7 +93,7 @@ class PedidosService:
         cliente_doc = self._users_crud.get_cliente_by_id(cliente_id)
         cliente = ClienteSchema.from_firestore(cliente_doc, company_id)
 
-        direccion_cargador_format = DireccionSchema.format_direccion(cliente.direccionFiscal.model_dump() if cliente.direccion else None)
+        direccion_cargador_format = DireccionSchema.format_direccion(cliente.direccionFiscal.model_dump() if cliente.direccionFiscal else None)
 
         return CartaDePorteSnapshotSchema(
             destinatarioNombre=pedido.destinatarioNombre,
@@ -102,50 +105,6 @@ class PedidosService:
             clienteTelefono=cliente.telefono,
             congeladoAt=None
         )
-
-    def _actualizar_referencias_cruzadas(self, cargas_creadas: list[dict]):
-        batch = self._crud.get_batch() if hasattr(self._crud, 'get_batch') else self._users_crud.get_batch() if hasattr(self._users_crud, 'get_batch') else None
-
-        if not batch:
-            from ..firebase_config import db
-            batch = db.batch()
-
-        for carga in cargas_creadas:
-            carga_id = carga.get("id")
-            transportista_id = carga.get("transportistaId")
-            vehiculo_id = carga.get("vehiculoId")
-
-            if transportista_id or vehiculo_id:
-                estado_veh = "asignado"
-                if transportista_id and vehiculo_id:
-                    estado_trans = "asignado"
-                else:
-                    estado_trans = "asignacion_parcial"
-
-                if transportista_id:
-                    from ..firebase_config import db
-                    trans_ref = db.collection("users").document(transportista_id)
-                    trans_update = {
-                        "estado": estado_trans,
-                        "cargaId": carga_id
-                    }
-                    if vehiculo_id:
-                        trans_update["vehiculoId"] = vehiculo_id
-                    batch.update(trans_ref, trans_update)
-
-                if vehiculo_id:
-                    from ..firebase_config import db
-                    veh_ref = db.collection("vehiculos").document(vehiculo_id)
-                    veh_update = {
-                        "estado": estado_veh,
-                        "cargaId": carga_id
-                    }
-                    if transportista_id:
-                        veh_update["transportistaId"] = transportista_id
-                        veh_update["transportistaNombre"] = carga.get("conductorNombre")
-                    batch.update(veh_ref, veh_update)
-
-        batch.commit()
 
     def delete_pedido(self, pedido_id: str, company_id: str):
         doc = self._crud.get_pedido_doc(pedido_id)

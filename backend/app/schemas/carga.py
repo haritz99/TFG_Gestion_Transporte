@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 _NOMBRE_APELLIDOS_REGEX = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+$")
-_DNI_NIE_REGEX = re.compile(r"^(?:\d{8}[A-HJ-NP-TV-Z]|[XYZ]\d{7}[A-HJ-NP-TV-Z])$")
 _MATRICULA_REGEX = re.compile(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$")
 
 
@@ -157,7 +156,6 @@ class TipoCargaSchema(CargaBaseSchema):
 
 class CargaUpdateSubSchema(BaseModel):
     estado: EstadoCarga | None = None
-    transportistaId: str | None = Field(default=None)
     conductorNombre: str | None = Field(default=None)
     subVehiculoMatricula: str | None = Field(default=None)
     subRemolqueMatricula: str | None = Field(default=None)
@@ -170,16 +168,6 @@ class CargaUpdateSubSchema(BaseModel):
         normalizado = " ".join(value.strip().split())
         if not _NOMBRE_APELLIDOS_REGEX.fullmatch(normalizado):
             raise ValueError("El nombre del conductor debe incluir nombre y apellidos válidos")
-        return normalizado
-
-    @field_validator("transportistaId")
-    @classmethod
-    def validar_dni_nie(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        normalizado = value.strip().upper()
-        if not _DNI_NIE_REGEX.fullmatch(normalizado):
-            raise ValueError("El DNI/NIE del conductor no tiene un formato válido")
         return normalizado
 
     @field_validator("subVehiculoMatricula", "subRemolqueMatricula")
