@@ -1,9 +1,11 @@
 from __future__ import annotations
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, BackgroundTasks
 from typing import Any
 import secrets
 import string
 from datetime import datetime, timezone
+
+from .email_service import EmailService
 from ..crud.user_crud import UserCRUD
 from ..crud.company_crud import CompanyCRUD
 from ..dependencies.auth import normalize_roles
@@ -13,7 +15,8 @@ from firebase_admin import auth as firebase_auth
 
 
 class RegisterService:
-    def __init__(self, crud: UserCRUD = Depends(UserCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD)):
+    def __init__(self, email_service: EmailService = Depends(EmailService), crud: UserCRUD = Depends(UserCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD)):
+        self._email_service = email_service
         self._crud = crud
         self._company_crud = company_crud
 
@@ -111,7 +114,7 @@ class RegisterService:
 
         return uid, temp_password, reset_link
 
-    def create_trans(self, user_data: UserSchema, company_id: str) -> UserCreateResponseSchema:
+    def create_trans(self, user_data: UserSchema, company_id: str, background_tasks: BackgroundTasks) -> UserCreateResponseSchema:
         uid = None
         try:
             uid, temp_password, reset_link = self.create_firebase_auth_user(
@@ -134,9 +137,15 @@ class RegisterService:
 
             created_user = UserSchema(**user_dict)
 
+            background_tasks.add_task(
+                self._email_service.send_welcome_email,
+                email=user_data.email,
+                temp_password=temp_password,
+                reset_link=reset_link
+            )
+
             return UserCreateResponseSchema(
                 user=created_user,
-                temp_password=temp_password,
                 password_reset_link=reset_link
             )
         except firebase_auth.EmailAlreadyExistsError:
@@ -149,7 +158,7 @@ class RegisterService:
                     pass
             raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-    def create_external_user(self, user_data: ExternalUserSchema, company_id: str, rol: str) -> UserCreateResponseSchema[ExternalUserSchema]:
+    def create_external_user(self, user_data: ExternalUserSchema, company_id: str, rol: str, background_tasks: BackgroundTasks) -> UserCreateResponseSchema[ExternalUserSchema]:
         """
         Crea un usuario externo (cliente o subcontratado) con datos iniciales.
         """
@@ -179,9 +188,15 @@ class RegisterService:
 
             created_user = ExternalUserSchema(**user_dict)
 
+            background_tasks.add_task(
+                self._email_service.send_welcome_email,
+                email=user_data.email,
+                temp_password=temp_password,
+                reset_link=reset_link
+            )
+
             return UserCreateResponseSchema(
                 user=created_user,
-                temp_password=temp_password,
                 password_reset_link=reset_link,
             )
         except firebase_auth.EmailAlreadyExistsError:

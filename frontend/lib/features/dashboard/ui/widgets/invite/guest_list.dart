@@ -66,8 +66,18 @@ class GuestList extends StatelessWidget {
                   message: 'Enviar email de invitación',
                   child: IconButton(
                     icon: const Icon(Icons.email_outlined, size: 20),
-                    onPressed: () async => await inviteProvider.sendInviteEmail(guest.email, guest.rol[0]),
                     color: Colors.grey.shade600,
+                    onPressed: () async {
+                      final success = await inviteProvider.sendInviteEmail(guest.email);
+                      if (!context.mounted) return;
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(inviteProvider.message ?? "Email enviado correctamente")));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Ocurrio un error enviando el email")));
+                      }
+                    }
                   )
                 ),
                 Tooltip(

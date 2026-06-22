@@ -21,10 +21,10 @@ class FleetKpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      FleetKpiCard(value: totalVehiculos?.toString(), label: 'Total Vehiculos'),
-      FleetKpiCard(value: asignados?.toString(), label: 'Asignados'),
-      FleetKpiCard(value: enMantenimiento?.toString(), label: 'Mantenimiento'),
-      FleetKpiCard(value: disponibles?.toString(), label: 'Disponibles'),
+      KpiCard(value: totalVehiculos?.toString(), label: 'Total Vehiculos'),
+      KpiCard(value: asignados?.toString(), label: 'Asignados'),
+      KpiCard(value: enMantenimiento?.toString(), label: 'Mantenimiento'),
+      KpiCard(value: disponibles?.toString(), label: 'Disponibles'),
     ];
 
     if (isMobile) {

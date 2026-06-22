@@ -7,6 +7,8 @@ import 'package:gestion_transporte/features/external/sub/sub_listado.dart';
 import 'package:gestion_transporte/features/transportistas/ui/gestionar_equipo_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/cliente_register_page.dart';
+import '../../features/conductores/conductorProvider.dart';
+import '../../features/conductores/conductor_page.dart';
 import '../../features/dashboard/ui/dashboard_page.dart';
 import '../../features/plan/ui/plan_page.dart';
 import '../../features/vehiculos/ui/gestion_flota_screen.dart';
@@ -19,6 +21,7 @@ import 'navigation-ui/app_navigation_shell.dart';
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
+  static final _conductorShellNavigatorKey = GlobalKey<NavigatorState>();
 
   static Page<void> fadeTransitionPage(GoRouterState state, Widget child) {
     return CustomTransitionPage(
@@ -131,6 +134,7 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CargadorListaPedidos(),
       ),
+
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
@@ -167,6 +171,41 @@ class AppRouter {
               body: Center(child: Text("Gestión de Incidencias (No implementado)")),
             ),
           ),
+        ],
+      ),
+
+      ShellRoute(
+        navigatorKey: _conductorShellNavigatorKey,
+        builder: (context, state, child) {
+          return AppNavigationShell(
+            rol: RolNavegacion.conductor,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/hoja_ruta',
+            pageBuilder: (context, state) {
+              return fadeTransitionPage(state,
+                ChangeNotifierProvider(
+                  create: (_) => ConductorProvider(
+                    conductorId: authProvider.user!.uid,
+                    companyId: authProvider.user!.companyId,
+                  ),
+                  child: const ConductorPage(),
+                ),
+              );
+            },
+          ),
+          /*
+          GoRoute(
+            path: '/conductor/incidencias',
+            pageBuilder: (context, state) => fadeTransitionPage(
+              state,
+              const ConductorIncidenciasPage(),
+            ),
+          ),
+           */
         ],
       ),
     ],

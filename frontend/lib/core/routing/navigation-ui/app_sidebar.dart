@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../features/auth/providers/auth_provider.dart';
@@ -7,12 +6,12 @@ import '../../theme/app_colors.dart';
 import 'sidebar_item.dart';
 
 class AppSidebar extends StatelessWidget {
-  // Esta clase construye el sidebar de la barra de navegación
-  const AppSidebar({super.key});
+  final List<SidebarItem> navItems;
+
+  const AppSidebar({super.key, required this.navItems});
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
     final user = context.read<AuthProvider>().user;
     final nombreEmpresa = context.read<AuthProvider>().company!.nombre;
     return Container(
@@ -44,39 +43,7 @@ class AppSidebar extends StatelessWidget {
             // Aquí van los items principales del sidebar
             child: ListView(
               padding: EdgeInsets.zero,
-              children: [
-                SidebarItem(
-                  title: 'Panel de Control',
-                  icon: Icons.grid_view_rounded,
-                  route: '/panel',
-                  isSelected: location == '/panel',
-                ),
-                SidebarItem(
-                  title: 'Planificación',
-                  icon: Icons.calendar_today_rounded,
-                  route: '/planificacion',
-                  isSelected: location == '/planificacion',
-                ),
-                SidebarItem(
-                  title: 'Gestión de Flota',
-                  icon: Icons.local_shipping_outlined,
-                  route: '/flota',
-                  isSelected: location == '/flota',
-                ),
-                SidebarItem(
-                  title: 'Gestión de Equipo',
-                  icon: Icons.people_outline,
-                  route: '/equipo',
-                  isSelected: location == '/equipo',
-                ),
-                SidebarItem(
-                  title: 'Centro de Incidencias',
-                  icon: Icons.warning_amber_rounded,
-                  route: '/incidencias',
-                  isSelected: location == '/incidencias',
-                  badgeCount: 0,
-                ),
-              ],
+              children: navItems,
             ),
           ),
           const Divider(height: 1, color: AppColors.border),
@@ -110,13 +77,6 @@ class AppSidebar extends StatelessWidget {
                   color: AppColors.titleText,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                ),
-              ),
-              const Text(
-                'Panel del Encargado',
-                style: TextStyle(
-                  color: AppColors.mutedText,
-                  fontSize: 12,
                 ),
               ),
             ],

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-class FleetKpiCard extends StatelessWidget {
-  const FleetKpiCard({
+class KpiCard extends StatelessWidget {
+  const KpiCard({
     super.key,
     required this.value,
     required this.label,

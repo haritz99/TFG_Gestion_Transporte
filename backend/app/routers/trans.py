@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from typing import Any
 from ..dependencies.auth import get_current_encargado
-from ..schemas.users import UserSchema, UserPaginatedSchema
+from ..schemas.users import UserSchema, UserPaginatedSchema, UserCreateResponseSchema
+from ..services.register_service import RegisterService
 from ..services.trans_service import TransService
 
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
@@ -27,6 +28,14 @@ def get_trans_by_uid(
     user_data = trans_service.get_trans(uid, company_id)
     return UserSchema(**user_data)
 
+@router.post("/", response_model=UserCreateResponseSchema)
+def create_trans(
+    user_data: UserSchema,
+    background_tasks: BackgroundTasks,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    register_service: RegisterService = Depends(RegisterService)
+):
+    return register_service.create_trans(user_data, current_user.get("companyId"), background_tasks)
 
 @router.put("/{uid}", response_model=UserSchema)
 def update_trans(

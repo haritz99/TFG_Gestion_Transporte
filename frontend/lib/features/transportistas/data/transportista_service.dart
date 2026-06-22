@@ -143,32 +143,4 @@ class TransportistaService {
     throw Exception(errorData['detail'] ?? 'Error al eliminar transportista');
   }
 
-  Future<Map<String, int>> fetchEquipoCount({required String token}) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/trans/count');
-
-    final response = await _client.get(
-      uri,
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    ).timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => throw Exception('Tiempo de espera agotado al obtener KPIs'),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return {
-        'totalEquipo': data['total_trans'] as int? ?? 0,
-        'sin_asignar': data['sin_asignar'] as int? ?? 0,
-        'asignacion_parcial': data['asignacion_parcial'] as int? ?? 0,
-        'en_ruta': data['en_ruta'] as int? ?? 0,
-        'inactivos': data['inactivos'] as int? ?? 0,
-      };
-    }
-
-    final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-    throw Exception(errorData['detail'] ?? 'Error al obtener KPIs');
-  }
-
 }

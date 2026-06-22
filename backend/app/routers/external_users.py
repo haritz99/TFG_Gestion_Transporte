@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from typing import Any
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from ..schemas.external_user import ExternalUserSchema
 from ..schemas.users import UserCreateResponseSchema
+from ..services.email_service import EmailService
 from ..services.external_user_service import ExternalUserService
 from ..services.register_service import RegisterService
 from ..dependencies.auth import get_current_encargado, get_current_user
@@ -14,23 +15,31 @@ router = APIRouter(prefix="/ext", tags=["external_users"])
 def create_external_user(
     user_data: ExternalUserSchema,
     rol: str,
+    background_tasks: BackgroundTasks,
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: RegisterService = Depends(RegisterService),
 ) -> UserCreateResponseSchema[ExternalUserSchema]:
     company_id = current_user.get("companyId")
-    return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol)
+    return service.create_external_user(user_data=user_data, company_id=company_id, rol=rol, background_tasks=background_tasks)
 
-@router.post("/reset-link", response_model=dict[str, str])
-def get_reset_link(
-    email: str,
+@router.post("/invite", response_model=dict[str, str])
+def invite_external_user(
+    email:str,
+    background_tasks: BackgroundTasks,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: RegisterService = Depends(RegisterService),
-) -> dict[str, str]:
-    """
-    Genera un nuevo enlace de restablecimiento de contraseña para un usuario existente.
-    """
-    link = service.generate_reset_link(email)
-    return {"password_reset_link": link}
+    register_service: RegisterService = Depends(RegisterService),
+    email_service: EmailService = Depends(EmailService)
+):
+    temp_pass = register_service.generate_temp_password()
+    reset_link = register_service.generate_reset_link(email)
+
+    background_tasks.add_task(
+        email_service.send_welcome_email,
+        email=email,
+        temp_password=temp_pass,
+        reset_link=reset_link
+    )
+    return {"message": "Invitación enviada correctamente."}
 
 @router.get("/", response_model=list[ExternalUserSchema])
 def fetch_external_users(
@@ -43,23 +52,6 @@ def fetch_external_users(
     company_id = current_user.get("companyId")
     return service.fetch_external_users(company_id=company_id)
 
-"""
-@router.get("/cli", response_model=list[ClienteSchema])
-def get_clientes(current_user: dict[str, Any] = Depends(get_current_encargado)):
-    company_id = current_user.get("companyId")
-    clientes_ref = db.collection("clientes")
-    query = (
-        clientes_ref
-        .where("companyId", "==", company_id)
-        .stream()
-    )
-
-    clientes = []
-    for doc in query:
-        clientes.append(ClienteSchema.from_firestore(doc, company_id))
-
-    return clientes
-"""
 
 @router.put("/profile/{uid}", response_model=ExternalUserSchema)
 def update_external_user_profile(

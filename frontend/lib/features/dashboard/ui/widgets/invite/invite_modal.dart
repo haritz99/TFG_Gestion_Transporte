@@ -32,17 +32,15 @@ class _InviteModalState extends State<InviteModal> {
 
       try {
         await provider.createUser(_email, _rol);
-        if (provider.isCreated) {
-          final success = await provider.sendInviteEmail(_email, _rol);
-          if (mounted && success) {
-            Navigator.of(context).pop();
-          } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No se pudo abrir la aplicación de correo')),
-            );
-          }
+        if (provider.isCreated && mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text('Usuario invitado con éxito')
+              )
+          );
         }
-      } catch (e) {
+        } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),

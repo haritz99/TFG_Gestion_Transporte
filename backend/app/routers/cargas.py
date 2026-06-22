@@ -3,15 +3,10 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
-from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_encargado, get_current_sub
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from ..services.carta_porte_service import CartaPorteService
 from ..services.cargas_service import CargasService
-
-class CargaAssignSchema(BaseModel):
-    transportistaId: str = Field(..., min_length=1)
-    cargaId: str = Field(..., min_length=1)
 
 
 router = APIRouter(prefix="/cargas", tags=["cargas"])

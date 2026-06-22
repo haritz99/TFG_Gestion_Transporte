@@ -57,24 +57,18 @@ class InviteService {
 	Future<InviteResponse> createSubcontratado(String email) async =>
 		createExternalUser(email: email, rol: 'subcontratado');
 
-	Future<String> getResetLink(String email) async {
-		final token = await _tokenProvider.getRequiredToken();
-		final uri = Uri.parse('${ApiConfig.baseUrl}/ext/reset-link?email=$email');
-
-		final response = await _client.post(
-			uri,
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer $token',
-			},
+	Future<String> sendInviteEmail(String email) async {
+		final response = await http.post(
+			Uri.parse('${ApiConfig.baseUrl}/ext/invite'),
+			body: jsonEncode({'email': email}),
 		);
 
+		final Map<String, dynamic> body = jsonDecode(response.body);
+
 		if (response.statusCode == 200) {
-			final Map<String, dynamic> data = jsonDecode(response.body);
-			return data['password_reset_link'].toString();
+			return body['message'];
 		} else {
-			final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-			throw Exception(errorData['detail'] ?? 'Error al obtener enlace de reset');
+			throw Exception(body['detail']);
 		}
 	}
 

@@ -62,6 +62,5 @@ class UserPaginatedSchema(FirestoreSchema):
 T = TypeVar("T", bound=FirestoreSchema)
 class UserCreateResponseSchema(BaseModel, Generic[T]):
     user: T
-    temp_password: Optional[str] = None
     password_reset_link: Optional[str] = None
 
