@@ -55,14 +55,18 @@ class AppRouter {
 
       // Lógica para usuario interno
       if (user != null) {
-        final internalRoutes = ['/panel', '/planificacion', '/flota', '/equipo', '/incidencias'];
-
-        if (!internalRoutes.any((route) => location.startsWith(route))) {
-          return '/panel';
-        }
-
-        if (isLoggingIn) {
-          return '/panel';
+        if (user.rol.contains('encargado')) {
+          final encargadoRoutes = ['/panel', '/planificacion', '/flota', '/equipo', '/incidencias'];
+          if (!encargadoRoutes.any((route) => location.startsWith(route))) {
+            return '/panel';
+          }
+          if (isLoggingIn) return '/panel';
+        } else if (user.rol.contains('transportista')){
+          final conductorRoutes = ['/hoja_ruta'];
+          if (!conductorRoutes.any((route) => location.startsWith(route))) {
+            return '/hoja_ruta';
+          }
+          if (isLoggingIn) return '/hoja_ruta';
         }
       }
 

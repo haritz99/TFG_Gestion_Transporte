@@ -23,9 +23,7 @@ class ConductorProvider extends ChangeNotifier {
 
   CargaModel? get proximaEntrega {
     final activas = _cargas.where((c) =>
-    c.estado == EstadoCarga.asignado ||
-        c.estado == EstadoCarga.enTransito
-    ).toList()
+    c.estado == EstadoCarga.asignado || c.estado == EstadoCarga.enTransito).toList()
       ..sort((a, b) => a.fechaDescarga.compareTo(b.fechaDescarga));
     return activas.isEmpty ? null : activas.first;
   }
@@ -45,7 +43,7 @@ class ConductorProvider extends ChangeNotifier {
 
   void _startListening() {
     _subscription = FirebaseFirestore.instance
-        .collection('/cargas')
+        .collectionGroup('cargas')
         .where('transportistaId', isEqualTo: conductorId)
         .where('companyId', isEqualTo: companyId)
         .snapshots()
@@ -63,6 +61,8 @@ class ConductorProvider extends ChangeNotifier {
         isLoading = false;
         notifyListeners();
       },
+
+
     );
   }
 

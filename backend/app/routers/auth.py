@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
-from ..dependencies.auth import get_current_user, get_current_encargado
+from ..dependencies.auth import get_current_user, get_current_encargado, get_current_encargado_conductor
 from ..schemas.users import RegisterRequest
 from ..services.notification_service import NotificacionService
 from ..services.register_service import RegisterService
@@ -26,7 +26,7 @@ async def inicializar_custom_claims(
 
 @router.get("/company/")
 async def get_company_info(
-    current_user: dict[str, Any] = Depends(get_current_encargado),
+    current_user: dict[str, Any] = Depends(get_current_encargado_conductor),
     service: RegisterService = Depends(RegisterService)
 ):
     return service.get_company_info(current_user.get("companyId"))

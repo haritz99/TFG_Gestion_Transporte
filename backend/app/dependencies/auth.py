@@ -58,7 +58,7 @@ async def get_current_user(
         )
 
 
-def _require_role(required_role: str):
+def _require_role(*required_roles: str):
     async def role_checker(current_user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
         uid = current_user.get("uid")
         if not isinstance(uid, str) or not uid:
@@ -69,11 +69,11 @@ def _require_role(required_role: str):
 
         roles = normalize_roles(current_user.get("rol"))
         company_id = current_user.get("companyId")
-        
-        if required_role not in roles:
+
+        if not any(role in roles for role in required_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"No tienes permisos de {required_role} para realizar esta acción",
+                detail=f"No tienes permisos de {required_roles} para realizar esta acción",
             )
 
         if not isinstance(company_id, str) or not company_id:
@@ -88,5 +88,7 @@ def _require_role(required_role: str):
     return role_checker
 
 get_current_encargado = _require_role("encargado")
+get_current_conductor = _require_role("transportista")
 get_current_cargador = _require_role("cliente")
 get_current_sub = _require_role("subcontratado")
+get_current_encargado_conductor = _require_role("encargado", "transportista")

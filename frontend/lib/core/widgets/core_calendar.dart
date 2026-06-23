@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
-
+import 'package:provider/provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/ui/models/carga_data_source.dart';
 import '../models/carga_model.dart';
 import '../theme/app_colors.dart';
@@ -30,7 +31,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final int appointmentDisplayCount = 6;
+    final int appointmentDisplayCount = 8;
     final List<CargaCalendar> calendarEntries = [];
     for (final carga in widget.cargas) {
       calendarEntries.add(CargaCalendar(carga: carga, op: Operacion.carga));
@@ -77,16 +78,16 @@ class _CoreCalendarState extends State<CoreCalendar> {
                   ),
                   monthViewSettings: MonthViewSettings(
                     appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
-                    appointmentDisplayCount: appointmentDisplayCount, // Maximo 6 botones para mostrar cargas
+                    appointmentDisplayCount: appointmentDisplayCount, // Muestra máximo 8 cargas
                     showAgenda: true,
                     dayFormat: 'EEE',
-                    agendaItemHeight: 130,
+                    agendaItemHeight: 180,
                     agendaStyle: const AgendaStyle(
                       appointmentTextStyle: TextStyle(fontSize: 12),
                     ),
                   ),
                   scheduleViewSettings: ScheduleViewSettings(
-                    appointmentItemHeight: 130,
+                    appointmentItemHeight: 180,
                     hideEmptyScheduleWeek: false,
                     dayHeaderSettings: const DayHeaderSettings(
                       dayTextStyle: TextStyle(fontWeight: FontWeight.bold, color: AppColors.bodyText),
@@ -155,6 +156,9 @@ class _CoreCalendarState extends State<CoreCalendar> {
     final fechaDescargaCompleta = DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaDescarga);
     final fechaCargaCompleta = DateFormat('dd/MM/yyyy HH:mm').format(carga.fechaCarga);
 
+    final authProvider = context.read<AuthProvider>();
+    final bool isConductor = authProvider.user?.rol.contains('transportista') ?? false;
+
     String fechaText = '';
     if (mismoDia) {
       fechaText = 'Carga: $horaCarga - Descarga: $horaDescarga';
@@ -197,6 +201,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -208,49 +213,74 @@ class _CoreCalendarState extends State<CoreCalendar> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    'Origen: ${carga.origenTexto}',
-                    style: AppTextStyles.bodySm,
+                  Text.rich(
+                    TextSpan(
+                        style: AppTextStyles.bodySm,
+                        children: [
+                          TextSpan(text: 'Origen: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          TextSpan(text: carga.origenTexto)
+                        ]
+                    )
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    'Destino: ${carga.destinoTexto}',
-                    style: AppTextStyles.bodySm,
+                  Text.rich(
+                      TextSpan(
+                          style: AppTextStyles.bodySm,
+                          children: [
+                            TextSpan(text: 'Destino: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: carga.destinoTexto)
+                          ]
+                      )
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    fechaText,
-                    style: AppTextStyles.bodySm,
+                  Text.rich(
+                      TextSpan(
+                          style: AppTextStyles.bodySm,
+                          children: [
+                            TextSpan(text: fechaText)
+                          ]
+                      )
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    'Vehículo: ${carga.vehiculoId ?? ""}',
-                    style: AppTextStyles.bodySm,
+                  Text.rich(
+                      TextSpan(
+                          style: AppTextStyles.bodySm,
+                          children: [
+                            TextSpan(text: 'Vehículo: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: carga.vehiculoId ?? "")
+                          ]
+                      )
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    'Conductor: ${carga.transportistaNombre ?? ""}',
-                    style: AppTextStyles.bodySm,
-                  ),
+                  Text.rich(
+                    TextSpan(
+                        style: AppTextStyles.bodySm,
+                        children: [
+                          TextSpan(text: 'Conductor: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          TextSpan(text: carga.transportistaNombre ?? "")
+                        ]
+                    )
+                  )
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: eventColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                carga.estado.value.toUpperCase(),
-                style: TextStyle(
-                  color: eventColor,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            if (!isConductor)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: eventColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  carga.estado.value.toUpperCase(),
+                  style: TextStyle(
+                    color: eventColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

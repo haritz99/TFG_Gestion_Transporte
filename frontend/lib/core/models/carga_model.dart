@@ -2,6 +2,7 @@ import 'dart:ui';
 import '../theme/app_colors.dart';
 import 'carta_porte.dart';
 import 'direccion_model.dart';
+import 'model_utils.dart';
 
 abstract class CargaBaseModel {
   final UbicacionModel origen;
@@ -205,8 +206,8 @@ class CargaModel extends CargaBaseModel {
       ancho: (map['ancho'] as num?)?.toDouble(),
       alto: (map['alto'] as num?)?.toDouble(),
       estado: EstadoCarga.fromString(map['estado'] as String),
-      fechaCarga: DateTime.parse(map['fechaCarga'] as String),
-      fechaDescarga: DateTime.parse(map['fechaDescarga'] as String),
+      fechaCarga: ModelUtils.parseDateTime(map['fechaCarga']) ?? DateTime.now(),
+      fechaDescarga: ModelUtils.parseDateTime(map['fechaDescarga']) ?? DateTime.now(),
       bufferHours: map['bufferHours'] as int?,
       transportistaId: map['transportistaId'] as String?,
       pedidoId: map['pedidoId'] as String?,

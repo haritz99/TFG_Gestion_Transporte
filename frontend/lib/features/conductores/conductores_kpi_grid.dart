@@ -15,24 +15,24 @@ class ConductoresKpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 3,
+      crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: isMobile ? 1.0 : 1.75,
+      childAspectRatio: isMobile ? 1.5 : 1.75,
       children: [
         KpiCard(
           label: 'Cargas asignadas hoy',
           value: provider.cargasHoy.length.toString(),
         ),
         KpiCard(
-          label: 'Próxima entrega',
+          label: provider.proximaEntrega != null ? 'Próxima entrega' : 'Sin entregas pendientes',
           value: provider.proximaEntrega != null
               ? '${provider.proximaEntrega!.fechaDescarga.hour}/${provider.proximaEntrega!.fechaDescarga.day}/'
               '${provider.proximaEntrega!.fechaDescarga.month} · '
               '${provider.proximaEntrega!.origen}/${provider.proximaEntrega!.destino}'
-              : 'Sin entregas pendientes',
+              : '',
         ),
       ],
     );
