@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status, BackgroundTasks, Body
 from ..schemas.external_user import ExternalUserSchema
 from ..schemas.users import UserCreateResponseSchema
 from ..services.email_service import EmailService
@@ -24,8 +24,8 @@ def create_external_user(
 
 @router.post("/invite", response_model=dict[str, str])
 def invite_external_user(
-    email:str,
     background_tasks: BackgroundTasks,
+    email: str = Body(..., embed=True),
     current_user: dict[str, Any] = Depends(get_current_encargado),
     register_service: RegisterService = Depends(RegisterService),
     email_service: EmailService = Depends(EmailService)

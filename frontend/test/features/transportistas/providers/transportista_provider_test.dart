@@ -97,7 +97,6 @@ void main() {
       );
 
       expect(created, isNotNull);
-      expect(provider.createResponse, isNotNull);
       expect(provider.errorMessage, isNull);
       expect(provider.isLoading, false);
     });
@@ -175,13 +174,6 @@ void main() {
       expect(provider.errorMessage, contains('Error backend'));
       expect(provider.transportistas.length, 1);
       expect(provider.isLoading, false);
-    });
-
-    test('sendCredentialsEmail devuelve false si no hay respuesta previa', () async {
-      final ok = await provider.sendCredentialsEmail();
-
-      expect(ok, false);
-      expect(provider.errorMessage, 'No hay credenciales para enviar.');
     });
   });
 }

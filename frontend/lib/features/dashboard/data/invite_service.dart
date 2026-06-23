@@ -58,8 +58,13 @@ class InviteService {
 		createExternalUser(email: email, rol: 'subcontratado');
 
 	Future<String> sendInviteEmail(String email) async {
+		final token = await _tokenProvider.getRequiredToken();
 		final response = await http.post(
 			Uri.parse('${ApiConfig.baseUrl}/ext/invite'),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer $token',
+			},
 			body: jsonEncode({'email': email}),
 		);
 

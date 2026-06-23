@@ -40,17 +40,12 @@ class EmailService:
             server.starttls()
             server.login(self.sender_email, self.sender_password)
             server.send_message(msg)
-            print(f"Notificación de alta enviada correctamente a: {email}")
+            print(f"Email de alta enviada correctamente a: {email}")
 
         except smtplib.SMTPAuthenticationError:
             print("Error de autenticación SMTP: Revise EMAIL_USER y EMAIL_PASSWORD.")
         except Exception as e:
             print(f"Error al enviar la notificación de alta a {email}: {str(e)}")
-        finally:
-            try:
-                server.quit()
-            except NameError:
-                pass
 
 
 def get_email_service() -> EmailService:

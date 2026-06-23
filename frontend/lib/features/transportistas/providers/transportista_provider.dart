@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:gestion_transporte/features/auth/providers/token_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/paginated_response.dart';
 import '../data/transportista_service.dart';
@@ -14,8 +12,6 @@ class TransportistaProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  Map<String, dynamic>? _createResponse;
-  String? _lastCreatedEmail;
   List<UserModel> _transportistas = [];
   bool _hasMore = true;
   bool _isLoadingPage = false;
@@ -32,7 +28,6 @@ class TransportistaProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  Map<String, dynamic>? get createResponse => _createResponse;
   List<UserModel> get transportistas => _transportistas;
   bool get hasMore => _hasMore;
   bool get isLoadingPage => _isLoadingPage;
@@ -120,7 +115,6 @@ class TransportistaProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
-    _createResponse = null;
     notifyListeners();
 
     try {
@@ -142,11 +136,6 @@ class TransportistaProvider extends ChangeNotifier {
       );
 
       final userMap = response['user'];
-      _createResponse = {
-        'temp_password': response['temp_password'],
-        'password_reset_link': response['password_reset_link'],
-      };
-      _lastCreatedEmail = email;
       final created = UserModel.fromMap(userMap, userMap['uid']);
       _upsertTransportista(created);
       return created;
@@ -223,51 +212,5 @@ class TransportistaProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  void clearCreateResponse() {
-    _createResponse = null;
-    _lastCreatedEmail = null;
-    notifyListeners();
-  }
-
-  Future<bool> sendCredentialsEmail() async {
-    if (_createResponse == null || _lastCreatedEmail == null) {
-      _errorMessage = 'No hay credenciales para enviar.';
-      notifyListeners();
-      return false;
-    }
-
-    final tempPassword = _createResponse!['temp_password'] as String?;
-    final resetLink = _createResponse!['password_reset_link'] as String?;
-
-    if (tempPassword == null || resetLink == null) {
-      _errorMessage = 'La respuesta de la API no incluye las credenciales necesarias.';
-      notifyListeners();
-      return false;
-    }
-
-    final mailUri = Uri(
-      scheme: 'mailto',
-      path: _lastCreatedEmail,
-      queryParameters: {
-        'subject': 'Credenciales de acceso',
-        'body':
-            'Hola,\n\n'
-            'Tu cuenta de transportista ha sido creada.\n\n'
-            'Contrasena temporal: $tempPassword\n\n'
-            'Para establecer tu contrasena definitiva, abre este enlace:\n$resetLink\n\n'
-            'Un saludo.',
-      },
-    );
-
-    final opened = await launchUrl(mailUri, mode: LaunchMode.externalApplication);
-    if (!opened) {
-      _errorMessage = 'No se pudo abrir una app de correo en este dispositivo.';
-      notifyListeners();
-      return false;
-    }
-
-    return true;
   }
 }

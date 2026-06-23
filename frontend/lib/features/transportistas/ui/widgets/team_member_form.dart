@@ -31,8 +31,6 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
     'C1', 'C', 'D1', 'D', 'BE', 'C1E', 'CE', 'D1E', 'DE',
   ];
 
-  bool _isCreated = false;
-  UserModel? _createdUser;
 
   @override
   void initState() {
@@ -95,36 +93,16 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
         );
       }
 
-      if (mounted) {
-        if (result != null) {
-          if (widget.member == null) {
-            _createdUser = result;
-            setState(() {
-              _isCreated = true;
-            });
-          } else {
+      if (!mounted) return;
+      if (result != null) {
             Navigator.of(context).pop(result);
-          }
-        } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Conductor invitado con éxito')),
+            );
+      } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(provider.errorMessage ?? 'Error al guardar')),
           );
-        }
-      }
-    }
-  }
-
-  void _sendEmail() async {
-    final provider = context.read<TransportistaProvider>();
-    bool success = await provider.sendCredentialsEmail();
-
-    if (mounted) {
-      if (success) {
-        Navigator.of(context).pop(_createdUser);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(provider.errorMessage ?? 'Error al enviar credenciales')),
-        );
       }
     }
   }
@@ -283,25 +261,14 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text(_isCreated ? 'Cerrar' : 'Cancelar'),
+                    child: Text('Cancelar'),
                   ),
                   const SizedBox(width: 16),
-                  if (_isCreated && widget.member == null)
-                    ElevatedButton(
-                      onPressed: _sendEmail,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                      child: const Text('Enviar credenciales'),
-                    )
-                  else ...[
-                    if (context.watch<TransportistaProvider>().isLoading)
-                      const CircularProgressIndicator()
-                    else
-                      ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                        child: const Text('Guardar'),
-                      ),
-                  ],
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                    child: const Text('Guardar'),
+                  ),
                 ],
               ),
             ],
