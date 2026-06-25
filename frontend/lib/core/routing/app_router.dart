@@ -38,7 +38,7 @@ class AppRouter {
     initialLocation: '/login',
     refreshListenable: authProvider,
     redirect: (context, state) {
-      if (authProvider.isLoading) return null;
+      if (authProvider.isLoading) return '/loading';
       final bool isAuthenticated = authProvider.isAuthenticated;
       final bool isLoggingIn = state.matchedLocation == '/login';
       if (!isAuthenticated) {
@@ -103,6 +103,12 @@ class AppRouter {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/loading',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      ),
       GoRoute(
         path: '/login',
         parentNavigatorKey: _rootNavigatorKey,
@@ -169,12 +175,6 @@ class AppRouter {
             //builder: (context, state) => const GestionEquipoScreen(),
             pageBuilder: (context, state) => fadeTransitionPage(state, const GestionEquipoScreen()),
           ),
-          GoRoute(
-            path: '/incidencias',
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text("Gestión de Incidencias (No implementado)")),
-            ),
-          ),
         ],
       ),
 
@@ -201,15 +201,6 @@ class AppRouter {
               );
             },
           ),
-          /*
-          GoRoute(
-            path: '/conductor/incidencias',
-            pageBuilder: (context, state) => fadeTransitionPage(
-              state,
-              const ConductorIncidenciasPage(),
-            ),
-          ),
-           */
         ],
       ),
     ],

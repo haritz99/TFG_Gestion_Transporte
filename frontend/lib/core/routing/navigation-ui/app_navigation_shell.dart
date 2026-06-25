@@ -51,7 +51,6 @@ class AppNavigationShell extends StatelessWidget {
       SidebarItem(title: 'Planificación', icon: Icons.calendar_today_rounded, route: '/planificacion', isSelected: location == '/planificacion'),
       SidebarItem(title: 'Gestión de Flota', icon: Icons.local_shipping_outlined, route: '/flota', isSelected: location == '/flota'),
       SidebarItem(title: 'Gestión de Equipo', icon: Icons.people_outline, route: '/equipo', isSelected: location == '/equipo'),
-      SidebarItem(title: 'Centro de Incidencias', icon: Icons.warning_amber_rounded, route: '/incidencias', isSelected: location == '/incidencias', badgeCount: 0),
     ];
   }
 

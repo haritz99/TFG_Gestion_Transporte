@@ -15,6 +15,7 @@ import 'features/cargas/providers/pedido_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/dashboard/providers/invite_provider.dart';
 import 'features/cargas/providers/carga_provider.dart';
+import 'features/incidencias/incidencias_provider.dart';
 import 'features/transportistas/providers/transportista_provider.dart';
 import 'features/vehiculos/providers/vehiculo_provider.dart';
 import 'flavors.dart';
@@ -47,6 +48,20 @@ class App extends StatelessWidget {
             tokenProvider: context.read<AuthTokenProvider>(),
             cargaProvider: context.read<CargaProvider>(),
           ),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, IncidenciaProvider>(
+          create: (context) => IncidenciaProvider(
+            companyId: '',
+            tokenProvider: context.read<AuthTokenProvider>(),
+          ),
+          update: (context, authProvider, previous) {
+            final companyId = authProvider.user?.companyId ?? '';
+            if (previous?.companyId == companyId) return previous!;
+            return IncidenciaProvider(
+              companyId: companyId,
+              tokenProvider: context.read<AuthTokenProvider>(),
+            );
+          },
         ),
         ChangeNotifierProvider<PedidoProvider>(
           create: (context) => PedidoProvider(tokenProvider: context.read<AuthTokenProvider>()),

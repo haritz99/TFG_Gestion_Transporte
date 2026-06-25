@@ -437,9 +437,9 @@ class CargaProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      String urlCloudinary = await _service.generarCartaDePorte(cargaId);
+      String urlStorage = await _service.generarCartaDePorte(cargaId);
       await PdfHandler.instance.open(
-          urlCloudinary,
+          urlStorage,
           'Carta_Porte_$cargaId.pdf'
       );
     } catch (e) {

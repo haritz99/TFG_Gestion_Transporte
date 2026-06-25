@@ -23,16 +23,16 @@ class ConductoresKpiGrid extends StatelessWidget {
       childAspectRatio: isMobile ? 1.5 : 1.75,
       children: [
         KpiCard(
-          label: 'Cargas asignadas hoy',
+          label: 'Viaje(s) hoy',
           value: provider.cargasHoy.length.toString(),
         ),
         KpiCard(
-          label: provider.proximaEntrega != null ? 'Próxima entrega' : 'Sin entregas pendientes',
-          value: provider.proximaEntrega != null
+          label: provider.proximaEntrega != null
               ? '${provider.proximaEntrega!.fechaDescarga.hour}/${provider.proximaEntrega!.fechaDescarga.day}/'
               '${provider.proximaEntrega!.fechaDescarga.month} · '
-              '${provider.proximaEntrega!.origen}/${provider.proximaEntrega!.destino}'
+              '${provider.proximaEntrega!.origenTexto}/${provider.proximaEntrega!.destinoTexto}'
               : '',
+          value: ''
         ),
       ],
     );

@@ -130,6 +130,7 @@ class CargaModel extends CargaBaseModel {
   final String? companyId;
   final String? clienteId;
   final CartaPorteSnapshotModel? cartaPorteSnapshot;
+  final String? cartaPorteUrl;
 
   const CargaModel({
     this.id,
@@ -144,6 +145,7 @@ class CargaModel extends CargaBaseModel {
     this.comisionCesion,
     this.companyId,
     this.clienteId,
+    this.cartaPorteUrl,
     this.cartaPorteSnapshot,
     required super.origen,
     required super.destino,
@@ -216,10 +218,9 @@ class CargaModel extends CargaBaseModel {
       transportistaNombre: map['conductorNombre'] as String? ?? map['transportistaNombre'] as String?,
       companyId: map['companyId'] as String?,
       clienteId: map['clienteId'] as String?,
-      cartaPorteSnapshot: map['cartaPorteSnapshot'] != null
-          ? CartaPorteSnapshotModel.fromMap(
-              Map<String, dynamic>.from(map['cartaPorteSnapshot'] as Map))
-          : null,
+      cartaPorteUrl: map['carta_porte_url'] as String?,
+      cartaPorteSnapshot: map['cartaPorteSnapshot'] != null ? CartaPorteSnapshotModel.fromMap(
+          Map<String, dynamic>.from(map['cartaPorteSnapshot'] as Map)) : null,
     );
   }
 

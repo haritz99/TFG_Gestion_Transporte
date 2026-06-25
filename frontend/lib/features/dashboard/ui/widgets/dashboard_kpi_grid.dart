@@ -56,23 +56,6 @@ class DashboardKpiGrid extends StatelessWidget {
           label: 'Incidencias Abiertas',
           value: provider.incidenciasAbiertas.toString(),
           isAlert: provider.incidenciasAbiertas > 0,
-          bottomContent: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: () {
-                  // TODO: Ir a pantalla de incidencias
-                },
-                child: Text(
-                  'Ver incidencias >',
-                  style: AppTextStyles.captionBold.copyWith(
-                    color: AppColors.warning,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
         DashboardKpiCard(
           label: 'Entregadas Hoy',

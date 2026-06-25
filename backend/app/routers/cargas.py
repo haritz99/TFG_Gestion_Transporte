@@ -3,11 +3,12 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
-from ..dependencies.auth import get_current_encargado, get_current_sub
+from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor
+from ..schemas import IncidenciaSchema
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from ..services.carta_porte_service import CartaPorteService
 from ..services.cargas_service import CargasService
-
+from ..services.incidencias_service import IncidenciaService
 
 router = APIRouter(prefix="/cargas", tags=["cargas"])
 
@@ -133,3 +134,21 @@ def delete_carga(carga_id: str,
                  service: CargasService = Depends(CargasService)):
     service.delete_carga(carga_id, current_user.get("companyId"))
     return None
+
+@router.post("/{carga_id}/incidencia", response_model=dict[str, str])
+def create_incidencia(
+        carga_id: str,
+        data: IncidenciaSchema,
+        current_user: dict[str, Any] = Depends(get_current_conductor),
+        service: IncidenciaService = Depends(IncidenciaService),
+):
+    return service.create_incidencia(carga_id, data, current_user)
+
+
+@router.patch("/{carga_id}/incidencia/{incidencia_id}/resolver", response_model=dict[str, str])
+def resolver_incidencia(
+    incidencia_id: str,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: IncidenciaService = Depends(IncidenciaService),
+):
+    return service.resolver_incidencia(incidencia_id)

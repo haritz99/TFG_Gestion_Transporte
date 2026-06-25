@@ -132,7 +132,7 @@ class CartaPorteService:
 
 		self.subir_pdf(pdf_bytes, carga_id, company_id)
 		try:
-			self._crud.update_carga_doc(carga_id, {"carta_porte_url": blob_path})
+			self._crud.update_carga_doc(carga_id, {"carta_porte_url": url_firmada})
 		except Exception as e:
 			print(f"Error al actualizar la carga con la URL de la carta de porte: {e}")
 

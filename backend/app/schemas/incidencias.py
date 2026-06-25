@@ -1,16 +1,8 @@
 from __future__ import annotations
-
-from datetime import datetime
-from typing import Optional
-
-from pydantic import Field
-
-from .base import FirestoreSchema
+from typing import Literal
+from pydantic import BaseModel
 
 
-class IncidenciaSchema(FirestoreSchema):
-    descripcion: str = Field(..., min_length=1)
-    fecha: datetime
-    transportistaId: str = Field(..., min_length=1)
-    tareaId: Optional[str] = None
-
+class IncidenciaSchema(BaseModel):
+    tipo: Literal["averia", "accidente", "retraso", "mercancia_danada", "otro"]
+    descripcion: str

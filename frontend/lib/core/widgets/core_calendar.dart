@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/core/pdf/pdf_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/ui/models/carga_data_source.dart';
+import '../../features/incidencias/incidencia_form.dart';
 import '../models/carga_model.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -31,6 +34,8 @@ class _CoreCalendarState extends State<CoreCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    final esConductor = authProvider.user?.rol.contains('transportista') ?? false;
     final int appointmentDisplayCount = 8;
     final List<CargaCalendar> calendarEntries = [];
     for (final carga in widget.cargas) {
@@ -100,6 +105,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                       monthTextStyle: AppTextStyles.headingMd.copyWith(fontSize: 18, color: AppColors.bodyText),
                     ),
                   ),
+                  onTap: (CalendarTapDetails details) => _onConductorTap(context, details.appointments?.first as CargaCalendar?, esConductor),
                   appointmentBuilder: _appointmentBuilder,
                   onSelectionChanged: (details) {
                     if (widget.onDateSelected != null && details.date != null) {
@@ -324,7 +330,61 @@ class _CoreCalendarState extends State<CoreCalendar> {
       ),
     );
   }
+
+  void _onConductorTap(BuildContext context, CargaCalendar? cargaCalendar, bool esConductor) {
+    final carga = cargaCalendar?.carga;
+    if (!esConductor || carga == null) return;
+    if (carga.cartaPorteUrl == null || carga.cartaPorteUrl == '') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La carta de porte aún no ha sido generada para esta carga.'),
+        ),
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('Ver carta de porte'),
+              onTap: carga.cartaPorteUrl != null ? () {
+                Navigator.pop(context);
+                PdfHandler.instance.open(carga.cartaPorteUrl!, 'carta_porte_${carga.id}.pdf');
+              } : null,
+            ),
+            ListTile(
+              leading: const Icon(Icons.map_outlined),
+              title: const Text('Abrir en Google Maps'),
+              onTap: () async {
+                Navigator.pop(context);
+                final latO = carga.origen.lat;
+                final lngO = carga.origen.lng;
+                final latD = carga.destino.lat;
+                final lngD = carga.destino.lng;
+                await launchUrl(Uri.parse('https://www.google.com/maps/dir/?api=1&origin=$latO,$lngO&destination=$latD,$lngD'),
+                    mode: LaunchMode.externalApplication);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.warning_amber_outlined),
+              title: const Text('Crear incidencia'),
+              onTap: () {
+                Navigator.pop(context);
+                mostrarFormIncidencia(context, carga);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
+
 
 class _ViewToggleButtons extends StatefulWidget {
   final CalendarController controller;

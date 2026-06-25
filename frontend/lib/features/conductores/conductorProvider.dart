@@ -61,8 +61,6 @@ class ConductorProvider extends ChangeNotifier {
         isLoading = false;
         notifyListeners();
       },
-
-
     );
   }
 

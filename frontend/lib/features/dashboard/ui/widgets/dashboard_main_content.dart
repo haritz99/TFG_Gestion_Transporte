@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:gestion_transporte/features/dashboard/ui/widgets/dashboard_calendar.dart';
+import 'package:gestion_transporte/features/dashboard/ui/widgets/panel_incidencias.dart';
 import '../../../../core/models/carga_model.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../features/auth/providers/auth_provider.dart';
 
 class DashboardMainContent extends StatelessWidget {
   final bool isMobile;
@@ -16,12 +17,13 @@ class DashboardMainContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
     if (isMobile) {
       return Column(
         children: [
           DashboardCalendar(cargas: cargas),
           const SizedBox(height: 24),
-          _buildPlaceholderCard('Panel de Incidencias Críticas', 300),
+          PanelIncidencias(),
         ],
       );
     }
@@ -34,30 +36,16 @@ class DashboardMainContent extends StatelessWidget {
           child: DashboardCalendar(cargas: cargas),
         ),
         const SizedBox(width: 24),
+        if (authProvider.user?.rol.contains('encargado') ?? false)
         Expanded(
           flex: 30,
-          child: _buildPlaceholderCard('Panel de Incidencias Críticas', 600),
+          child: SizedBox(
+            height: 700,
+            child: PanelIncidencias(),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPlaceholderCard(String title, double height) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: AppTextStyles.headingMd.copyWith(
-            color: AppColors.mutedText,
-          ),
-        ),
-      ),
-    );
-  }
 }
