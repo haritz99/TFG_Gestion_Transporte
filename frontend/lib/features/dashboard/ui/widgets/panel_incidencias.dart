@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/models/incidencia_model.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../incidencias/incidencias_provider.dart';
 
 
 class PanelIncidencias extends StatelessWidget {
-  const PanelIncidencias({super.key});
+  final bool internalScroll;
+  const PanelIncidencias({super.key, this.internalScroll = false});
 
   String _labelTipo(TipoIncidencia t) => switch (t) {
     TipoIncidencia.averia           => 'Avería',
@@ -28,11 +30,12 @@ class PanelIncidencias extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Incidencias',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.warning),
           ),
           const SizedBox(height: 12),
           if (provider.isLoading)
@@ -45,8 +48,10 @@ class PanelIncidencias extends StatelessWidget {
               ),
             )
           else
-            Expanded(
+            Flexible(
               child:  ListView.separated(
+                shrinkWrap: !internalScroll,
+                physics: internalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
                 itemCount: provider.incidencias.length,
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {

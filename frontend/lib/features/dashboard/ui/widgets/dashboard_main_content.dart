@@ -23,7 +23,7 @@ class DashboardMainContent extends StatelessWidget {
         children: [
           DashboardCalendar(cargas: cargas),
           const SizedBox(height: 24),
-          PanelIncidencias(),
+          PanelIncidencias(internalScroll: false),
         ],
       );
     }
@@ -41,7 +41,7 @@ class DashboardMainContent extends StatelessWidget {
           flex: 30,
           child: SizedBox(
             height: 700,
-            child: PanelIncidencias(),
+            child: PanelIncidencias(internalScroll: true),
           ),
         ),
       ],
