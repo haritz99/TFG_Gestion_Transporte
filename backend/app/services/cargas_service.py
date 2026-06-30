@@ -12,13 +12,15 @@ from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
 from google.cloud.firestore import ArrayUnion
 from .carta_porte_service import CartaPorteService
+from .notification_service import NotificacionService
 
 
 class CargasService:
-    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), pedidos_crud: PedidosCRUD = Depends(PedidosCRUD), users_crud: UserCRUD = Depends(UserCRUD)):
+    def __init__(self, crud: CargasCRUD = Depends(CargasCRUD), pedidos_crud: PedidosCRUD = Depends(PedidosCRUD), users_crud: UserCRUD = Depends(UserCRUD), notificacion_service: NotificacionService = Depends(NotificacionService)):
         self._crud = crud
         self._pedidos_crud = pedidos_crud
         self._users_crud = users_crud
+        self._notificacion_service = notificacion_service
         self._carta_porte_service = CartaPorteService(crud=self._crud)
 
     def get_carta_porte_template_data(self, carga_id: str, company_id: str) -> dict:
@@ -116,6 +118,11 @@ class CargasService:
 
             pedido_schema = PedidoSchema.from_firestore(pedido_doc, company_id)
 
+            try:
+                carga.validar_contra_pedido(pedido_schema)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
+            
             carga.companyId = company_id
             carga.clienteId = pedido_schema.clienteId
 
@@ -170,6 +177,17 @@ class CargasService:
         batch.commit()
 
         updated_doc = self._crud.get_carga_doc(carga_id)
+        self._notificacion_service.notificar(
+            user_id=subcontratado.uid,
+            roles=["subcontratado"],
+            titulo="Carga cedida",
+            cuerpo=f"Se te ha cedido una carga, entra en la app para conocer los detalles!.",
+            data={
+                "evento": "carga_cedida",
+                "cargaId": carga_id,
+                "subcontratadoId": subcontratado.uid,
+            },
+        )
         return CargaSchema.from_firestore(updated_doc, company_id)
 
     @staticmethod

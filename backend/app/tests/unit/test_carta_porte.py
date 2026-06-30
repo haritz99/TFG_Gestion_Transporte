@@ -11,9 +11,28 @@ from app.services.carta_porte_service import CartaPorteService
 
 
 @pytest.fixture
-def service():
-    return CartaPorteService(crud=MagicMock())
+def mock_notificacion_service():
+    return MagicMock()
 
+@pytest.fixture
+def mock_cargas_crud():
+    return MagicMock()
+
+@pytest.fixture
+def mock_company_crud():
+    mock = MagicMock()
+    mock.get_by_id.return_value = MagicMock(exists=True)
+    return mock
+
+@pytest.fixture
+def mock_vehiculos_crud():
+    mock = MagicMock()
+    mock.get_by_id.return_value = MagicMock(exists=True)
+    return mock
+
+@pytest.fixture
+def service(mock_notificacion_service, mock_cargas_crud, mock_company_crud, mock_vehiculos_crud):
+    return CartaPorteService(notificacion_service=mock_notificacion_service,crud=mock_cargas_crud,company_crud=mock_company_crud,vehiculos_crud=mock_vehiculos_crud)
 
 @pytest.fixture
 def sample_carga_doc():
@@ -50,9 +69,9 @@ def client_with_overrides():
     app.dependency_overrides.clear()
 
 
-def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, sample_carga_doc):
+def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, mock_cargas_crud, sample_carga_doc):
     # Arrange
-    service._crud.get_carga_doc.return_value = sample_carga_doc
+    mock_cargas_crud.get_carga_doc.return_value = sample_carga_doc
 
     # Act
     carga = service.get_carta_porte_template_data("CRG-039", "empresa_test")
@@ -66,9 +85,9 @@ def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, sample
     assert carga["carta_porte_snapshot"]["subcontratado_num_autorizacion"] == "1234567AB"
 
 
-def test_generar_carta_porte_pdf(service, sample_carga_doc, monkeypatch):
+def test_generar_carta_porte_pdf(service, mock_cargas_crud, sample_carga_doc, monkeypatch):
     # Arrange
-    service._crud.get_carga_doc.return_value = sample_carga_doc
+    mock_cargas_crud.get_carga_doc.return_value = sample_carga_doc
 
     class FakeHTML:
         def __init__(self, string, base_url=None):
@@ -80,15 +99,11 @@ def test_generar_carta_porte_pdf(service, sample_carga_doc, monkeypatch):
             return b"%PDF-FAKE"
 
     monkeypatch.setattr(carta_porte_service_module, "HTML", FakeHTML)
-    monkeypatch.setattr(
-        carta_porte_service_module.CartaPorteService,
-        "subir_pdf",
-        lambda *args, **kwargs: "cartas_porte/empresa_test/carta_CRG-039.pdf",
+    service.subir_pdf = MagicMock(
+        return_value="cartas_porte/empresa_test/carta_CRG-039.pdf"
     )
-    monkeypatch.setattr(
-        carta_porte_service_module.CartaPorteService,
-        "generar_url_firmada",
-        lambda *args, **kwargs: "https://fake.storage/signed/carta_CRG-039.pdf",
+    service.generar_url_firmada = MagicMock(
+        return_value="https://fake.storage/signed/carta_CRG-039.pdf"
     )
 
     # Act
@@ -100,6 +115,8 @@ def test_generar_carta_porte_pdf(service, sample_carga_doc, monkeypatch):
     parsed = urlparse(url)
     assert parsed.scheme in ('http', 'https') or url.startswith('/')
     assert url.lower().endswith('.pdf') or 'carta' in url.lower()
+    assert service.subir_pdf.assert_called_once()
+    assert service.generar_url_firmada.assert_called_once()
 
 
 def test_get_carta_porte_pdf_endpoint_returns_pdf(client_with_overrides):

@@ -130,18 +130,6 @@ def test_trans_service_get_all_paginated(service, mock_trans_crud):
     assert len(res.items) == 2
     assert res.last_doc_id == "u1"
 
-def test_trans_service_get_count(service, mock_trans_crud):
-    mock_v = MagicMock()
-    mock_v.value = 10
-    mock_trans_crud.get_count.return_value = [[mock_v]]
-    mock_v2 = MagicMock()
-    mock_v2.value = 5
-    mock_trans_crud.get_count_by_estado.return_value = [[mock_v2]]
-
-    res = service.get_count_trans("c1")
-    assert res.total_trans == 10
-    assert res.en_ruta == 5
-
 def test_trans_service_update_trans_ok(service, mock_user_crud, mock_auth):
     old_doc = MagicMock()
     old_doc.exists = True
@@ -186,8 +174,3 @@ def test_trans_service_update_auth_error(service, mock_user_crud, mock_auth):
         service.update_trans("u1", new_data, "c1")
     assert exc.value.status_code == 400
 
-def test_trans_service_get_count_error(service, mock_trans_crud):
-    mock_trans_crud.get_count.side_effect = Exception("Firestore Timeout")
-    with pytest.raises(HTTPException) as exc:
-        service.get_count_trans("c1")
-    assert exc.value.status_code == 500

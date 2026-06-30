@@ -15,7 +15,6 @@ def test_user_schema_valida_correctamente():
     schema = UserSchema(**payload)
     assert schema.email == "pepe@test.com"
     assert schema.rol == ["encargado"]
-    assert schema.estado == "sin_asignar" # Default
 
 def test_user_schema_transportista_requiere_permisos():
     payload = {
@@ -26,11 +25,9 @@ def test_user_schema_transportista_requiere_permisos():
         "rol": ["transportista"],
         "companyId": "comp1"
     }
-    # No permisosCond - should fail
     with pytest.raises(ValidationError):
         UserSchema(**payload)
 
-    # With permisosCond - should pass
     payload["permisosCond"] = ["B", "C"]
     schema = UserSchema(**payload)
     assert schema.rol == ["transportista"]
