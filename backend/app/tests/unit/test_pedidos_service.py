@@ -51,44 +51,20 @@ def valid_pedido_dict():
         "companyId": "comp1"
     }
 
+
 @pytest.fixture
-def mock_cliente_document(mock_users_crud):
+def mock_cliente_document(mock_users_crud, cliente_doc_dict):
     mock_cliente_doc = MagicMock(exists=True)
     mock_cliente_doc.id = "cli1"
-    mock_cliente_doc.to_dict.return_value = {
-        "nombreComercial": "Mi Cliente",
-        "email": "cli@test.com",
-        "nif": "B12345678",
-        "telefono": "600123456",
-        "personaContacto": "Juan",
-        "companyId": "comp1",
-        "direccionFiscal": {
-            "calle": "Calle Falsa 123",
-            "ciudad": "Madrid",
-            "provincia": "Madrid",
-            "codigoPostal": "28000",
-            "pais": "España"
-        }
-    }
+    mock_cliente_doc.to_dict.return_value = cliente_doc_dict
     mock_users_crud.get_cliente_by_id.return_value = mock_cliente_doc
     return mock_cliente_doc
 
 @pytest.fixture
-def mock_tipo_carga_document(mock_cargas_crud):
+def mock_tipo_carga_document(mock_cargas_crud, tipo_carga_doc_dict):
     mock_tipo_doc = MagicMock(exists=True)
     mock_tipo_doc.id = "t1"
-    mock_tipo_doc.to_dict.return_value = {
-        "nombre": "Tipo 1",
-        "origen": {"ciudad": "Madrid"} ,
-        "destino": {"ciudad": "Barcelona"},
-        "mercancia": "Palets",
-        "numBultos": 10,
-        "peso": 500.0,
-        "precio": 100.0,
-        "pesoMax": 1000.0,
-        "companyId": "comp1",
-        "clienteId": "cli1"
-    }
+    mock_tipo_doc.to_dict.return_value = {**tipo_carga_doc_dict, "largo": 1.2, "ancho": 0.8, "alto": 1.0}
     mock_cargas_crud.get_tipo_carga_by_id.return_value = mock_tipo_doc
     return mock_tipo_doc
 
@@ -164,41 +140,6 @@ def test_pedidos_service_create_pedido_notifica_carga_asignada(service, mock_ped
         "cargas": [{"id": "new_c_id", "transportistaId": "u123"}],
     }
 
-    mock_cliente_doc = MagicMock(exists=True)
-    mock_cliente_doc.id = "cli1"
-    mock_cliente_doc.to_dict.return_value = {
-        "nombreComercial": "Mi Cliente",
-        "email": "cli@test.com",
-        "nif": "B12345678",
-        "telefono": "600123456",
-        "personaContacto": "Juan",
-        "companyId": "comp1",
-        "direccionFiscal": {
-            "calle": "Calle Falsa 123",
-            "ciudad": "Madrid",
-            "provincia": "Madrid",
-            "codigoPostal": "28000",
-            "pais": "España"
-        }
-    }
-    mock_users_crud.get_cliente_by_id.return_value = mock_cliente_doc
-
-    mock_tipo_doc = MagicMock(exists=True)
-    mock_tipo_doc.id = "t1"
-    mock_tipo_doc.to_dict.return_value = {
-        "nombre": "Tipo 1",
-        "origen": "Madrid",
-        "destino": "Barcelona",
-        "mercancia": "Palets",
-        "numBultos": 10,
-        "peso": 500.0,
-        "precio": 100.0,
-        "pesoMax": 1000.0,
-        "companyId": "comp1",
-        "clienteId": "cli1"
-    }
-    mock_cargas_crud.get_tipo_carga_by_id.return_value = mock_tipo_doc
-
     res = service.create_pedido(pedido, "comp1")
 
     assert res["pedidoId"] == "new_p_id"
@@ -211,53 +152,37 @@ def test_pedidos_service_create_pedido_notifica_carga_asignada(service, mock_ped
     assert call_kwargs["data"]["pedidoId"] == "new_p_id"
 
 
-def test_pedidos_service_create_pedido_rechaza_fuera_de_ventana(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, mock_notificacion_service, valid_pedido_dict):
+def test_pedidos_companyid_se_toma_de_claims_no_del_body(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, mock_notificacion_service, valid_pedido_dict, mock_cliente_document, mock_tipo_carga_document):
+    # Corresponde al test 11 de la lista backend.
     from app.schemas.pedido import CreatePedidoSchema, AsignacionCargaSchema
 
-    ahora = valid_pedido_dict["fechaCarga"]
-    valid_pedido_dict["cargas"] = [
-        AsignacionCargaSchema(
-            tipoCargaId="t1",
-            fechaCarga=ahora - datetime.timedelta(hours=1),
-            fechaDescarga=valid_pedido_dict["fechaDescarga"],
-        )
-    ]
+    valid_pedido_dict["companyId"] = "otra_company"
+    valid_pedido_dict["cargas"] = [AsignacionCargaSchema(tipoCargaId="t1")]
     pedido = CreatePedidoSchema(**valid_pedido_dict)
 
-    mock_cliente_doc = MagicMock(exists=True)
-    mock_cliente_doc.id = "cli1"
-    mock_cliente_doc.to_dict.return_value = {
-        "nombreComercial": "Mi Cliente",
-        "email": "cli@test.com",
-        "nif": "B12345678",
-        "telefono": "600123456",
-        "personaContacto": "Juan",
-        "companyId": "comp1",
-        "direccionFiscal": {
-            "calle": "Calle Falsa 123",
-            "ciudad": "Madrid",
-            "provincia": "Madrid",
-            "codigoPostal": "28000",
-            "pais": "España"
-        }
-    }
-    mock_users_crud.get_cliente_by_id.return_value = mock_cliente_doc
+    mock_pedidos_crud.create_pedido_con_cargas.return_value = {"pedidoId": "new_p_id", "cargas": []}
 
-    mock_tipo_doc = MagicMock(exists=True)
-    mock_tipo_doc.id = "t1"
-    mock_tipo_doc.to_dict.return_value = {
-        "nombre": "Tipo 1",
-        "origen": "Madrid",
-        "destino": "Barcelona",
-        "mercancia": "Palets",
-        "numBultos": 10,
-        "peso": 500.0,
-        "precio": 100.0,
-        "pesoMax": 1000.0,
-        "companyId": "comp1",
-        "clienteId": "cli1"
-    }
-    mock_cargas_crud.get_tipo_carga_by_id.return_value = mock_tipo_doc
+    # Act
+    service.create_pedido(pedido, "comp1")
+
+    # Assert
+    call_args = mock_pedidos_crud.create_pedido_con_cargas.call_args.args
+    pedido_payload = call_args[0]
+    assert pedido.companyId == "comp1"
+    assert pedido_payload["companyId"] == "comp1"
+    assert pedido_payload["companyId"] != "otra_company"
+
+
+def test_pedidos_service_create_pedido_rechaza_fuera_de_ventana(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, mock_notificacion_service, valid_pedido_dict, mock_cliente_document, mock_tipo_carga_document):
+    from app.schemas.pedido import CreatePedidoSchema, AsignacionCargaSchema
+
+    ahora = datetime.datetime.now(datetime.timezone.utc)
+    valid_pedido_dict["fechaCarga"] = ahora + datetime.timedelta(days=2)
+    valid_pedido_dict["fechaDescarga"] = ahora + datetime.timedelta(days=3)
+    valid_pedido_dict["cargas"] = [
+        AsignacionCargaSchema(tipoCargaId="t1", fechaCarga=ahora + datetime.timedelta(days=1), fechaDescarga=ahora + datetime.timedelta(days=1, hours=2))
+    ]
+    pedido = CreatePedidoSchema(**valid_pedido_dict)
 
     with pytest.raises(HTTPException) as exc:
         service.create_pedido(pedido, "comp1")
@@ -266,7 +191,7 @@ def test_pedidos_service_create_pedido_rechaza_fuera_de_ventana(service, mock_pe
     assert "fecha de carga" in str(exc.value.detail).lower()
     mock_pedidos_crud.create_pedido_con_cargas.assert_not_called()
 
-def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, valid_pedido_dict):
+def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, valid_pedido_dict, mock_cliente_document, mock_tipo_carga_document):
     # Arrange
     from app.schemas.pedido import CreatePedidoSchema, AsignacionCargaSchema
 
@@ -281,46 +206,6 @@ def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_cru
         return {"pedidoId": "new_p_id", "cargasIds": ["new_c_id"]}
 
     mock_pedidos_crud.create_pedido_con_cargas.side_effect = mock_create_pedido_con_cargas
-
-    # Mock cliente doc
-    mock_cliente_doc = MagicMock(exists=True)
-    mock_cliente_doc.id = "cli1"
-    mock_cliente_doc.to_dict.return_value = {
-        "nombreComercial": "Mi Cliente",
-        "email": "cli@test.com",
-        "nif": "B12345678",
-        "telefono": "600123456",
-        "personaContacto": "Juan",
-        "companyId": "comp1",
-        "direccionFiscal": {
-            "calle": "Calle Falsa 123",
-            "ciudad": "Madrid",
-            "provincia": "Madrid",
-            "codigoPostal": "28000",
-            "pais": "España"
-        }
-    }
-    mock_users_crud.get_cliente_by_id.return_value = mock_cliente_doc
-
-    # Mock para el tipo de carga con dimensiones y otros datos
-    mock_tipo_doc = MagicMock(exists=True)
-    mock_tipo_doc.id = "t1"
-    mock_tipo_doc.to_dict.return_value = {
-        "nombre": "Tipo Completo",
-        "origen": "Madrid",
-        "destino": "Barcelona",
-        "mercancia": "Electrónica",
-        "numBultos": 5,
-        "peso": 200.0,
-        "precio": 150.0,
-        "largo": 1.2,
-        "ancho": 0.8,
-        "alto": 1.0,
-        "pesoMax": 1000.0,
-        "companyId": "comp1",
-        "clienteId": "cli1"
-    }
-    mock_cargas_crud.get_tipo_carga_by_id.return_value = mock_tipo_doc
 
     # Act
     service.create_pedido(pedido, "comp1")
@@ -342,6 +227,38 @@ def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_cru
     assert snapshot["clienteNombre"] == "Mi Cliente"
     assert snapshot["clienteNif"] == "B12345678"
     assert "Calle Falsa 123" in snapshot["clienteDireccion"]
+
+
+def test_carta_porte_snapshot_inmutable_tras_cambios_origen(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, valid_pedido_dict, cliente_doc_dict, mock_cliente_document, mock_tipo_carga_document):
+    # Corresponde al test 18 de la lista backend.
+    from app.schemas.pedido import CreatePedidoSchema, AsignacionCargaSchema
+
+    valid_pedido_dict["cargas"] = [AsignacionCargaSchema(tipoCargaId="t1")]
+    pedido = CreatePedidoSchema(**valid_pedido_dict)
+
+    cargas_guardadas = []
+
+    def mock_create_pedido_con_cargas(pedido_payload, cargas_payloads):
+        nonlocal cargas_guardadas
+        cargas_guardadas = cargas_payloads
+        return {"pedidoId": "new_p_id", "cargas": [{"id": "new_c_id"}]}
+
+    mock_pedidos_crud.create_pedido_con_cargas.side_effect = mock_create_pedido_con_cargas
+
+    cliente_data = cliente_doc_dict
+    mock_users_crud.get_cliente_by_id.return_value = mock_cliente_document
+
+    # Act
+    service.create_pedido(pedido, "comp1")
+
+    # Assert
+    snapshot_before = dict(cargas_guardadas[0]["cartaPorteSnapshot"])
+    cliente_data["nombreComercial"] = "Cliente Cambiado"
+    cliente_data["direccionFiscal"]["calle"] = "Otra Calle"
+
+    assert snapshot_before["clienteNombre"] == "Mi Cliente"
+    assert snapshot_before["clienteDireccion"].startswith("Calle Falsa 123")
+    assert cargas_guardadas[0]["cartaPorteSnapshot"]["clienteNombre"] == "Mi Cliente"
 
 def test_pedidos_service_delete_pedido_ok(service, mock_pedidos_crud, mock_cargas_service, valid_pedido_dict):
     # Arrange

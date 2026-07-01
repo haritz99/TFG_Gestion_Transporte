@@ -40,6 +40,30 @@ def sample_carga_doc():
     doc = MagicMock(exists=True, id="CRG-039")
     doc.to_dict.return_value = {
         "companyId": "empresa_test",
+        "origen": {
+            "direccion": {
+                "calle": "Calle Origen 1",
+                "ciudad": "Madrid",
+                "provincia": "Madrid",
+                "codigoPostal": "28001",
+                "pais": "España",
+            },
+            "lat": 40.4168,
+            "lng": -3.7038,
+        },
+        "destino": {
+            "direccion": {
+                "calle": "Calle Destino 1",
+                "ciudad": "Barcelona",
+                "provincia": "Barcelona",
+                "codigoPostal": "08001",
+                "pais": "España",
+            },
+            "lat": 41.3874,
+            "lng": 2.1686,
+        },
+        "precio": 1000.0,
+        "comisionCesion": 10.0,
         "clienteNombre": "Cargas Rapidas S.L. 4",
         "clienteNif": "B77350878",
         "clienteDireccion": "Calle Falsa 5, 28074 Valencia (Barcelona)",
@@ -115,8 +139,8 @@ def test_generar_carta_porte_pdf(service, mock_cargas_crud, sample_carga_doc, mo
     parsed = urlparse(url)
     assert parsed.scheme in ('http', 'https') or url.startswith('/')
     assert url.lower().endswith('.pdf') or 'carta' in url.lower()
-    assert service.subir_pdf.assert_called_once()
-    assert service.generar_url_firmada.assert_called_once()
+    service.subir_pdf.assert_called_once()
+    service.generar_url_firmada.assert_called_once()
 
 
 def test_get_carta_porte_pdf_endpoint_returns_pdf(client_with_overrides):
