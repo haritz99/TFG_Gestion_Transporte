@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
@@ -10,6 +11,8 @@ import '../services/auth_service.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   UserModel? _user;
+  final Duration _timeout;
+  Completer<void>? _hydrationCompleter;
   ExternalUserModel? _externalUser;
   bool _isLoading = false;
   String? _idToken;
@@ -22,14 +25,16 @@ class AuthProvider extends ChangeNotifier {
   String? get idToken => _idToken;
   CompanyModel? get company => _company;
 
-  AuthProvider({required AuthService authService}) : _authService = authService {
+  AuthProvider({
+    required AuthService authService,
+    Duration? timeout,
+  }) : _authService = authService, _timeout = timeout ?? const Duration(seconds: 8) {
     _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     _isLoading = true;
     notifyListeners();
-
     try {
       if (firebaseUser != null) {
         final results = await Future.wait([
@@ -52,18 +57,28 @@ class AuthProvider extends ChangeNotifier {
         _externalUser = null;
         _idToken = null;
       }
-    } catch (_) {
+      _tryCompleteHydration();
+    } catch (e) {
       _user = null;
       _externalUser = null;
       _idToken = null;
+      print('Error hidratando sesión: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  void _tryCompleteHydration() {
+    if (_isHydrated()) {
+      _hydrationCompleter?.complete();
+    }
+  }
+  bool _isHydrated() => _idToken != null && (_user != null || _externalUser != null);
+
   Future<void> signIn(String email, String password) async {
     _isLoading = true;
+    _hydrationCompleter = Completer<void>();
     notifyListeners();
     try {
       await _authService.signIn(email, password);
@@ -78,19 +93,19 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _waitForSessionHydration() async {
-    const timeout = Duration(seconds: 8);
-    final deadline = DateTime.now().add(timeout);
-
-    while (DateTime.now().isBefore(deadline)) {
-      if (_idToken != null && (_user != null || _externalUser != null)) {
-        return;
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (_isHydrated()) {
+      _hydrationCompleter = null;
+      return;
     }
-
-    throw TimeoutException(
-      'No se pudo hidratar la sesion tras iniciar sesion en el tiempo esperado.',
-    );
+    try {
+      await _hydrationCompleter!.future.timeout(_timeout);
+    } on TimeoutException {
+      throw TimeoutException(
+        'No se pudo hidratar la sesión en el tiempo esperado.',
+      );
+    } finally {
+      _hydrationCompleter = null;
+    }
   }
 
   Future<void> register({
@@ -193,6 +208,7 @@ class AuthProvider extends ChangeNotifier {
     _user = null;
     _externalUser = null;
     _idToken = null;
+    _company = null;
     notifyListeners();
   }
 }

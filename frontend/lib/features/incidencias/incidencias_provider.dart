@@ -6,6 +6,7 @@ import '../auth/providers/token_provider.dart';
 import 'incidencia_service.dart';
 
 class IncidenciaProvider extends ChangeNotifier {
+  final FirebaseFirestore _firestore;
   final IncidenciaService _service;
   final String companyId;
   List<IncidenciaModel> _incidencias = [];
@@ -14,8 +15,9 @@ class IncidenciaProvider extends ChangeNotifier {
   String? errorMessage;
 
 
-  IncidenciaProvider({required this.companyId, required AuthTokenProvider tokenProvider, IncidenciaService? service,
-  }) : _service = service ?? IncidenciaService(tokenProvider) {
+  IncidenciaProvider({required this.companyId, FirebaseFirestore? firestore, required AuthTokenProvider tokenProvider, IncidenciaService? service,
+  }) :  _firestore = firestore ?? FirebaseFirestore.instance,
+        _service = service ?? IncidenciaService(tokenProvider) {
     _startListening();
   }
 
@@ -23,7 +25,7 @@ class IncidenciaProvider extends ChangeNotifier {
 
   void _startListening() {
     if (companyId.isEmpty) return;
-    _subscription = FirebaseFirestore.instance
+    _subscription = _firestore
         .collection('incidencias')
         .where('companyId', isEqualTo: companyId)
         .orderBy('createdAt', descending: true)
