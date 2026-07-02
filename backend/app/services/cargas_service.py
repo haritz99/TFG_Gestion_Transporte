@@ -112,17 +112,23 @@ class CargasService:
             if not carga.pedidoId:
                 raise HTTPException(status_code=400, detail=f"La carga {carga.id} debe estar asociada a un pedido")
 
-            pedido_doc = self._pedidos_crud.get_pedido_doc(carga.pedidoId)
-            if not pedido_doc.exists:
-                raise HTTPException(status_code=404, detail=f"Pedido {carga.pedidoId} no encontrado")
+        pedido_ids_unicos = {carga.pedidoId for carga in cargas}
+        pedido_refs = [self._pedidos_crud.get_pedido_ref(pid) for pid in pedido_ids_unicos]
+        pedidos_docs = self._pedidos_crud.get_all(pedido_refs)
+        pedidos_por_id: dict[str, PedidoSchema] = {}
+        for doc in pedidos_docs:
+            if not doc.exists:
+                raise HTTPException(status_code=404, detail=f"Pedido {doc.id} no encontrado")
+            pedidos_por_id[doc.id] = PedidoSchema.from_firestore(doc, company_id)
 
-            pedido_schema = PedidoSchema.from_firestore(pedido_doc, company_id)
+        for carga in cargas:
+            pedido_schema = pedidos_por_id[carga.pedidoId]
 
             try:
                 carga.validar_contra_pedido(pedido_schema)
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail=str(exc))
-            
+
             carga.companyId = company_id
             carga.clienteId = pedido_schema.clienteId
 
@@ -201,7 +207,6 @@ class CargasService:
         snapshot.subcontratadoTelefono = subcontratado.telefono
         snapshot.subcontratadoNumAutorizacion = subcontratado.numeroAutorizacion
         snapshot.precioNeto = precio_neto
-        #snapshot.congeladoAt = datetime.now(timezone.utc)
 
         update_payload = {
             "cartaPorteSnapshot": snapshot.model_dump(),

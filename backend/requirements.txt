@@ -9,3 +9,4 @@ httpx
 pytz
 jinja2
 weasyprint
+qrcode[pil]

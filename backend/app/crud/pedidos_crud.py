@@ -14,6 +14,11 @@ class PedidosCRUD:
             query = query.where("fechaCarga", "<=", dt_fin)
         return query.stream()
 
+    def get_all(self, refs):
+        if not refs:
+            return []
+        return list(db.get_all(refs))
+
     def get_pedido_doc(self, pedido_id: str):
         return db.collection("pedidos").document(pedido_id).get()
 

@@ -1,9 +1,42 @@
+import os
 import pytest
 import datetime
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
+os.environ.setdefault("FIRESTORE_EMULATOR_HOST", "localhost:8080")
+os.environ.setdefault("GCLOUD_PROJECT", "test-project")
+from google.cloud import firestore
+
 from app.main import app
+
+COLECCIONES_A_LIMPIAR = ["pedidos", "cargas", "empresas", "users", "subcontratados"]
+
+@pytest.fixture(scope="session")
+def firestore_client():
+    assert os.environ.get("FIRESTORE_EMULATOR_HOST"), (
+        "FIRESTORE_EMULATOR_HOST no está definido."
+    )
+    client = firestore.Client(project=os.environ["GCLOUD_PROJECT"])
+    yield client
+    client.close()
+
+def _borrar_todas_las_colecciones(client: firestore.Client) -> None:
+    for nombre_coleccion in COLECCIONES_A_LIMPIAR:
+        _borrar_coleccion_recursiva(client.collection(nombre_coleccion))
+
+
+def _borrar_coleccion_recursiva(coleccion_ref) -> None:
+    for doc in coleccion_ref.stream():
+        for subcoleccion in doc.reference.collections():
+            _borrar_coleccion_recursiva(subcoleccion)
+        doc.reference.delete()
+
+@pytest.fixture(autouse=True)
+def limpiar_firestore(firestore_client):
+    _borrar_todas_las_colecciones(firestore_client)
+    yield
+    _borrar_todas_las_colecciones(firestore_client)
 
 @pytest.fixture(scope="session")
 def client():
@@ -126,6 +159,25 @@ def pedido_doc_dict():
         "estado": "planificado",
         "clienteId": "cli1",
         "companyId": "comp1",
+    }
+
+@pytest.fixture
+def fake_pedido():
+    """
+    Pedido para tests de integracion (lo que envía el front)
+    """
+    ahora = datetime.datetime.now(datetime.timezone.utc)
+    return {
+        "destinatarioNombre": "Cliente Test SL",
+        "destinatarioNif": "B12345678",
+        "destinatarioDireccion": "Rambla Catalunya 5, Barcelona",
+        "descripcion": "Pedido de test",
+        "clienteId": "cli1",
+        "fechaCarga": ahora.isoformat(),
+        "fechaDescarga": (ahora + datetime.timedelta(hours=24)).isoformat(),
+        "cargas": [
+            {"tipoCargaId": "t1"},
+        ],
     }
 
 @pytest.fixture

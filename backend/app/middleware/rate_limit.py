@@ -32,6 +32,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return client.host if client and client.host else "anonymous"
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        if request.method == "OPTIONS":
+            return await call_next(request)
         if not self._is_limited_path(request.url.path):
             return await call_next(request)
 
@@ -39,6 +41,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         now = time.monotonic()
         async with self._lock:
             hits = self._hits[key]
+            print(f"{key} -> {len(hits)} hits")
             cutoff = now - self.window_seconds
             while hits and hits[0] <= cutoff:
                 hits.popleft()
