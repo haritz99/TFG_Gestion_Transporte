@@ -10,7 +10,6 @@ from google.cloud import firestore
 
 from app.main import app
 
-COLECCIONES_A_LIMPIAR = ["pedidos", "cargas", "empresas", "users", "subcontratados"]
 
 @pytest.fixture(scope="session")
 def firestore_client():
@@ -21,23 +20,6 @@ def firestore_client():
     yield client
     client.close()
 
-def _borrar_todas_las_colecciones(client: firestore.Client) -> None:
-    for nombre_coleccion in COLECCIONES_A_LIMPIAR:
-        _borrar_coleccion_recursiva(client.collection(nombre_coleccion))
-
-
-def _borrar_coleccion_recursiva(coleccion_ref) -> None:
-    for doc in coleccion_ref.stream():
-        for subcoleccion in doc.reference.collections():
-            _borrar_coleccion_recursiva(subcoleccion)
-        doc.reference.delete()
-
-@pytest.fixture(autouse=True)
-def limpiar_firestore(firestore_client):
-    _borrar_todas_las_colecciones(firestore_client)
-    yield
-    _borrar_todas_las_colecciones(firestore_client)
-
 @pytest.fixture(scope="session")
 def client():
     with TestClient(app) as c:
@@ -46,6 +28,14 @@ def client():
 @pytest.fixture
 def auth_headers():
     return {"Authorization": "Bearer test-token-valid"}
+
+@pytest.fixture
+def auth_headers_company_a():
+    return {"Authorization": "Bearer company-a-token"}
+
+@pytest.fixture
+def auth_headers_company_b():
+    return {"Authorization": "Bearer company-b-token"}
 
 @pytest.fixture
 def current_user_mock():
@@ -148,15 +138,26 @@ def build_firestore_doc():
 
     return _build
 @pytest.fixture
-def pedido_doc_dict():
+def pedido_doc_dict(valid_carga_dict):
+    return {
+        "descripcion": "Pedido test",
+        "fechaCarga": datetime.datetime.now(datetime.timezone.utc),
+        "fechaDescarga": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+        "cargas": [valid_carga_dict],
+        "origenes": ["Madrid"],
+        "destinos": ["Barcelona"],
+        "estado": "planificado",
+        "clienteId": "cli1",
+        "companyId": "comp1",
+    }
+
+@pytest.fixture
+def create_pedido_dict():
     return {
         "descripcion": "Pedido test",
         "fechaCarga": datetime.datetime.now(datetime.timezone.utc),
         "fechaDescarga": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
         "cargas": [{"tipoCargaId": "t1"}],
-        "origenes": ["Madrid"],
-        "destinos": ["Barcelona"],
-        "estado": "planificado",
         "clienteId": "cli1",
         "companyId": "comp1",
     }

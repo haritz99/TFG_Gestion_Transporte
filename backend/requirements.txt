@@ -10,3 +10,4 @@ pytz
 jinja2
 weasyprint
 qrcode[pil]
+google-cloud-firestore

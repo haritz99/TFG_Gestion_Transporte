@@ -1,8 +1,8 @@
-from ..firebase_config import db
+from app.firebase_config import get_db
 
 class VehiculoCRUD:
     def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None):
-        query = db.collection("vehiculos").where("companyId", "==", company_id).order_by("__name__")
+        query = get_db().collection("vehiculos").where("companyId", "==", company_id).order_by("__name__")
 
         if last_doc_id:
             last_doc = self.get_by_id(last_doc_id)
@@ -12,20 +12,20 @@ class VehiculoCRUD:
         return query.limit(limit).stream()
 
     def get_by_id(self, matricula: str):
-        return db.collection("vehiculos").document(matricula.upper()).get()
+        return get_db().collection("vehiculos").document(matricula.upper()).get()
 
 
     def commit_batch(self, batch):
         batch.commit()
 
     def set_vehiculo(self, matricula: str, vehiculo_data: dict):
-        doc_ref = db.collection("vehiculos").document(matricula.upper())
+        doc_ref = get_db().collection("vehiculos").document(matricula.upper())
         doc_ref.set(doc_ref, vehiculo_data)
 
     def update_vehiculo(self, matricula: str, vehiculo_data: dict):
-        doc_ref = db.collection("vehiculos").document(matricula.upper())
+        doc_ref = get_db().collection("vehiculos").document(matricula.upper())
         doc_ref.update(doc_ref, vehiculo_data)
 
     def delete_vehiculo(self, matricula: str):
-        doc_ref = db.collection("vehiculos").document(matricula.upper())
+        doc_ref = get_db().collection("vehiculos").document(matricula.upper())
         doc_ref.delete(doc_ref)

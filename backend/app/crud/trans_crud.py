@@ -1,10 +1,10 @@
 from .user_crud import UserCRUD
-from ..firebase_config import db
+from app.firebase_config import get_db
 
 class TransCRUD:
     def get_all(self, company_id: str, solodis: bool, limit: int = 8, last_doc_id: str | None = None, user_crud: UserCRUD = None):
         query = (
-            db.collection("users")
+            get_db().collection("users")
             .where("companyId", "==", company_id)
             .where("rol", "array_contains", "transportista")
             .order_by("__name__")
