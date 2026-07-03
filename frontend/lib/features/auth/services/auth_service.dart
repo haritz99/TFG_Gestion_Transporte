@@ -11,11 +11,18 @@ import '../../../core/models/external_user_model.dart';
 import '../../../secrets.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
   final http.Client _client;
   final String _baseUrl = '${ApiConfig.baseUrl}/auth';
-  AuthService({http.Client? client}) : _client = client ?? http.Client();
+
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    FirebaseFirestore? firestore,
+    http.Client? client,
+  })  : _auth = firebaseAuth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _client = client ?? http.Client();
 
   User? get currentUser => _auth.currentUser;
 

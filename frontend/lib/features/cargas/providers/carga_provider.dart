@@ -310,6 +310,9 @@ class CargaProvider extends ChangeNotifier {
   void actualizarFechasCarga(String cargaId, DateTime start, DateTime end) {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {
+      // No permitir mover cargas que ya están cedidas
+      if (_cargas[idx].estado == EstadoCarga.cedido) return;
+
       _cargas[idx] = _cargas[idx].copyWith(
         fechaCarga: start,
         fechaDescarga: end,
@@ -322,6 +325,9 @@ class CargaProvider extends ChangeNotifier {
   void planificarCarga(String cargaId, DateTime start, DateTime end) {
     final idx = _cargas.indexWhere((c) => c.id == cargaId);
     if (idx != -1) {
+      // No permitir planificar/mover si la carga está cedida
+      if (_cargas[idx].estado == EstadoCarga.cedido) return;
+
       _cargas[idx] = _cargas[idx].copyWith(
         estado: EstadoCarga.planificado,
         fechaCarga: start,

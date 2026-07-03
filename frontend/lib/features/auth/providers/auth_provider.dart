@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gestion_transporte/core/models/external_user_model.dart';
@@ -10,6 +11,8 @@ import '../services/auth_service.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   UserModel? _user;
+  final Duration _timeout;
+  Completer<void>? _hydrationCompleter;
   ExternalUserModel? _externalUser;
   bool _isLoading = false;
   String? _idToken;
@@ -18,19 +21,27 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get user => _user;
   ExternalUserModel? get externalUser => _externalUser;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _idToken != null;
+  bool get isAuthenticated => _user != null || _externalUser != null;
   String? get idToken => _idToken;
   CompanyModel? get company => _company;
 
-  AuthProvider({required AuthService authService}) : _authService = authService {
+  AuthProvider({
+    required AuthService authService,
+    Duration? timeout,
+  }) : _authService = authService, _timeout = timeout ?? const Duration(seconds: 8) {
     _authService.authStateChanges.listen(_onAuthStateChanged);
+    debugPrint('Constructor AuthProvider');
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
+    debugPrint(
+        'AuthState user=${firebaseUser?.uid} '
+            'completer=${_hydrationCompleter?.hashCode}'
+    );
     _isLoading = true;
     notifyListeners();
-
     try {
+      debugPrint('Auth A');
       if (firebaseUser != null) {
         final results = await Future.wait([
           _authService.getUserData(firebaseUser.uid),
@@ -44,30 +55,53 @@ class AuthProvider extends ChangeNotifier {
             return null;
           });
         } else {
+          debugPrint('Auth B');
           await cargarConfiguracionEmpresa(_user!.companyId);
         }
+        debugPrint('Auth C');
         await _authService.guardarFcmToken();
+        debugPrint('Auth D');
       } else {
         _user = null;
         _externalUser = null;
         _idToken = null;
       }
-    } catch (_) {
+      _tryCompleteHydration();
+      debugPrint('Auth E');
+    } catch (e) {
+      debugPrint('Auth error');
+      debugPrint(e.toString());
       _user = null;
       _externalUser = null;
       _idToken = null;
     } finally {
+      debugPrint('Auth finally');
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  void _tryCompleteHydration() {
+    if (_isHydrated()) {
+      _hydrationCompleter?.complete();
+    }
+  }
+  bool _isHydrated() {
+    debugPrint(
+        '_isHydrated user:${_user != null} ext:${_externalUser != null}');
+    return (_user != null || _externalUser != null);
+  }
+
   Future<void> signIn(String email, String password) async {
     _isLoading = true;
+    _hydrationCompleter = Completer<void>();
     notifyListeners();
     try {
+      debugPrint('1');
       await _authService.signIn(email, password);
+      debugPrint('2');
       await _waitForSessionHydration();
+      debugPrint('3');
     } catch (e) {
       rethrow;
     }
@@ -78,19 +112,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _waitForSessionHydration() async {
-    const timeout = Duration(seconds: 8);
-    final deadline = DateTime.now().add(timeout);
-
-    while (DateTime.now().isBefore(deadline)) {
-      if (_idToken != null && (_user != null || _externalUser != null)) {
-        return;
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (_isHydrated()) {
+      _hydrationCompleter = null;
+      return;
     }
-
-    throw TimeoutException(
-      'No se pudo hidratar la sesion tras iniciar sesion en el tiempo esperado.',
-    );
+    try {
+      debugPrint('A');
+      await _hydrationCompleter!.future.timeout(_timeout);
+      debugPrint('B');
+    } on TimeoutException {
+      throw TimeoutException(
+        'No se pudo hidratar la sesión en el tiempo esperado.',
+      );
+    } finally {
+      _hydrationCompleter = null;
+    }
   }
 
   Future<void> register({
@@ -193,6 +229,7 @@ class AuthProvider extends ChangeNotifier {
     _user = null;
     _externalUser = null;
     _idToken = null;
+    _company = null;
     notifyListeners();
   }
 }

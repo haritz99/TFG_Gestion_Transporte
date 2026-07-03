@@ -1,9 +1,9 @@
-from ..firebase_config import db
+from app.firebase_config import get_db
 from google.cloud import firestore
 
 class PedidosCRUD:
     def get_todos_los_pedidos(self, company_id: str, cliente_id=None, estado=None, dt_inicio=None, dt_fin=None):
-        query = db.collection("pedidos").where("companyId", "==", company_id)
+        query = get_db().collection("pedidos").where("companyId", "==", company_id)
         if cliente_id:
             query = query.where("clienteId", "==", cliente_id)
         if estado:
@@ -14,13 +14,18 @@ class PedidosCRUD:
             query = query.where("fechaCarga", "<=", dt_fin)
         return query.stream()
 
+    def get_all(self, refs):
+        if not refs:
+            return []
+        return list(get_db().get_all(refs))
+
     def get_pedido_doc(self, pedido_id: str):
-        return db.collection("pedidos").document(pedido_id).get()
+        return get_db().collection("pedidos").document(pedido_id).get()
 
 
     def create_pedido_con_cargas(self, pedido_payload: dict, cargas_payloads: list[dict]) -> dict:
-        counter_pedido_ref = db.collection("counters").document("pedidos")
-        counter_cargas_ref = db.collection("counters").document("cargas")
+        counter_pedido_ref = get_db().collection("counters").document("pedidos")
+        counter_cargas_ref = get_db().collection("counters").document("cargas")
 
         @firestore.transactional
         def create_in_transaction(transaction):
@@ -36,7 +41,7 @@ class PedidosCRUD:
 
             # Create Pedido
             pedido_id = f"PED-{pedido_count:03d}"
-            pedido_ref = db.collection("pedidos").document(pedido_id)
+            pedido_ref = get_db().collection("pedidos").document(pedido_id)
             pedido_payload["id"] = pedido_id
             transaction.set(pedido_ref, pedido_payload)
 
@@ -55,17 +60,17 @@ class PedidosCRUD:
                 "cargas": cargas_creadas
             }
 
-        return create_in_transaction(db.transaction())
+        return create_in_transaction(get_db().transaction())
 
     def delete_pedido_y_cargas(self, pedido_ref, cargas_refs):
-        batch = db.batch()
+        batch = get_db().batch()
         for c_ref in cargas_refs:
             batch.delete(c_ref)
         batch.delete(pedido_ref)
         batch.commit()
 
     def get_pedido_ref(self, pedido_id: str):
-        return db.collection("pedidos").document(pedido_id)
+        return get_db().collection("pedidos").document(pedido_id)
 
     def get_carga_ref(self, carga_id: str):
-        return db.collection("cargas").document(carga_id)
+        return get_db().collection("cargas").document(carga_id)

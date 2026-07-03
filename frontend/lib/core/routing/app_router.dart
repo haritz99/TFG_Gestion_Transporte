@@ -38,7 +38,7 @@ class AppRouter {
     initialLocation: '/login',
     refreshListenable: authProvider,
     redirect: (context, state) {
-      if (authProvider.isLoading) return '/loading';
+      //if (authProvider.isLoading) return '/loading';
       final bool isAuthenticated = authProvider.isAuthenticated;
       final bool isLoggingIn = state.matchedLocation == '/login';
       if (!isAuthenticated) {
@@ -49,8 +49,8 @@ class AppRouter {
       final externalUser = authProvider.externalUser;
       final location = state.matchedLocation;
 
-      if (user == null && externalUser == null) {
-        return isLoggingIn ? null : '/login';
+      if (isAuthenticated && user == null && externalUser == null) {
+        return '/loading';
       }
 
       // Lógica para usuario interno

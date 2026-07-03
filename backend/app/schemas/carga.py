@@ -11,8 +11,7 @@ from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
 from .direccion import UbicacionSchema
 
 if TYPE_CHECKING:
-    from .pedido import PedidoSchema
-
+    from .pedido import PedidoSchema, CreatePedidoSchema
 
 _NOMBRE_APELLIDOS_REGEX = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)+$")
 _MATRICULA_REGEX = re.compile(r"^\d{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$")
@@ -86,29 +85,30 @@ class CargaSchema(CargaBaseSchema):
     createdAt: Optional[datetime.datetime] = None
     updatedAt: Optional[datetime.datetime] = None
 
-    def validar_contra_pedido(self, pedido: PedidoSchema):
+    def validar_contra_pedido(self, pedido: PedidoSchema | CreatePedidoSchema):
         """
         Valida que la carga cumpla con las restricciones de su pedido padre.
         Se debe llamar a este método desde el servicio/router tras obtener el pedido de la base de datos y validarlo con Pydantic.
         """
-        if self.fechaCarga < pedido.fechaCarga:
-            raise ValueError(f"La fecha de carga ({self.fechaCarga}) no puede ser anterior a la del pedido ({pedido.fechaCarga}).")
-        if self.fechaDescarga > pedido.fechaDescarga:
-            raise ValueError(f"La fecha de descarga ({self.fechaDescarga}) no puede ser posterior a la del pedido ({pedido.fechaDescarga}).")
+        def _normalizar_a_utc(dt: datetime.datetime) -> datetime.datetime | None:
+            if dt is None:
+                return dt
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=datetime.timezone.utc)
+            return dt.astimezone(datetime.timezone.utc)
 
-        if pedido.origenes and self.origen not in pedido.origenes:
-            raise ValueError(f"El origen '{self.origen}' no existe en los orígenes válidos del pedido.")
-        if pedido.destinos and self.destino not in pedido.destinos:
-            raise ValueError(f"El destino '{self.destino}' no existe en los destinos válidos del pedido.")
-    """
-     @model_validator(mode='after')
+        fecha_carga_self = _normalizar_a_utc(self.fechaCarga)
+        fecha_carga_pedido = _normalizar_a_utc(pedido.fechaCarga)
+        if fecha_carga_self < fecha_carga_pedido:
+            raise ValueError(f"La fecha de carga ({self.fechaCarga}) no puede ser anterior a la del pedido ({pedido.fechaCarga}).")
+
+    
+    @model_validator(mode='after')
     def validar_fechas(self) -> 'CargaSchema':
         if self.fechaDescarga <= self.fechaCarga:
             raise ValueError('La fecha de descarga debe ser posterior a la fecha de carga.')
         return self
-    """
-
-
+    
     @model_validator(mode='after')
     def validar_asignacion_estado(self) -> 'CargaSchema':
         if self.estado in (EstadoCarga.ASIGNADO, EstadoCarga.EN_TRANSITO, EstadoCarga.ENTREGADO):

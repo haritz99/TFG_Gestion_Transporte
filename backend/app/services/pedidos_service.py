@@ -9,17 +9,20 @@ from ..schemas.direccion import DireccionSchema
 from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from app.crud.pedidos_crud import PedidosCRUD
 from app.services.cargas_service import CargasService
+from app.services.notification_service import NotificacionService
 from ..schemas.external_user import ClienteSchema
 
 class PedidosService:
     def __init__(self, crud: PedidosCRUD = Depends(PedidosCRUD),
                  cargas_crud: CargasCRUD = Depends(CargasCRUD),
                  cargas_service: CargasService = Depends(CargasService),
-                 users_crud: UserCRUD = Depends(UserCRUD)):
+                 users_crud: UserCRUD = Depends(UserCRUD),
+                 notificacion_service: NotificacionService = Depends(NotificacionService)):
         self._crud = crud
         self._cargas_crud = cargas_crud
         self._cargas_service = cargas_service
         self._users_crud = users_crud
+        self._notificacion_service = notificacion_service
 
     def fetch_pedidos(self, company_id: str, cliente_id: Optional[str] = None, estado: Optional[str] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[PedidoSchema]:
         dt_inicio = datetime.datetime.combine(fecha_inicio, datetime.time.min) if fecha_inicio else None
@@ -74,17 +77,30 @@ class PedidosService:
                 createdAt=datetime.datetime.now(),
                 updatedAt=datetime.datetime.now()
             )
+            try:
+                carga.validar_contra_pedido(pedido)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
             cargas_payloads.append(carga.model_dump(exclude={'id'}))
 
         result = self._crud.create_pedido_con_cargas(pedido_payload, cargas_payloads)
         pedido.id = result["pedidoId"]
 
-        # Actualizar referencias cruzadas y estados de transportistas y vehículos
-        """
-        if result.get("cargas"):
-            self._actualizar_referencias_cruzadas(result["cargas"]) 
-        """
-
+        for carga_creada in result.get("cargas", []):
+            transportista_id = carga_creada.get("transportistaId")
+            if not transportista_id:
+                continue
+            self._notificacion_service.notificar(
+                user_id=transportista_id,
+                roles=["transportista"],
+                titulo="Carga asignada",
+                cuerpo=f"Se te ha asignado una nueva carga, entra en la app para ver los detalles!.",
+                data={
+                    "evento": "carga_asignada",
+                    "cargaId": carga_creada.get("id"),
+                    "pedidoId": pedido.id,
+                },
+            )
 
         return result
 

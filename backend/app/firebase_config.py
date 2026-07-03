@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials
+from google.cloud import firestore as g_firestore
 from dotenv import load_dotenv
 
 backend_dir = Path(__file__).resolve().parents[1]
@@ -39,8 +40,7 @@ def ensure_firebase_initialized() -> None:
 
 
 def get_db():
-    ensure_firebase_initialized()
-    return firestore.client()
+    return g_firestore.Client(project=os.environ["GCLOUD_PROJECT"])
 
 
 class _LazyFirestoreClient:

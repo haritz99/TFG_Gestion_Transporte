@@ -4,32 +4,59 @@ from unittest.mock import MagicMock
 from fastapi import HTTPException
 from app.services.cargas_service import CargasService
 from app.schemas.carga import CargaSchema, EstadoCarga
-from app.schemas.pedido import PedidoSchema
 
 @pytest.fixture
 def mock_cargas_crud():
     return MagicMock(name="CargasCRUD")
 
-@pytest.fixture
-def service(mock_cargas_crud):
-    return CargasService(crud=mock_cargas_crud)
 
 @pytest.fixture
-def valid_carga_dict():
-    ahora = datetime.datetime.now(datetime.timezone.utc)
+def mock_users_crud():
+    return MagicMock(name="UserCRUD")
+
+
+@pytest.fixture
+def mock_notificacion_service():
+    return MagicMock(name="NotificacionService")
+
+
+@pytest.fixture
+def mock_pedidos_crud():
+    return MagicMock(name="PedidosCRUD")
+
+@pytest.fixture
+def service(mock_cargas_crud, mock_users_crud, mock_notificacion_service, mock_pedidos_crud):
+    return CargasService(
+        crud=mock_cargas_crud,
+        pedidos_crud=mock_pedidos_crud,
+        users_crud=mock_users_crud,
+        notificacion_service=mock_notificacion_service,
+    )
+
+@pytest.fixture
+def valid_carga_dict(carga_doc_dict):
     return {
-        "pedidoId": "p1",
-        "origen": "Madrid",
-        "destino": "Barcelona",
-        "mercancia": "Palets",
-        "numBultos": 10,
-        "peso": 500.0,
-        "precio": 100.0,
-        "fechaCarga": ahora,
-        "fechaDescarga": ahora + datetime.timedelta(hours=5),
+        **carga_doc_dict,
         "estado": EstadoCarga.PENDIENTE,
-        "companyId": "comp1"
     }
+
+
+def _valid_pedido_doc(pedido_doc_dict):
+    mock_pedido_doc = MagicMock(exists=True)
+    mock_pedido_doc.id = "p1"
+    mock_pedido_doc.to_dict.return_value = pedido_doc_dict
+    return mock_pedido_doc
+
+
+def _build_valid_carga(carga_doc_dict, **overrides):
+    payload = {
+        **carga_doc_dict,
+        "id": overrides.pop("id", "c1"),
+        "pedidoId": overrides.pop("pedidoId", "p1"),
+    }
+    payload.update(overrides)
+    payload = {k: v for k, v in payload.items() if v is not None}
+    return CargaSchema(**payload)
 
 def test_cargas_service_fetch_cargas_filtros(service, mock_cargas_crud, valid_carga_dict):
     # Arrange
@@ -73,40 +100,6 @@ def test_cargas_service_get_carga_by_id_existe(service, mock_cargas_crud, valid_
     assert res.id == "c1"
 
 
-def test_cargas_service_assign_carga_ok(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc_carga = MagicMock(exists=True)
-    mock_doc_carga.id = "c1"
-    mock_doc_carga.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc_carga
-
-    mock_doc_trans = MagicMock(exists=True)
-    mock_doc_trans.to_dict.return_value = {"companyId": "comp1", "rol": ["transportista"]}
-    mock_cargas_crud.get_trans_doc.return_value = mock_doc_trans
-
-    # Act
-    res = service.assign_carga_transportista("c1", "t1", "comp1")
-
-    # Assert
-    assert res.transportistaId == "t1"
-    assert res.estado == EstadoCarga.ASIGNADO
-
-def test_cargas_service_assign_carga_no_trans(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc_carga = MagicMock(exists=True)
-    mock_doc_carga.id = "c1"
-    mock_doc_carga.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc_carga
-
-    mock_doc_trans = MagicMock(exists=True)
-    mock_doc_trans.to_dict.return_value = {"companyId": "comp1", "rol": ["encargado"]}
-    mock_cargas_crud.get_trans_doc.return_value = mock_doc_trans
-
-    # Act & Assert
-    with pytest.raises(HTTPException) as exc:
-        service.assign_carga_transportista("c1", "t1", "comp1")
-    assert exc.value.status_code == 403
-
 def test_cargas_service_delete_carga_ok(service, mock_cargas_crud, valid_carga_dict):
     # Arrange
     mock_doc = MagicMock(exists=True)
@@ -118,6 +111,133 @@ def test_cargas_service_delete_carga_ok(service, mock_cargas_crud, valid_carga_d
 
     # Assert
     mock_cargas_crud.delete_carga_doc.assert_called_once_with("c1")
+
+
+def test_cargas_service_bulk_update_ok_persiste_cargas_en_lote(service, mock_cargas_crud, mock_pedidos_crud, pedido_doc_dict, carga_doc_dict):
+    # Corresponde al test 1 de la lista backend.
+    # Arrange
+    mock_pedido_doc = _valid_pedido_doc(pedido_doc_dict)
+    mock_pedido_doc.id = "p1"
+    mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p1")
+    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+
+    carga_1 = _build_valid_carga(carga_doc_dict, id="c1", pedidoId="p1")
+    carga_2 = _build_valid_carga(carga_doc_dict, id="c2", pedidoId="p1", fechaCarga=carga_1.fechaCarga + datetime.timedelta(hours=1), fechaDescarga=carga_1.fechaDescarga + datetime.timedelta(hours=1))
+    batch = MagicMock()
+    mock_cargas_crud.get_batch.return_value = batch
+
+    ref_1 = MagicMock(name="ref_1")
+    ref_2 = MagicMock(name="ref_2")
+    mock_cargas_crud.get_carga_ref.side_effect = [ref_1, ref_2]
+
+    # Act
+    result = service.bulk_update_cargas([carga_1, carga_2], "comp1")
+
+    # Assert
+    assert len(result) == 2
+    assert result[0].companyId == "comp1"
+    assert result[0].clienteId == "cli1"
+    assert result[1].companyId == "comp1"
+    assert result[1].clienteId == "cli1"
+    assert batch.update.call_count == 2
+    batch.commit.assert_called_once()
+
+
+def test_cargas_service_bulk_update_rechaza_carga_sin_pedido(service, mock_cargas_crud, carga_doc_dict):
+    # Corresponde al test 2 de la lista backend.
+    # Arrange
+    carga = _build_valid_carga(carga_doc_dict, id="c1", pedidoId=None)
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        service.bulk_update_cargas([carga], "comp1")
+
+    assert exc.value.status_code == 400
+
+
+def test_cargas_service_bulk_update_rechaza_pedido_inexistente(service, mock_cargas_crud, mock_pedidos_crud, carga_doc_dict):
+    # Corresponde al test 3 de la lista backend.
+    # Arrange
+    carga = _build_valid_carga(carga_doc_dict, id="c1", pedidoId="p_inexistente")
+    mock_pedido_doc = MagicMock(exists=False)
+    mock_pedido_doc.id = "p_inexistente"
+    mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p_inexistente")
+    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        service.bulk_update_cargas([carga], "comp1")
+
+    assert exc.value.status_code == 404
+
+
+def test_cargas_service_bulk_update_rechaza_ref_invalida(service, mock_cargas_crud, mock_pedidos_crud, pedido_doc_dict, carga_doc_dict):
+    # Corresponde al test 4 de la lista backend.
+    # Arrange
+    carga = _build_valid_carga(carga_doc_dict, id="c1", pedidoId="p1")
+    mock_pedido_doc = _valid_pedido_doc(pedido_doc_dict)
+    mock_pedido_doc.id = "p1"
+    mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p1")
+    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+    mock_cargas_crud.get_batch.return_value = MagicMock()
+    mock_cargas_crud.get_carga_ref.return_value = None
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc:
+        service.bulk_update_cargas([carga], "comp1")
+
+    assert exc.value.status_code == 500
+    assert "referencia" in str(exc.value.detail).lower()
+
+def test_cargas_service_ceder_carga_subcontratado_notifica(service, mock_cargas_crud, mock_users_crud, mock_notificacion_service, carga_doc_dict, subcontratado_doc_dict):
+    mock_doc_carga = MagicMock(exists=True)
+    mock_doc_carga.id = "c1"
+    mock_doc_carga.reference = MagicMock(name="carga_ref")
+    mock_doc_carga.to_dict.return_value = {
+        **carga_doc_dict,
+        "cartaPorteSnapshot": {
+            "clienteNombre": "Mi Cliente",
+            "clienteNif": "B12345678",
+            "clienteDireccion": "Calle Falsa 123, 28000 Madrid (Madrid)",
+        },
+        "precio": 100.0,
+    }
+    mock_cargas_crud.get_carga_doc.return_value = mock_doc_carga
+
+    mock_sub_doc = MagicMock(exists=True)
+    mock_sub_doc.id = "sub1"
+    mock_sub_doc.to_dict.return_value = subcontratado_doc_dict
+    mock_users_crud.get_subcontratado_by_id.return_value = mock_sub_doc
+
+    mock_updated_doc = MagicMock(exists=True)
+    mock_updated_doc.id = "c1"
+    mock_updated_doc.to_dict.return_value = {
+        **carga_doc_dict,
+        "estado": EstadoCarga.CEDIDO,
+        "companyId": "comp1",
+        "subcontratadoId": "sub1",
+        "cartaPorteSnapshot": {
+            "clienteNombre": "Mi Cliente",
+            "clienteNif": "B12345678",
+            "clienteDireccion": "Calle Falsa 123, 28000 Madrid (Madrid)",
+            "subcontratadoNombre": "Sub S.L.",
+        },
+    }
+    mock_cargas_crud.get_carga_doc.side_effect = [mock_doc_carga, mock_updated_doc]
+
+    batch = mock_cargas_crud.get_batch.return_value
+
+    result = service.ceder_carga_subcontratado("c1", "sub1", "comp1")
+
+    assert result.estado == EstadoCarga.CEDIDO
+    call_kwargs = mock_notificacion_service.notificar.call_args.kwargs
+    assert call_kwargs["user_id"] == "sub1"
+    assert call_kwargs["roles"] == ["subcontratado"]
+    assert call_kwargs["titulo"] == "Carga cedida"
+    assert call_kwargs["data"]["evento"] == "carga_cedida"
+    assert call_kwargs["data"]["cargaId"] == "c1"
+    assert call_kwargs["data"]["subcontratadoId"] == "sub1"
+    batch.commit.assert_called_once()
 
 def test_cargas_service_calculate_asignados(service, mock_cargas_crud):
     # Arrange
@@ -146,77 +266,3 @@ def test_cargas_service_calculate_sin_asignar(service, mock_cargas_crud):
     assert res == 8
     mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "pendiente")
 
-def test_cargas_service_assign_carga_not_found(service, mock_cargas_crud):
-    # Arrange
-    mock_doc = MagicMock(exists=False)
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
-
-    # Act & Assert
-    with pytest.raises(HTTPException) as exc:
-        service.assign_carga_transportista("c_inexistente", "t1", "comp1")
-    assert exc.value.status_code == 404
-
-def test_cargas_service_assign_transportista_not_found(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc_carga = MagicMock(exists=True)
-    mock_doc_carga.id = "c1"
-    mock_doc_carga.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc_carga
-
-    mock_doc_trans = MagicMock(exists=False)
-    mock_cargas_crud.get_trans_doc.return_value = mock_doc_trans
-
-    # Act & Assert
-    with pytest.raises(HTTPException) as exc:
-        service.assign_carga_transportista("c1", "t_inexistente", "comp1")
-    assert exc.value.status_code == 404
-
-def test_cargas_service_update_carga_ok(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc = MagicMock(exists=True)
-    mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
-
-    carga_upd = CargaSchema(**valid_carga_dict)
-    carga_upd.mercancia = "Nueva Mercancia"
-
-    pedido = PedidoSchema(
-        id="p1", clienteId="cli1", descripcion="T", companyId="comp1",
-        fechaCarga=carga_upd.fechaCarga - datetime.timedelta(hours=1), 
-        fechaDescarga=carga_upd.fechaDescarga + datetime.timedelta(hours=1),
-        origenes=["Madrid"], destinos=["Barcelona"]
-    )
-
-    # Act
-    res = service.update_carga("c1", carga_upd, pedido, "comp1")
-
-    # Assert
-    assert res.mercancia == "Nueva Mercancia"
-    mock_cargas_crud.update_carga_doc.assert_called_once()
-
-def test_cargas_service_update_carga_not_found(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc = MagicMock(exists=False)
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
-    carga_upd = CargaSchema(**valid_carga_dict)
-    pedido = MagicMock()
-
-    # Act & Assert
-    with pytest.raises(HTTPException) as exc:
-        service.update_carga("c1", carga_upd, pedido, "comp1")
-    assert exc.value.status_code == 404
-
-def test_cargas_service_update_carga_company_mismatch(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc = MagicMock(exists=True)
-    valid_carga_dict["companyId"] = "comp_otra"
-    mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
-
-    carga_upd = CargaSchema(**valid_carga_dict)
-    pedido = MagicMock()
-
-    # Act & Assert
-    with pytest.raises(HTTPException) as exc:
-        service.update_carga("c1", carga_upd, pedido, "comp1")
-    assert exc.value.status_code == 403

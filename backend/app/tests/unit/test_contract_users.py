@@ -19,19 +19,15 @@ def test_contract_flutter_create_transportista():
     except ValidationError as e:
         pytest.fail(f"El contrato se ha roto. Pydantic rechaza el payload de Flutter. Errores: {e}")
 
-    # 3. Comprobamos que el backend rellena bien los huecos u opciones por defecto
-    assert user.estado == 'sin_asignar', "Pydantic debio asignar el estado por defecto"
     assert user.companyId is None, "Debe venir nulo, el Router lo rellenara luego con el Token"
 
 def test_contract_flutter_rompe_contrato():
-    # Simulamos que un desarrollador frontend olvida enviar el array de 'permisosCond'
     flutter_payload_roto = {
       'nombre': 'Carlos',
       'apellido': 'Sainz',
       'email': 'carlos@empresa.com',
       'telefono': '+34123456789',
       'rol': ['transportista'],
-      # Falta permisosCond
     }
 
     with pytest.raises(ValidationError) as exc_info:

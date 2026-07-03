@@ -21,8 +21,8 @@ class CargasSeleccionadas {
     DateTime? fechaDescarga,
   }) : asignaciones = List.generate(cantidad, (_) =>
       AsignacionCarga(
-        fechaCarga: fechaCarga ?? DateTime.now(),
-        fechaLimite: fechaDescarga ?? DateTime.now(),
+        fechaCarga: fechaCarga,
+        fechaLimite: fechaDescarga,
       ));
 
   double get subtotal => tipo.precio * cantidad;
@@ -139,8 +139,8 @@ class PedidoProvider extends ChangeNotifier {
 
     final descripcion = _datosTemporalPedido['descripcion'] as String?;
     final cliente = _datosTemporalPedido['cliente'] as ExternalUserModel;
-    final fechaCarga = _datosTemporalPedido['fechaCarga'] as DateTime? ?? DateTime.now();
-    final fechaDescarga = _datosTemporalPedido['fechaDescarga'] as DateTime? ?? DateTime.now().add(const Duration(days: 7));
+    final fechaCarga = _datosTemporalPedido['fechaCarga'] as DateTime;
+    final fechaDescarga = _datosTemporalPedido['fechaDescarga'];
 
 
     _isLoading = true;
@@ -154,7 +154,7 @@ class PedidoProvider extends ChangeNotifier {
         'conductorNombre': asig.conductor != null ? '${asig.conductor!.nombre} ${asig.conductor!.apellido}'.trim() : null,
         'vehiculoId': asig.vehiculo?.matricula,
         'fechaCarga': (asig.fechaCarga ?? fechaCarga).toIso8601String(),
-        'fechaDescarga': (asig.fechaLimite ?? fechaDescarga).toIso8601String(),
+        'fechaDescarga': (asig.fechaLimite ?? fechaCarga.add(const Duration(hours: 5))).toIso8601String(),
       }).toList();
 
       final direccion = DireccionModel(

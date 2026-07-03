@@ -40,8 +40,17 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
     final pedidoProvider = context.read<PedidoProvider>();
 
     _descripcionController = TextEditingController(text: pedidoProvider.datosTemporalPedido['descripcion'] ?? '');
-    _fechaCarga = pedidoProvider.datosTemporalPedido['fechaCarga'] ?? DateTime.now();
-    _fechaDescarga = pedidoProvider.datosTemporalPedido['fechaDescarga'] ?? DateTime.now().add(const Duration(days: 7));
+    _fechaCarga = pedidoProvider.datosTemporalPedido['fechaCarga'];
+    _fechaDescarga = pedidoProvider.datosTemporalPedido['fechaDescarga'];
+
+    if (_fechaCarga == null) {
+      _fechaCarga = DateTime.now();
+      pedidoProvider.actualizarDatosTemporales(fechaCarga: _fechaCarga);
+    }
+    if (_fechaDescarga == null) {
+      _fechaDescarga = _fechaCarga!.add(const Duration(days: 7));
+      pedidoProvider.actualizarDatosTemporales(fechaDescarga: _fechaDescarga);
+    }
 
     _selectedCliente = pedidoProvider.datosTemporalPedido['cliente'];
 
@@ -116,7 +125,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isCarga) async {
-    final initialDate = isCarga ? (_fechaCarga ?? DateTime.now()) : (_fechaDescarga ?? DateTime.now());
+    final initialDate = isCarga ? (_fechaCarga) : (_fechaDescarga);
     final pickedDate = await _showCalendarDialog(
       context,
       initialDate: initialDate,
@@ -203,7 +212,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       children: List.generate(seleccion.cantidad, (index) {
         final asig = seleccion.asignaciones[index];
         final fCarga = asig.fechaCarga ?? _fechaCarga ?? DateTime.now();
-        final fDescarga = asig.fechaLimite ?? _fechaDescarga ?? DateTime.now();
+        final fDescarga = fCarga.add(const Duration(hours : 5));
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
