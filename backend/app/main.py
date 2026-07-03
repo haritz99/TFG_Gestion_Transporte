@@ -53,20 +53,18 @@ origins = [
     "http://127.0.0.1:5500",
     "http://localhost:8000",
 ]
-
+app.add_middleware(
+    RateLimitMiddleware,
+    limit=20,
+    window_seconds=60,
+    path_prefixes=["/auth", "/trans", "/vehi", "/ext", "/pedidos", "/cargas", "/dashboard"],
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
-app.add_middleware(
-    RateLimitMiddleware,
-    limit=20,
-    window_seconds=60,
-    path_prefixes=["/auth", "/trans", "/vehi", "/ext", "/pedidos", "/cargas", "/dashboard"],
 )
 
 app.include_router(auth.router)

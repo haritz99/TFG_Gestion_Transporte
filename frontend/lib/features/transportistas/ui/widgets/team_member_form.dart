@@ -97,7 +97,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
       if (result != null) {
             Navigator.of(context).pop(result);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Conductor invitado con éxito')),
+              const SnackBar(content: Text('Conductor invitado con éxito')),
             );
       } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -261,7 +261,7 @@ class _TeamMemberFormState extends State<TeamMemberForm> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text('Cancelar'),
+                    child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(

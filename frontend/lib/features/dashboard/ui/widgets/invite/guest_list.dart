@@ -75,7 +75,7 @@ class GuestList extends StatelessWidget {
                         SnackBar(content: Text(inviteProvider.message ?? "Email enviado correctamente")));
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Ocurrio un error enviando el email")));
+                            const SnackBar(content: Text("Ocurrio un error enviando el email")));
                       }
                     }
                   )

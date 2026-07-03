@@ -195,12 +195,12 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                   controller: _conductorCtrl,
                   decoration: const InputDecoration(labelText: 'Nombre y apellidos del Conductor'),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _vehiculoCtrl,
                   decoration: const InputDecoration(labelText: 'Matrícula del Vehículo'),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _remolqueCtrl,
                   decoration: const InputDecoration(labelText: 'Matrícula del Remolque'),

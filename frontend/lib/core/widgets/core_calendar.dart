@@ -252,7 +252,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                       TextSpan(
                           style: AppTextStyles.bodySm,
                           children: [
-                            TextSpan(text: 'Vehículo: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            const TextSpan(text: 'Vehículo: ', style: TextStyle(fontWeight: FontWeight.bold)),
                             TextSpan(text: carga.vehiculoId ?? "")
                           ]
                       )
@@ -262,7 +262,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                     TextSpan(
                         style: AppTextStyles.bodySm,
                         children: [
-                          TextSpan(text: 'Conductor: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const TextSpan(text: 'Conductor: ', style: TextStyle(fontWeight: FontWeight.bold)),
                           TextSpan(text: carga.transportistaNombre ?? "")
                         ]
                     )

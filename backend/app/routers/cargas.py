@@ -147,6 +147,7 @@ def create_incidencia(
 
 @router.patch("/{carga_id}/incidencia/{incidencia_id}/resolver", response_model=dict[str, str])
 def resolver_incidencia(
+    carga_id: str,
     incidencia_id: str,
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: IncidenciaService = Depends(IncidenciaService),

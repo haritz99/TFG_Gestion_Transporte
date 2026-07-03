@@ -35,9 +35,7 @@ class _InviteModalState extends State<InviteModal> {
         if (provider.isCreated && mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('Usuario invitado con éxito')
-              )
+              const SnackBar(content: Text('Usuario invitado con éxito'))
           );
         }
         } catch (e) {
@@ -73,11 +71,11 @@ class _InviteModalState extends State<InviteModal> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Gestionar colaboradores',
                               style: TextStyle(
                                 fontSize: 18,
@@ -85,7 +83,7 @@ class _InviteModalState extends State<InviteModal> {
                                 color: AppColors.titleText,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               'Invita a nuevos miembros y gestiona los invitados actuales',
                               style: TextStyle(

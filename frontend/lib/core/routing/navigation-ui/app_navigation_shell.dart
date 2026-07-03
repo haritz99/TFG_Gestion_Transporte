@@ -26,7 +26,7 @@ class AppNavigationShell extends StatelessWidget {
       // En movil se usa un Drawer
       return Scaffold(
         appBar: AppBar(
-          title: Text(nombreEmpresa, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          title: Text(nombreEmpresa, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           elevation: 0,
         ),
         drawer: Drawer(child: AppSidebar(navItems: navItems)),

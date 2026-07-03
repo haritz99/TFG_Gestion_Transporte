@@ -23,7 +23,7 @@ class DashboardMainContent extends StatelessWidget {
         children: [
           DashboardCalendar(cargas: cargas),
           const SizedBox(height: 24),
-          PanelIncidencias(internalScroll: false),
+          const PanelIncidencias(internalScroll: false),
         ],
       );
     }
@@ -37,13 +37,13 @@ class DashboardMainContent extends StatelessWidget {
         ),
         const SizedBox(width: 24),
         if (authProvider.user?.rol.contains('encargado') ?? false)
-        Expanded(
-          flex: 30,
-          child: SizedBox(
-            height: 700,
-            child: PanelIncidencias(internalScroll: true),
-          ),
+        const Expanded(
+        flex: 30,
+        child: SizedBox(
+          height: 700,
+          child: PanelIncidencias(internalScroll: true),
         ),
+      ),
       ],
     );
   }

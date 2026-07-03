@@ -26,9 +26,9 @@ class AppSidebar extends StatelessWidget {
           _buildSideBarHeader(nombreEmpresa),
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: const Text(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
               'NAVEGACIÓN',
               style: TextStyle(
                 color: AppColors.mutedText,
@@ -73,7 +73,7 @@ class AppSidebar extends StatelessWidget {
             children: [
               Text(
                 nombreEmpresa,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.titleText,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

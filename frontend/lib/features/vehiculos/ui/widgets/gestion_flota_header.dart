@@ -14,9 +14,9 @@ class GestionFlotaHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Column(
+    final content = const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text('Gestión de Flota', style: AppTextStyles.headingLg),
         SizedBox(height: 4),
         Text(

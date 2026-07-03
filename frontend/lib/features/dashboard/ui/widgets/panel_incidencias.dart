@@ -26,7 +26,7 @@ class PanelIncidencias extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
