@@ -1,6 +1,6 @@
 import pytest
 import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, ANY
 from fastapi import HTTPException
 from app.services.cargas_service import CargasService
 from app.schemas.carga import CargaSchema, EstadoCarga
@@ -251,7 +251,7 @@ def test_cargas_service_calculate_asignados(service, mock_cargas_crud):
 
     # Assert
     assert res == 12
-    mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "asignado")
+    mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "asignado", ANY, ANY)
 
 def test_cargas_service_calculate_sin_asignar(service, mock_cargas_crud):
     # Arrange
@@ -264,5 +264,5 @@ def test_cargas_service_calculate_sin_asignar(service, mock_cargas_crud):
 
     # Assert
     assert res == 8
-    mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "pendiente")
+    mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "planificado", ANY, ANY)
 
