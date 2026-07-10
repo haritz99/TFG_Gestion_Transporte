@@ -76,9 +76,13 @@ class CargasCRUD:
     def get_trans_doc(self, trans_id: str):
         return get_db().collection("users").document(trans_id).get()
 
-    def get_cargas_count(self, company_id: str, estado: str):
-        return get_db().collection_group('cargas').where('companyId', '==', company_id).where('estado', '==', estado).count().get()
-
+    def get_cargas_count(self, company_id: str, estado: str, inicio=None, fin=None):
+        query = get_db().collection_group('cargas').where('companyId', '==', company_id).where('estado', '==', estado)
+        if inicio is not None:
+            query = query.where('fechaCarga', '>=', inicio)
+        if fin is not None:
+            query = query.where('fechaCarga', '<=', fin)
+        return query.count().get()
     def get_cargas_hoy_count(self, company_id: str, sod, eod, estado=None):
         query = get_db().collection_group('cargas').where('companyId', '==', company_id).where('fechaDescarga', '>=', sod).where('fechaDescarga', '<=', eod).order_by('fechaDescarga')
         if estado:

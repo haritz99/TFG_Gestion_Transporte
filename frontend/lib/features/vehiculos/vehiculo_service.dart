@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../../../core/config/api_config.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/models/vehiculo_model.dart';
-import '../../../core/models/paginated_response.dart';
+import '../../core/api_config.dart';
+import '../../core/app_constants.dart';
+import '../../core/models/vehiculo_model.dart';
+import '../../core/models/paginated_response.dart';
 
 class VehiculoService {
   final http.Client _client;

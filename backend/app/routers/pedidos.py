@@ -4,7 +4,8 @@ import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from ..dependencies.auth import get_current_encargado, get_current_cargador
+from ..dependencies.auth import get_current_encargado, get_current_cargador, \
+    get_current_encargado_cargador
 from ..schemas.pedido import PedidoSchema, CreatePedidoSchema
 from ..services.pedidos_service import PedidosService
 
@@ -46,7 +47,7 @@ def get_pedido_by_id(pedido_id: str,
 
 @router.post("/", status_code=201)
 def insert_pedido(pedido: CreatePedidoSchema,
-                  current_user: dict[str, Any] = Depends(get_current_encargado),
+                  current_user: dict[str, Any] = Depends(get_current_encargado_cargador),
                   service: PedidosService = Depends(PedidosService)):
     return service.create_pedido(pedido, current_user.get("companyId"))
 

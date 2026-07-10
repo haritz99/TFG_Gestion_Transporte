@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/connectivity_provider.dart';
+import '../connectivity_provider.dart';
 
 /// Widget que muestra un banner/snackbar cuando no hay conexión.
 class ConnectivityBanner extends StatelessWidget {

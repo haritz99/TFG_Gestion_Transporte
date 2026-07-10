@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../incidencias/incidencias_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import 'dashboard_kpi_card.dart';
 
@@ -17,6 +19,7 @@ class DashboardKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final incidenciasCount = context.watch<IncidenciaProvider>().incidencias.length;
     return GridView.count(
       crossAxisCount: isMobile ? 2 : 4,
       shrinkWrap: true,
@@ -26,11 +29,11 @@ class DashboardKpiGrid extends StatelessWidget {
       childAspectRatio: isMobile ? 1.0 : 1.75,
       children: [
         DashboardKpiCard(
-          label: 'Cargas asignadas',
+          label: 'Cargas asignadas esta semana',
           value: provider.cargasAsignadas.toString(),
         ),
         DashboardKpiCard(
-          label: 'Cargas pendientes',
+          label: 'Cargas pendientes esta semana',
           value: provider.cargasSinAsignar.toString(),
           bottomContent: Align(
             alignment: Alignment.bottomRight,
@@ -54,8 +57,7 @@ class DashboardKpiGrid extends StatelessWidget {
         ),
         DashboardKpiCard(
           label: 'Incidencias Abiertas',
-          value: provider.incidenciasAbiertas.toString(),
-          isAlert: provider.incidenciasAbiertas > 0,
+          value: incidenciasCount.toString(),
         ),
         DashboardKpiCard(
           label: 'Entregadas Hoy',

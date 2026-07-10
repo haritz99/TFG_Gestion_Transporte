@@ -3,6 +3,7 @@ from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
 from google.cloud import firestore as g_firestore
+from firebase_admin import firestore as admin_firestore
 from dotenv import load_dotenv
 
 backend_dir = Path(__file__).resolve().parents[1]
@@ -40,7 +41,10 @@ def ensure_firebase_initialized() -> None:
 
 
 def get_db():
-    return g_firestore.Client(project=os.environ["GCLOUD_PROJECT"])
+    if os.environ.get("FIRESTORE_EMULATOR_HOST"):
+        return g_firestore.Client(project=os.environ.get("GCLOUD_PROJECT", "test-project"))
+    ensure_firebase_initialized()
+    return admin_firestore.client()
 
 
 class _LazyFirestoreClient:

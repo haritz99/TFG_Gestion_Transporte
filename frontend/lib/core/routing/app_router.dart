@@ -14,7 +14,7 @@ import '../../features/plan/ui/plan_page.dart';
 import '../../features/vehiculos/ui/gestion_flota_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/ui/login_page.dart';
-import '../../features/plan/providers/planificacion_provider.dart';
+import '../../features/plan/planificacion_provider.dart';
 import 'package:provider/provider.dart';
 import 'navigation-ui/app_navigation_shell.dart';
 

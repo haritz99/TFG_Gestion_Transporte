@@ -6,7 +6,7 @@ import 'package:gestion_transporte/core/models/external_user_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import '../../../core/models/company_model.dart';
 import '../../../core/models/direccion_model.dart';
-import '../services/auth_service.dart';
+import '../auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;

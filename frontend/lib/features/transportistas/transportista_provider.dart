@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:gestion_transporte/features/auth/providers/token_provider.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/models/paginated_response.dart';
-import '../data/transportista_service.dart';
+import '../../core/app_constants.dart';
+import '../../core/models/paginated_response.dart';
+import 'transportista_service.dart';
 
 class TransportistaProvider extends ChangeNotifier {
   final TransportistaService _service;

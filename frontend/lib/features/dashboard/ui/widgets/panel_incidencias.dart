@@ -64,7 +64,7 @@ class PanelIncidencias extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              _labelTipo(inc.tipo),
+                              "${_labelTipo(inc.tipo)} - ${inc.cargaId}",
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 13),
                             ),

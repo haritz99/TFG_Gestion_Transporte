@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../providers/planificacion_provider.dart';
+import '../../planificacion_provider.dart';
 import '../../../../core/models/carga_model.dart';
 import '../../../cargas/providers/carga_provider.dart';
 import '../../../cargas/providers/pedido_provider.dart';

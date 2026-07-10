@@ -3,7 +3,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/carga_model.dart';
-import '../../providers/planificacion_provider.dart';
+import '../../planificacion_provider.dart';
 import '../../../cargas/providers/carga_provider.dart';
 import '../../../cargas/providers/pedido_provider.dart';
 

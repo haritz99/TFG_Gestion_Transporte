@@ -6,9 +6,9 @@ import 'package:gestion_transporte/core/models/company_model.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../../../core/config/api_config.dart';
-import '../../../core/models/external_user_model.dart';
-import '../../../secrets.dart';
+import '../../core/api_config.dart';
+import '../../core/models/external_user_model.dart';
+import '../../secrets.dart';
 
 class AuthService {
   final FirebaseAuth _auth;
@@ -93,25 +93,6 @@ class AuthService {
     if (response.statusCode != 201) {
       final detail = jsonDecode(response.body)['detail'] ?? 'Error desconocido';
       throw Exception('Error al registrar empresa: $detail');
-    }
-  }
-
-  Future<void> inicializarCustomClaims(String? token, String companyId, List<String> rol) async {
-    if (token == null || token.isEmpty) {
-      throw Exception('No se pudo obtener el token de autenticación');
-    }
-
-    final uri = Uri.parse('${ApiConfig.baseUrl}/auth/customClaims/init');
-    final response = await _client.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'companyId': companyId, 'rol': rol}),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Error al inicializar los claims: ${response.body}');
     }
   }
 

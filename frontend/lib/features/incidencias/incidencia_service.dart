@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../../core/config/api_config.dart';
+import '../../core/api_config.dart';
 import '../auth/providers/token_provider.dart';
 
 class IncidenciaService {

@@ -5,7 +5,7 @@ import '../../../../core/models/carga_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../cargas/providers/carga_provider.dart';
-import '../../providers/transportista_provider.dart';
+import '../../transportista_provider.dart';
 
 class TeamMemberForm extends StatefulWidget {
   final UserModel? member;

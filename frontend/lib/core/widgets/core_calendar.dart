@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/pdf/pdf_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -134,11 +135,6 @@ class _CoreCalendarState extends State<CoreCalendar> {
                 'Calendario de Pedidos',
                 style: AppTextStyles.headingMd.copyWith(color: AppColors.primary),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${widget.cargas.length} cargas próximas',
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.bodyText),
-              ),
             ],
           ),
         ),
@@ -164,7 +160,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
 
     final authProvider = context.read<AuthProvider>();
     final bool isConductor = authProvider.user?.rol.contains('transportista') ?? false;
-
+    final isMobile = ResponsiveBreakpoints.of(context).isMobile;
     String fechaText = '';
     if (mismoDia) {
       fechaText = 'Carga: $horaCarga - Descarga: $horaDescarga';
@@ -271,6 +267,17 @@ class _CoreCalendarState extends State<CoreCalendar> {
               ),
             ),
             if (!isConductor)
+              if (isMobile)
+                Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: eventColor,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              else
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 margin: const EdgeInsets.only(right: 8),

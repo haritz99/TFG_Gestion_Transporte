@@ -40,3 +40,38 @@ class KpiCard extends StatelessWidget {
   }
 }
 
+class ViajeCard extends StatelessWidget {
+  final String fechaHora;
+  final String origenDestino;
+
+  const ViajeCard({super.key, required this.fechaHora, required this.origenDestino});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 76,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Próximo: '),
+          Text(fechaHora, style: AppTextStyles.kpiLabel),
+          const SizedBox(height: 4),
+          Text(
+            origenDestino,
+            style: AppTextStyles.kpiValue.copyWith(fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+

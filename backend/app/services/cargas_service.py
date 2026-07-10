@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, time
+from datetime import datetime, timezone, time, timedelta
 from typing import Optional, List
 
 import pytz
@@ -52,16 +52,26 @@ class CargasService:
 
 
     def calculate_asignados(self, company_id: str):
-        result = self._crud.get_cargas_count(company_id, EstadoCarga.ASIGNADO.value)
+        inicio, fin = self._limites_semana_actual()
+        result = self._crud.get_cargas_count(company_id, EstadoCarga.ASIGNADO.value, inicio, fin)
         if result and len(result) > 0 and len(result[0]) > 0:
             return result[0][0].value
         return 0
 
     def calculate_sin_asignar(self, company_id: str):
-        result = self._crud.get_cargas_count(company_id, EstadoCarga.PENDIENTE.value)
+        inicio, fin = self._limites_semana_actual()
+        result = self._crud.get_cargas_count(company_id, EstadoCarga.PLANIFICADO.value, inicio, fin)
         if result and len(result) > 0 and len(result[0]) > 0:
             return result[0][0].value
         return 0
+
+    @staticmethod
+    def _limites_semana_actual() -> tuple[datetime, datetime]:
+        ahora = datetime.now(timezone.utc)
+        inicio_semana = ahora - timedelta(days=ahora.weekday())
+        inicio_semana = inicio_semana.replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_semana = inicio_semana + timedelta(days=6, hours=23, minutes=59, seconds=59)
+        return inicio_semana, fin_semana
 
     def calculate_cargas_hoy(self, company_id: str, sod: datetime, eod: datetime, estado: Optional[EstadoCarga] = None):
         if sod.tzinfo is None: sod = pytz.utc.localize(sod)

@@ -55,7 +55,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
     _selectedCliente = pedidoProvider.datosTemporalPedido['cliente'];
 
     if (_selectedCliente == null) {
-      final user = context.read<AuthProvider>().user;
+      final user = context.read<AuthProvider>().externalUser;
       if (user != null && user.rol.contains('cliente')) {
         _selectedCliente = ExternalUserModel(
           uid: user.uid,

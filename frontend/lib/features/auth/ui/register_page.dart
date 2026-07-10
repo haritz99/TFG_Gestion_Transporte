@@ -102,75 +102,81 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Registro')),
-      body: Stepper(
-        type: StepperType.horizontal,
-        currentStep: _currentStep,
-        onStepContinue: authProvider.isLoading ? null : _onStepContinue,
-        onStepCancel: _onStepCancel,
-        controlsBuilder: (context, details) =>
-            Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: authProvider.isLoading ? null : details
-                            .onStepContinue,
-                        child: authProvider.isLoading
-                            ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                            : Text(
-                            _currentStep == 0 ? 'Siguiente' : 'Registrarme'),
-                      ),
-                    ),
-                    if (_currentStep > 0) ...[
-                      const SizedBox(width: 12),
-                      TextButton(
-                        onPressed: details.onStepCancel,
-                        child: const Text('Atrás'),
-                      ),
-                    ],
-                  ],
-                )
-            ),
-        steps: [
-          Step(
-            title: const Text('Datos personales'),
-            isActive: _currentStep >= 0,
-            state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-            content: Form(
-                key: _formKey1,
-                child: _PersonalDataStep(
-                  nombreController: _nombreController,
-                  apellidoController: _apellidoController,
-                  emailController: _emailController,
-                  telefonoController: _telefonoController,
-                  passwordController: _passwordController,
-                  confirmPasswordController: _confirmPasswordController,
-                  isTransportista: _isTransportista,
-                  onTransportistaChanged: (value) =>
-                      setState(() => _isTransportista = value ?? false),
-                )
-            ),
-          ),
-          Step(
-            title: const Text('Registra tu empresa'),
-            isActive: _currentStep >= 1,
-            state: StepState.indexed,
-            content: Form(
-              key: _formKey2,
-              child: CompanyRegisterPage(
-                shared: _shared,
-                razonSocialCtr: _razonSocialCtr,
-                numAutorizacionCtr: _numAutorizacionCtr,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Stepper(
+            type: StepperType.horizontal,
+            currentStep: _currentStep,
+            onStepContinue: authProvider.isLoading ? null : _onStepContinue,
+            onStepCancel: _onStepCancel,
+            controlsBuilder: (context, details) =>
+                Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: authProvider.isLoading ? null : details
+                                .onStepContinue,
+                            child: authProvider.isLoading
+                                ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                                : Text(
+                                _currentStep == 0 ? 'Siguiente' : 'Registrarme'),
+                          ),
+                        ),
+                        if (_currentStep > 0) ...[
+                          const SizedBox(width: 12),
+                          TextButton(
+                            onPressed: details.onStepCancel,
+                            child: const Text('Atrás'),
+                          ),
+                        ],
+                      ],
+                    )
+                ),
+            steps: [
+              Step(
+                title: const Text('Datos personales'),
+                isActive: _currentStep >= 0,
+                state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+                content: Form(
+                    key: _formKey1,
+                    child: _PersonalDataStep(
+                      nombreController: _nombreController,
+                      apellidoController: _apellidoController,
+                      emailController: _emailController,
+                      telefonoController: _telefonoController,
+                      passwordController: _passwordController,
+                      confirmPasswordController: _confirmPasswordController,
+                      isTransportista: _isTransportista,
+                      onTransportistaChanged: (value) =>
+                          setState(() => _isTransportista = value ?? false),
+                    )
+                ),
               ),
-            ),
+              Step(
+                title: const Text('Registra tu empresa'),
+                isActive: _currentStep >= 1,
+                state: StepState.indexed,
+                content: Form(
+                  key: _formKey2,
+                  child: CompanyRegisterPage(
+                    shared: _shared,
+                    razonSocialCtr: _razonSocialCtr,
+                    numAutorizacionCtr: _numAutorizacionCtr,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      )
+
     );
   }
 }

@@ -3,7 +3,8 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
-from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor
+from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor, \
+    get_current_encargado_cargador
 from ..schemas import IncidenciaSchema
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
 from ..services.carta_porte_service import CartaPorteService
@@ -36,7 +37,7 @@ def get_cargas(
 @router.get("/tipos", response_model=list[TipoCargaSchema])
 def get_tipos_carga(
         cliente_id: str,
-        current_user: dict[str, Any] = Depends(get_current_encargado),
+        current_user: dict[str, Any] = Depends(get_current_encargado_cargador),
         service: CargasService = Depends(CargasService)):
 
     return service.get_tipos_carga(current_user.get("companyId"), cliente_id)
@@ -44,7 +45,7 @@ def get_tipos_carga(
 @router.post("/tipos", response_model=TipoCargaSchema, status_code=status.HTTP_201_CREATED)
 def create_tipo_carga(
         tipo_carga: TipoCargaSchema,
-        current_user: dict[str, Any] = Depends(get_current_encargado),
+        current_user: dict[str, Any] = Depends(get_current_encargado_cargador),
         service: CargasService = Depends(CargasService)):
 
     return service.create_tipo_carga(current_user.get("companyId"), tipo_carga)

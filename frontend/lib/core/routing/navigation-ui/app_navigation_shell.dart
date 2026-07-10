@@ -57,7 +57,6 @@ class AppNavigationShell extends StatelessWidget {
   static List<SidebarItem> getConductorNavItems(String location) {
     return [
       SidebarItem(title: 'Hoja de ruta', icon: Icons.dashboard, route: '/hoja_ruta', isSelected: location == '/hoja_ruta'),
-      SidebarItem(title: 'Cartas de porte', icon: Icons.list_alt_sharp, route: '/cartas_porte', isSelected: location == '/cartas_porte'),
     ];
   }
 

@@ -5,7 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Para mockear el User de Firebase
 import 'package:gestion_transporte/features/auth/providers/auth_provider.dart' as my_auth;
-import 'package:gestion_transporte/features/auth/services/auth_service.dart';
+import 'package:gestion_transporte/features/auth/auth_service.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'auth_provider_test.mocks.dart';
 

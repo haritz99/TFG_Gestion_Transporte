@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/core/widgets/management_page_layout.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:gestion_transporte/core/models/pedido_model.dart';
@@ -42,9 +43,9 @@ class _CargadorListaPedidosState extends State<CargadorListaPedidos> {
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       backgroundColor: AppColors.pageBackground,
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: CoreTable<PedidoModel>(
+      body: ManagementPageLayout(
+        header: const SizedBox.shrink(),
+        table: CoreTable<PedidoModel>(
           rows: pedidos,
           columns: _buildColumns(context),
           selectedStatus: _selectedStatus,
@@ -54,6 +55,9 @@ class _CargadorListaPedidosState extends State<CargadorListaPedidos> {
           onStatusChanged: (status) => setState(() => _selectedStatus = status),
           onDesktopPageChanged: (_) {},
         ),
+        hasMore: false,
+        isLoadingMore: false,
+        isMobile: ResponsiveBreakpoints.of(context).isMobile
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_transporte/core/widgets/management_page_layout.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:gestion_transporte/core/models/carga_model.dart';
@@ -8,6 +9,7 @@ import 'package:gestion_transporte/core/widgets/core_table/core_table_column.dar
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../core/pdf/pdf_handler.dart';
 import '../../cargas/providers/carga_provider.dart';
 
 class SubListadoCargas extends StatefulWidget {
@@ -18,7 +20,7 @@ class SubListadoCargas extends StatefulWidget {
 }
 
 class _SubListadoCargasState extends State<SubListadoCargas> {
-  String _selectedStatus = 'Todos';
+  String _selectedStatus = EstadoCarga.cedido.value;
   final _conductorCtrl = TextEditingController();
   final _transportistaCtrl = TextEditingController();
   final _vehiculoCtrl = TextEditingController();
@@ -55,13 +57,13 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
       backgroundColor: AppColors.pageBackground,
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: CoreTable<CargaModel>(
+          : ManagementPageLayout(
+              header: const SizedBox.shrink(),
+              table: CoreTable<CargaModel>(
                 rows: cargasFiltradas,
                 columns: _buildColumns(context),
                 selectedStatus: _selectedStatus,
-                statusOptions: [EstadoCarga.asignado.value, EstadoCarga.enTransito.value, EstadoCarga.entregado.value, EstadoCarga.cedido.value],
+                statusOptions: [EstadoCarga.cedido.value],
                 isMobile: ResponsiveBreakpoints.of(context).isMobile,
                 mobileCardBuilder: (carga) => _buildMobileCard(context, carga),
                 onStatusChanged: (status) {
@@ -71,6 +73,9 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
                 },
                 onDesktopPageChanged: (page) {},
               ),
+              hasMore: false,
+              isLoadingMore: false,
+              isMobile: ResponsiveBreakpoints.of(context).isMobile
             ),
     );
   }
@@ -83,11 +88,23 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
       ),
       CoreTableColumn<CargaModel>(
         label: 'Origen',
-        cellBuilder: (carga) => Text(carga.origenTexto, style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Tooltip(
+          message: carga.origenTexto,
+          child: SizedBox(
+            width: 160,
+            child: Text(carga.origen.direccion.ciudad, style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1,),
+          )
+        ),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Destino',
-        cellBuilder: (carga) => Text(carga.destinoTexto, style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Tooltip(
+          message: carga.destinoTexto,
+          child: SizedBox(
+            width: 160,
+            child: Text(carga.destino.direccion.ciudad, style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1,),
+          )
+        ),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Fecha Carga',
@@ -158,7 +175,13 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
           );
         },
       ),
-      CoreTableColumn(
+      CoreTableColumn<CargaModel>(
+          label: 'Carta Porte',
+          cellBuilder: (carga) {
+            return pdfButton(carga);
+          }
+      ),
+      CoreTableColumn<CargaModel>(
           label: 'Acciones',
           cellBuilder: (p) => IconButton(icon: const Icon(Icons.edit, color: Colors.blue),
           onPressed: () => _showEditDialog(context, p))
@@ -170,10 +193,31 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
     return ListTile(
       title: Text('${carga.origenTexto} → ${carga.destinoTexto}'),
       subtitle: Text('Mercancía: ${carga.mercancia}\nConductor: ${carga.transportistaNombre ?? "Sin asignar"}'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit, color: Colors.blue),
-        onPressed: () => _showEditDialog(context, carga),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          pdfButton(carga),
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue),
+            onPressed: () => _showEditDialog(context, carga),
+          ),
+        ]
+
+
       ),
+    );
+  }
+
+  Widget pdfButton(CargaModel carga) {
+    final url = carga.cartaPorteUrl;
+    final tieneCartaPorte = url != null && url.isNotEmpty;
+    return IconButton(
+      icon: Icon(
+        Icons.picture_as_pdf,
+        color: tieneCartaPorte ? AppColors.primary : AppColors.mutedText,
+      ),
+      onPressed: tieneCartaPorte ? () => PdfHandler.instance.open(carga.cartaPorteUrl!, 'carta_porte_${carga.id}.pdf') : null,
+      tooltip: tieneCartaPorte ? 'Ver carta' : 'Aún no generada',
     );
   }
 

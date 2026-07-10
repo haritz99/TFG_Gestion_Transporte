@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../auth/providers/token_provider.dart';
 import '../data/dashboard_service.dart';
@@ -9,13 +11,13 @@ class DashboardProvider extends ChangeNotifier {
   final AuthTokenProvider _tokenProvider;
   final CargaProvider _cargaProvider;
 
+  bool _isRefreshing = false;
   bool _isLoading = true;
   String? _errorMessage;
 
   // KPIs
   int _cargasAsignadas = 0;
   int _cargasSinAsignar = 0;
-  int _incidenciasAbiertas = 0;
   int _entregadasHoy = 0;
   int _totalEntregasHoy = 0;
 
@@ -25,7 +27,6 @@ class DashboardProvider extends ChangeNotifier {
 
   int get cargasAsignadas => _cargasAsignadas;
   int get cargasSinAsignar => _cargasSinAsignar;
-  int get incidenciasAbiertas => _incidenciasAbiertas;
   int get entregadasHoy => _entregadasHoy;
   int get totalEntregasHoy => _totalEntregasHoy;
 
@@ -61,7 +62,6 @@ class DashboardProvider extends ChangeNotifier {
 
       _cargasAsignadas = summary.cargasAsignadas;
       _cargasSinAsignar = summary.cargasSinAsignar;
-      _incidenciasAbiertas = summary.incidenciasAbiertas;
       _entregadasHoy = summary.entregadasHoy;
       _totalEntregasHoy = summary.totalEntregasHoy;
 
@@ -74,6 +74,18 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    await _loadDashboardData();
+    if (_isRefreshing) return;
+    _isRefreshing = true;
+    try {
+      final token = await _tokenProvider.getRequiredToken();
+      final summary = await _service.fetchDashboardSummary(token: token);
+      _cargasAsignadas = summary.cargasAsignadas;
+      _cargasSinAsignar = summary.cargasSinAsignar;
+      _entregadasHoy = summary.entregadasHoy;
+      _totalEntregasHoy = summary.totalEntregasHoy;
+      notifyListeners();
+    } finally {
+      _isRefreshing = false;
+    }
   }
 }

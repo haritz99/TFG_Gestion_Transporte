@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-import 'package:gestion_transporte/core/config/api_config.dart';
+import 'package:gestion_transporte/core/api_config.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
-import 'package:gestion_transporte/features/transportistas/data/transportista_service.dart';
+import 'package:gestion_transporte/features/transportistas/transportista_service.dart';
 
 import 'transportista_service_test.mocks.dart';
 

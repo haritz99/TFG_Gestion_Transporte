@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/transportista_provider.dart';
+import '../../transportista_provider.dart';
 
 class ConfirmDeleteMember extends StatelessWidget {
   final String uid;

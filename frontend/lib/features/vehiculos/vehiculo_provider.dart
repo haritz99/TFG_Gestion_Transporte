@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 
-import '../../../core/models/vehiculo_model.dart';
-import '../../../core/models/paginated_response.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../auth/providers/token_provider.dart';
-import '../data/vehiculo_service.dart';
+import '../../core/models/vehiculo_model.dart';
+import '../../core/models/paginated_response.dart';
+import '../../core/app_constants.dart';
+import '../auth/providers/token_provider.dart';
+import 'vehiculo_service.dart';
 
 class VehiculoProvider extends ChangeNotifier {
   final VehiculoService _service;

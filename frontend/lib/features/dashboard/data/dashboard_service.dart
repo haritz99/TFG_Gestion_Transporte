@@ -1,18 +1,16 @@
 import 'dart:convert';
-import 'package:gestion_transporte/core/config/api_config.dart';
+import 'package:gestion_transporte/core/api_config.dart';
 import 'package:http/http.dart' as http;
 
 class DashboardSummary {
   final int cargasAsignadas;
   final int cargasSinAsignar;
-  final int incidenciasAbiertas;
   final int entregadasHoy;
   final int totalEntregasHoy;
 
   DashboardSummary({
     required this.cargasAsignadas,
     required this.cargasSinAsignar,
-    required this.incidenciasAbiertas,
     required this.entregadasHoy,
     required this.totalEntregasHoy,
   });
@@ -21,7 +19,6 @@ class DashboardSummary {
     return DashboardSummary(
       cargasAsignadas: json['cargas_asignadas'] ?? 0,
       cargasSinAsignar: json['cargas_sin_asignar'] ?? 0,
-      incidenciasAbiertas: json['incidencias_abiertas'] ?? 0,
       entregadasHoy: json['entregadas_hoy'] ?? 0,
       totalEntregasHoy: json['total_entregas_hoy'] ?? 0,
     );

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:gestion_transporte/core/models/paginated_response.dart';
 import 'package:http/http.dart' as http;
 
-import '../../../core/config/api_config.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/models/user_model.dart';
+import '../../core/api_config.dart';
+import '../../core/app_constants.dart';
+import '../../core/models/user_model.dart';
 
 class TransportistaService {
   final http.Client _client;

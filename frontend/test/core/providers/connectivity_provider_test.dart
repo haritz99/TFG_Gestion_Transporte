@@ -3,7 +3,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'package:gestion_transporte/core/services/connectivity_service.dart';
-import 'package:gestion_transporte/core/providers/connectivity_provider.dart';
+import 'package:gestion_transporte/core/connectivity_provider.dart';
 
 import 'connectivity_provider_test.mocks.dart';
 

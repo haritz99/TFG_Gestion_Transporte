@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../services/connectivity_service.dart';
+import 'services/connectivity_service.dart';
 
 /// Provider que notifica a toda la app sobre cambios en la conectividad.
 ///

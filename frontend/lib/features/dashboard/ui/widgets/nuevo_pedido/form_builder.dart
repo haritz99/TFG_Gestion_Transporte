@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/features/cargas/providers/carga_provider.dart';
 import 'package:gestion_transporte/features/cargas/providers/pedido_provider.dart';
-import 'package:gestion_transporte/features/transportistas/providers/transportista_provider.dart';
-import 'package:gestion_transporte/features/vehiculos/providers/vehiculo_provider.dart';
+import 'package:gestion_transporte/features/transportistas/transportista_provider.dart';
+import 'package:gestion_transporte/features/vehiculos/vehiculo_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/models/pedido_model.dart';
 import '../../../../../core/theme/app_colors.dart';

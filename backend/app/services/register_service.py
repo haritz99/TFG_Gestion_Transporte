@@ -1,5 +1,5 @@
 from __future__ import annotations
-from fastapi import HTTPException, Depends, status, BackgroundTasks
+from fastapi import HTTPException, Depends, BackgroundTasks
 from typing import Any
 import secrets
 import string
@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from .email_service import EmailService
 from ..crud.user_crud import UserCRUD
 from ..crud.company_crud import CompanyCRUD
-from ..dependencies.auth import normalize_roles
 from ..schemas.users import UserSchema, UserCreateResponseSchema, RegisterRequest
 from ..schemas.external_user import ExternalUserSchema
 from firebase_admin import auth as firebase_auth
@@ -30,6 +29,7 @@ class RegisterService:
                 raise HTTPException(status_code=404, detail="Empresa no encontrada")
             return company_doc.to_dict()
         except Exception as e:
+            print("la excepcion es", str(e))
             raise HTTPException(status_code=500, detail=f"Error al obtener la información de la empresa: {str(e)}")
 
     def update_buffer_hours(self, company_id: str, buffer_hours: int):
@@ -249,55 +249,6 @@ class RegisterService:
             return ExternalUserSchema(**full_data)
         except Exception:
             raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-
-    # Funcion de custom_claims para los usuarios cuando se registran
-    def initialize_custom_claims(self, current_user, company_id, rol):
-        uid = current_user.get("uid")
-        if not isinstance(uid, str) or not uid:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token sin uid válido",
-            )
-
-        company_id = company_id.strip()
-        roles = normalize_roles(rol)
-
-        claims = {"rol": roles, "companyId": company_id}
-
-        try:
-            auth_user = firebase_auth.get_user(uid)
-            current_claims = auth_user.custom_claims or {}
-
-            if current_claims:
-                current_roles = normalize_roles(current_claims.get("rol"))
-                current_company_id = current_claims.get("companyId")
-
-                if current_company_id == company_id and current_roles == roles:
-                    return {
-                        "message": "Los custom claims ya estaban inicializados.",
-                        "uid": uid,
-                        "claims": claims,
-                    }
-
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="El usuario ya tiene claims asignados con valores diferentes.",
-                )
-
-            firebase_auth.set_custom_user_claims(uid, claims)
-            return {
-                "message": "Custom claims inicializados correctamente.",
-                "uid": uid,
-                "claims": claims,
-            }
-        except HTTPException:
-            raise
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="No se pudieron inicializar los custom claims",
-            )
 
 def get_register_service() -> RegisterService:
     return RegisterService()

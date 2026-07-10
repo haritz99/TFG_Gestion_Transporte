@@ -5,9 +5,9 @@ import 'package:mockito/mockito.dart';
 import 'package:gestion_transporte/core/models/user_model.dart';
 import 'package:gestion_transporte/features/auth/providers/token_provider.dart';
 import 'package:gestion_transporte/core/models/paginated_response.dart';
-import 'package:gestion_transporte/features/auth/services/auth_service.dart';
-import 'package:gestion_transporte/features/transportistas/data/transportista_service.dart';
-import 'package:gestion_transporte/features/transportistas/providers/transportista_provider.dart';
+import 'package:gestion_transporte/features/auth/auth_service.dart';
+import 'package:gestion_transporte/features/transportistas/transportista_service.dart';
+import 'package:gestion_transporte/features/transportistas/transportista_provider.dart';
 
 import 'transportista_provider_test.mocks.dart';
 

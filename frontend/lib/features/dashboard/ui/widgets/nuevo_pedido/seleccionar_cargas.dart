@@ -7,8 +7,8 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../auth/providers/auth_provider.dart';
 import '../../../../cargas/providers/pedido_provider.dart';
-import '../../../../transportistas/providers/transportista_provider.dart';
-import '../../../../vehiculos/providers/vehiculo_provider.dart';
+import '../../../../transportistas/transportista_provider.dart';
+import '../../../../vehiculos/vehiculo_provider.dart';
 
 class SeleccionarCargasForm extends StatefulWidget {
   const SeleccionarCargasForm({super.key});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/widgets/kpi_card.dart';
+import 'package:intl/intl.dart';
 import 'conductorProvider.dart';
 
 class ConductoresKpiGrid extends StatelessWidget {
@@ -15,25 +16,22 @@ class ConductoresKpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 1,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: isMobile ? 1.5 : 1.75,
+      childAspectRatio: isMobile ? 2.5 : 1.5,
       children: [
         KpiCard(
           label: 'Viaje(s) hoy',
           value: provider.cargasHoy.length.toString(),
         ),
-        KpiCard(
-          label: provider.proximaEntrega != null
-              ? '${provider.proximaEntrega!.fechaDescarga.hour}/${provider.proximaEntrega!.fechaDescarga.day}/'
-              '${provider.proximaEntrega!.fechaDescarga.month} · '
-              '${provider.proximaEntrega!.origenTexto}/${provider.proximaEntrega!.destinoTexto}'
-              : '',
-          value: ''
-        ),
+        if (provider.proximaEntrega != null)
+        ViajeCard(
+          fechaHora: DateFormat('dd/MM HH:mm').format(provider.proximaEntrega!.fechaCarga),
+          origenDestino: '${provider.proximaEntrega?.origen.direccion.ciudad} → ${provider.proximaEntrega?.destino.direccion.ciudad}',
+        )
       ],
     );
   }

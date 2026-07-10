@@ -12,7 +12,6 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 class DashboardSummary(BaseModel):
     cargas_asignadas: int
     cargas_sin_asignar: int
-    incidencias_abiertas: int
     entregadas_hoy: int
     total_entregas_hoy: int
 
@@ -31,8 +30,6 @@ def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_e
 
         cargas_sin_asignar = cargas_service.calculate_sin_asignar(company_id)
 
-        incidencias_abiertas = calculate_incidencias(company_id)
-
         entregadas_hoy = cargas_service.calculate_cargas_hoy(company_id, start_of_day, end_of_day, EstadoCarga.ENTREGADO)
 
         total_entregas_hoy = cargas_service.calculate_cargas_hoy(company_id, start_of_day, end_of_day)
@@ -40,7 +37,6 @@ def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_e
         return DashboardSummary(
             cargas_asignadas=cargas_asignadas,
             cargas_sin_asignar=cargas_sin_asignar,
-            incidencias_abiertas=incidencias_abiertas,
             entregadas_hoy=entregadas_hoy,
             total_entregas_hoy=total_entregas_hoy
         )
@@ -48,6 +44,3 @@ def fetch_dashboard_summary(current_user: dict[str, Any] = Depends(get_current_e
         print("Error fetching dashboard summary: ", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-def calculate_incidencias(company_id: str):
-    # TODO: Implementar
-    return 0

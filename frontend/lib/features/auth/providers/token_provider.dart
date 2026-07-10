@@ -1,4 +1,4 @@
-import '../services/auth_service.dart';
+import '../auth_service.dart';
 
 class AuthTokenProvider {
   final AuthService _authService;

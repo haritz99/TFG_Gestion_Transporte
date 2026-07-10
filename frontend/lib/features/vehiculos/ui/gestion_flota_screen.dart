@@ -4,9 +4,9 @@ import 'package:gestion_transporte/features/vehiculos/ui/widgets/vehiculo_form.d
 import 'package:provider/provider.dart';
 
 import '../../../core/models/vehiculo_model.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/app_constants.dart';
 import '../../cargas/providers/carga_provider.dart';
-import '../providers/vehiculo_provider.dart';
+import '../vehiculo_provider.dart';
 import 'gestion_flota_page.dart';
 import 'models/fleet_table_row_model.dart';
 import 'widgets/confirm_delete_vehicle.dart';

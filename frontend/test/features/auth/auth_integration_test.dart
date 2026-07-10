@@ -5,7 +5,7 @@ import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gestion_transporte/features/auth/providers/auth_provider.dart'
 as my_auth;
-import 'package:gestion_transporte/features/auth/services/auth_service.dart';
+import 'package:gestion_transporte/features/auth/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';

@@ -3,26 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from ..dependencies.auth import get_current_user, get_current_encargado, get_current_encargado_conductor
 from ..schemas.users import RegisterRequest
 from ..services.notification_service import NotificacionService
 from ..services.register_service import RegisterService
 
 router = APIRouter(prefix="/auth", tags=["custom-claims"])
-
-class InitCustomClaimsRequest(BaseModel):
-    companyId: str = Field(..., min_length=1)
-    rol: list[str] = Field(..., min_length=1)
-
-
-@router.post("/customClaims/init")
-async def inicializar_custom_claims(
-    payload: InitCustomClaimsRequest,
-    current_user: dict[str, Any] = Depends(get_current_user),
-    service: RegisterService = Depends(RegisterService)
-):
-    return service.initialize_custom_claims(current_user, payload.companyId, payload.rol)
 
 @router.get("/company/")
 async def get_company_info(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/models/carga_model.dart';
+import '../../../core/models/carga_model.dart';
 
 class PlanificacionProvider extends ChangeNotifier {
   final Set<String> _cargasPlanificadasIds = {};

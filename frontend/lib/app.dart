@@ -6,18 +6,18 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/connectivity_service.dart';
-import 'core/providers/connectivity_provider.dart';
+import 'core/connectivity_provider.dart';
 import 'core/widgets/connectivity_banner.dart';
 import 'features/auth/providers/token_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
-import 'features/auth/services/auth_service.dart';
+import 'features/auth/auth_service.dart';
 import 'features/cargas/providers/pedido_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/dashboard/providers/invite_provider.dart';
 import 'features/cargas/providers/carga_provider.dart';
 import 'features/incidencias/incidencias_provider.dart';
-import 'features/transportistas/providers/transportista_provider.dart';
-import 'features/vehiculos/providers/vehiculo_provider.dart';
+import 'features/transportistas/transportista_provider.dart';
+import 'features/vehiculos/vehiculo_provider.dart';
 import 'flavors.dart';
 
 class App extends StatelessWidget {
@@ -43,11 +43,15 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<CargaProvider>(
           create: (context) => CargaProvider(tokenProvider: context.read<AuthTokenProvider>()),
         ),
-        ChangeNotifierProvider<DashboardProvider>(
+        ChangeNotifierProxyProvider2<AuthTokenProvider, CargaProvider,DashboardProvider>(
           create: (context) => DashboardProvider(
             tokenProvider: context.read<AuthTokenProvider>(),
             cargaProvider: context.read<CargaProvider>(),
           ),
+          update: (context, tokenProvider, cargaProvider, dashboardProvider) {
+            dashboardProvider!.refresh();
+            return dashboardProvider;
+          },
         ),
         ChangeNotifierProxyProvider<AuthProvider, IncidenciaProvider>(
           create: (context) => IncidenciaProvider(

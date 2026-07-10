@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../config/api_config.dart';
+import '../api_config.dart';
 
 class ApiService {
   Future<Map<String, dynamic>> detectIntent(String text, String idToken) async {

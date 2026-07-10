@@ -45,6 +45,7 @@ class _SubHomeScreenState extends State<SubHomeScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+        /*
         const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: () {
@@ -58,6 +59,8 @@ class _SubHomeScreenState extends State<SubHomeScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
+
+       */
       ],
     );
   }

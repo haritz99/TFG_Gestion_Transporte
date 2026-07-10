@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../constants/app_constants.dart';
+import '../../app_constants.dart';
 import 'core_table_column.dart';
 
 class CoreTable<T> extends StatefulWidget {
