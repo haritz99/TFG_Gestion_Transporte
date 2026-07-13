@@ -8,7 +8,7 @@ from ..services.vehiculo_service import VehiculoService
 router = APIRouter(prefix="/vehi", tags=["vehiculos"], dependencies=[Depends(get_current_encargado)])
 
 
-@router.get("/", response_model=VehiculoPaginatedSchema)
+@router.get("", response_model=VehiculoPaginatedSchema)
 def get_vehiculos(
     limit: int = 8,
     lastDocId: str = Query(None),
@@ -29,7 +29,7 @@ def get_vehiculo(
     return service.get_by_id(matr.upper(), company_id)
 
 
-@router.post("/", response_model=VehiculoSchema, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=VehiculoSchema, status_code=status.HTTP_201_CREATED)
 def create_vehiculo(
     vehiculo_data: VehiculoSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),

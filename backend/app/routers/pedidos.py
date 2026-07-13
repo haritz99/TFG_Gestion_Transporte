@@ -11,7 +11,7 @@ from ..services.pedidos_service import PedidosService
 
 router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
-@router.get("/", response_model=list[PedidoSchema])
+@router.get("", response_model=list[PedidoSchema])
 def get_pedidos(
     cliente_id: Optional[str] = Query(None, description="Filtrar por ID de cliente"),
     estado: Optional[str] = Query(None, description="Filtrar por estado del pedido"),
@@ -45,7 +45,7 @@ def get_pedido_by_id(pedido_id: str,
     return service.get_pedido_by_id(pedido_id, current_user.get("companyId"))
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 def insert_pedido(pedido: CreatePedidoSchema,
                   current_user: dict[str, Any] = Depends(get_current_encargado_cargador),
                   service: PedidosService = Depends(PedidosService)):

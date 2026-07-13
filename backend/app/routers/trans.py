@@ -7,7 +7,7 @@ from ..services.trans_service import TransService
 
 router = APIRouter(prefix="/trans", tags=["trans"], dependencies=[Depends(get_current_encargado)])
 
-@router.get("/", response_model=UserPaginatedSchema)
+@router.get("", response_model=UserPaginatedSchema)
 def get_all_trans(
     limit: int = 8,
     lastDocId: str = Query(None),
@@ -28,7 +28,7 @@ def get_trans_by_uid(
     user_data = trans_service.get_trans(uid, company_id)
     return UserSchema(**user_data)
 
-@router.post("/", response_model=UserCreateResponseSchema)
+@router.post("", response_model=UserCreateResponseSchema)
 def create_trans(
     user_data: UserSchema,
     background_tasks: BackgroundTasks,

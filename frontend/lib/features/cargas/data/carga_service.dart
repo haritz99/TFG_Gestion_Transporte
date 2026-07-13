@@ -186,6 +186,27 @@ class CargaService {
     return responseData['url'] as String;
   }
 
+  Future<CargaModel> updateEstado(String cargaId, EstadoCarga estado) async {
+    final token = await tokenProvider.getRequiredToken();
+    final uri = Uri.parse('$_baseUrl/$cargaId/estado');
+
+    final response = await http.patch(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'estado': estado.value}),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return CargaModel.fromMap(data, data['id']);
+    } else {
+      throw Exception('Error al actualizar estado: ${response.statusCode} - ${response.body}');
+    }
+  }
+
   Future<void> updateBufferHours(String cargaId, int bufferHours) async {
     final token = await tokenProvider.getRequiredToken();
     final uri = Uri.parse('$_baseUrl/$cargaId/buffer-hours');

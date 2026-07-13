@@ -231,6 +231,19 @@ class CargasService:
         }
         return update_payload
 
+    def update_estado_carga(self, carga_id: str, nuevo_estado: str, company_id: str) -> CargaSchema:
+        doc = self._crud.get_carga_doc(carga_id)
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Carga no encontrada")
+
+        self._crud.update_carga_doc(carga_id, {
+            "estado": nuevo_estado,
+            "updatedAt": datetime.now(timezone.utc)
+        })
+
+        updated_doc = self._crud.get_carga_doc(carga_id)
+        return CargaSchema.from_firestore(updated_doc, company_id)
+
 
     def delete_carga(self, carga_id: str, company_id: str):
         doc = self._crud.get_carga_doc(carga_id)

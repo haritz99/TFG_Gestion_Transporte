@@ -11,7 +11,7 @@ from ..dependencies.auth import get_current_encargado, get_current_user
 
 router = APIRouter(prefix="/ext", tags=["external_users"])
 
-@router.post("/", response_model=UserCreateResponseSchema[ExternalUserSchema])
+@router.post("", response_model=UserCreateResponseSchema[ExternalUserSchema])
 def create_external_user(
     user_data: ExternalUserSchema,
     rol: str,
@@ -41,7 +41,7 @@ def invite_external_user(
     )
     return {"message": "Invitación enviada correctamente."}
 
-@router.get("/", response_model=list[ExternalUserSchema])
+@router.get("", response_model=list[ExternalUserSchema])
 def fetch_external_users(
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: ExternalUserService = Depends(ExternalUserService),

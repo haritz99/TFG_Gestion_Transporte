@@ -11,7 +11,7 @@ from ..services.register_service import RegisterService
 
 router = APIRouter(prefix="/auth", tags=["custom-claims"])
 
-@router.get("/company/")
+@router.get("/company")
 async def get_company_info(
     current_user: dict[str, Any] = Depends(get_current_encargado_conductor),
     service: RegisterService = Depends(RegisterService)

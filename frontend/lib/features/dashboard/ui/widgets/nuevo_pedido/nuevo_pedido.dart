@@ -212,7 +212,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
       children: List.generate(seleccion.cantidad, (index) {
         final asig = seleccion.asignaciones[index];
         final fCarga = asig.fechaCarga ?? _fechaCarga ?? DateTime.now();
-        final fDescarga = fCarga.add(const Duration(hours : 5));
+        final fDescarga = asig.fechaLimite ?? fCarga.add(const Duration(hours: 5));
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -439,7 +439,7 @@ class NuevoPedidoFormState extends State<NuevoPedidoForm> {
 
   void _addCarga() {
     if (_selectedTipo == null) return;
-    context.read<PedidoProvider>().anadirCarga(_selectedTipo!, _cantidad, _fechaCarga, _fechaDescarga);
+    context.read<PedidoProvider>().anadirCarga(_selectedTipo!, _cantidad, _fechaCarga, null);
     setState(() {
       _selectedTipo = null;
       _cantidad = 1;

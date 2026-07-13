@@ -42,8 +42,8 @@ class SeleccionarCargasFormState extends State<SeleccionarCargasForm> {
             initiallyExpanded: true,
             children: List.generate(seleccion.cantidad, (unidadIdx) {
               final asig = seleccion.asignaciones[unidadIdx];
-              final fechaInicio = asig.fechaCarga!;
-              final fechaFin = asig.fechaLimite!;
+              final fechaInicio = asig.fechaCarga ?? DateTime.now();
+              final fechaFin = asig.fechaLimite ?? fechaInicio.add(const Duration(hours: 5));
 
               final conductoresDisponibles = cargaProvider.conductoresDisponibles(
                 todosLosConductores: todosConductores,

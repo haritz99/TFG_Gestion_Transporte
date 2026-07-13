@@ -27,10 +27,9 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
         working-directory: ./frontend
 
-      - name: Create .env Mock for Flutter
+      - name: Create Mock dart_defines.json for Flutter
         run: |
-          touch .env
-          echo "API_URL=http://localhost:8000" > .env
+          echo '{"API_BASE_URL": "http://localhost:8000", "SYNCFUSION_KEY": "mock", "VAPID_PUBLIC_KEY": "mock"}' > dart_defines.json
         working-directory: ./frontend
 
       - name: Run Tests

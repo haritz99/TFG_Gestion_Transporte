@@ -13,7 +13,7 @@ from ..services.incidencias_service import IncidenciaService
 
 router = APIRouter(prefix="/cargas", tags=["cargas"])
 
-@router.get("/", response_model=list[CargaSchema])
+@router.get("", response_model=list[CargaSchema])
 def get_cargas(
     cliente_id: Optional[str] = Query(None, description="Filtrar por ID de cliente"),
     pedido_id: Optional[str] = Query(None, description="Filtrar por ID de pedido"),
@@ -135,6 +135,16 @@ def delete_carga(carga_id: str,
                  service: CargasService = Depends(CargasService)):
     service.delete_carga(carga_id, current_user.get("companyId"))
     return None
+
+
+@router.patch("/{carga_id}/estado", response_model=CargaSchema)
+def update_carga_estado(
+    carga_id: str,
+    payload: dict,
+    current_user: dict[str, Any] = Depends(get_current_conductor),
+    service: CargasService = Depends(CargasService)
+):
+    return service.update_estado_carga(carga_id, payload.get("estado"), current_user.get("companyId"))
 
 @router.post("/{carga_id}/incidencia", response_model=dict[str, str])
 def create_incidencia(

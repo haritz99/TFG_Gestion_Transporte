@@ -1,6 +1,7 @@
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from .middleware.rate_limit import RateLimitMiddleware
 from .routers import trans, external_users, pedidos, dashboard, cargas
 from .routers import vehiculos
@@ -8,6 +9,7 @@ from .routers import auth
 import os
 import firebase_admin
 from firebase_admin import credentials
+import google.auth
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -24,22 +26,21 @@ app = FastAPI(
 
 firebase_json_raw = os.getenv("FIREBASE_CREDENTIALS_JSON")
 path = os.getenv("FIREBASE_CREDENTIALS_PATH")
-
+project_id = None
 if firebase_json_raw:
     credentials_data = json.loads(firebase_json_raw)
     cred = credentials.Certificate(credentials_data)
+    #project_id = credentials_data["project_id"]
 
 elif path and os.path.exists(path):
     cred = credentials.Certificate(path)
-    with open(path, "r") as f:
-        credentials_data = json.load(f)
+    #with open(path, "r") as f:
+     #   credentials_data = json.load(f)
+    #project_id = credentials_data["project_id"]
 else:
-    raise RuntimeError(
-        "Falta la configuración de Firebase. Configura FIREBASE_CREDENTIALS_JSON o FIREBASE_CREDENTIALS_PATH"
-    )
-
-project_id = credentials_data.get("project_id")
-
+    cred = credentials.ApplicationDefault()
+    #project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT")
+_, project_id = google.auth.default()
 firebase_admin.initialize_app(cred, {
     'storageBucket': f'{project_id}.firebasestorage.app'
 })
@@ -49,10 +50,19 @@ frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5500")
 
 origins = [
     frontend_url,
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:8000",
+    "https://gestion-transporte-dev.web.app",
+    "https://gestion-transporte-dev.firebaseapp.com"
 ]
+
+class StripTrailingSlashMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        path = request.scope["path"]
+        if len(path) > 1 and path.endswith("/"):
+            request.scope["path"] = path.rstrip("/")
+        return await call_next(request)
+
+app.add_middleware(StripTrailingSlashMiddleware)
+
 app.add_middleware(
     RateLimitMiddleware,
     limit=20,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_transporte/core/pdf/pdf_handler.dart';
+import 'package:gestion_transporte/features/cargas/providers/carga_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -357,6 +358,13 @@ class _CoreCalendarState extends State<CoreCalendar> {
           children: [
             ListTile(
               leading: const Icon(Icons.description_outlined),
+              title: const Text('Marcar como recogido'),
+              onTap: carga.estado == EstadoCarga.asignado ? () {
+                  context.read<CargaProvider>().marcarRecogido(carga.id!);
+              } : null,
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
               title: const Text('Ver carta de porte'),
               onTap: carga.cartaPorteUrl != null ? () {
                 Navigator.pop(context);
@@ -383,6 +391,13 @@ class _CoreCalendarState extends State<CoreCalendar> {
                 Navigator.pop(context);
                 mostrarFormIncidencia(context, carga);
               },
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('Marcar como entregado'),
+              onTap: carga.estado == EstadoCarga.enTransito ? () {
+                context.read<CargaProvider>().marcarEntregado(carga.id!);
+              } : null,
             ),
           ],
         ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:gestion_transporte/secrets.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
@@ -11,14 +11,9 @@ Future<void> main() async{
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  //String? syncfusionKey = Secrets.syncfusionKey;
+  //SyncfusionLicenseRegister.registerLicense(syncfusionKey);
 
-  await dotenv.load(fileName: ".env");
-  /*
-  String? syncfusionKey = dotenv.env['SYNCFUSION_KEY'];
-  if (syncfusionKey != null) {
-    SyncfusionLicense.registerLicense(syncfusionKey);
-  }
-  */
   const String flavorString = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
 
   F.appFlavor = Flavor.values.firstWhere(

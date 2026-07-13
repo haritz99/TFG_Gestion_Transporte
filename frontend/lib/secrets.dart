@@ -1,5 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 class Secrets {
-  static String get fcmVapidKey => dotenv.env['VAPID_PUBLIC_KEY'] ?? '';
+  static const String fcmVapidKey = String.fromEnvironment('VAPID_PUBLIC_KEY', defaultValue: '');
+  static const String syncfusionKey = String.fromEnvironment('SYNCFUSION_LICENSE_KEY', defaultValue: '');
 }

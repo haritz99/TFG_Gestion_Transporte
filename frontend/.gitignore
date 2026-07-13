@@ -50,3 +50,4 @@ app.*.map.json
 /lib/run_with_loading.dart
 
 .env
+dart_defines.json

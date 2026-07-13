@@ -127,6 +127,13 @@ class _CalendarioCargasState extends State<CalendarioCargas> {
                     cargaProvider.refresh();
                     return;
                   }
+                  if (carga.estado == EstadoCarga.entregado || carga.estado == EstadoCarga.enTransito) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Las cargas en transito y entregadas no se pueden mover')),
+                    );
+                    cargaProvider.refresh();
+                    return;
+                  }
                   cargaProvider.actualizarFechasCarga(
                     appointment.id as String,
                     details.droppingTime ?? appointment.startTime,
