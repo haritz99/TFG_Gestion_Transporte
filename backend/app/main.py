@@ -9,7 +9,6 @@ from .routers import auth
 import os
 import firebase_admin
 from firebase_admin import credentials
-import google.auth
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -30,17 +29,17 @@ project_id = None
 if firebase_json_raw:
     credentials_data = json.loads(firebase_json_raw)
     cred = credentials.Certificate(credentials_data)
-    #project_id = credentials_data["project_id"]
+    project_id = credentials_data["project_id"]
 
 elif path and os.path.exists(path):
     cred = credentials.Certificate(path)
-    #with open(path, "r") as f:
-     #   credentials_data = json.load(f)
-    #project_id = credentials_data["project_id"]
+    with open(path, "r") as f:
+        credentials_data = json.load(f)
+    project_id = credentials_data["project_id"]
 else:
     cred = credentials.ApplicationDefault()
-    #project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT")
-_, project_id = google.auth.default()
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT")
+
 firebase_admin.initialize_app(cred, {
     'storageBucket': f'{project_id}.firebasestorage.app'
 })

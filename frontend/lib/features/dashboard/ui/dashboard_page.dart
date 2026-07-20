@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../providers/dashboard_provider.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../cargas/providers/carga_provider.dart';
+import '../providers/dashboard_provider.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/dashboard_kpi_grid.dart';
 import 'widgets/dashboard_main_content.dart';
@@ -19,6 +20,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    context.read<CargaProvider>().fetchCargasIniciales();
   }
 
   @override

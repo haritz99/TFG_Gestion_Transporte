@@ -11,7 +11,6 @@ from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
 from google.cloud.firestore import ArrayUnion
-from .carta_porte_service import CartaPorteService
 from .notification_service import NotificacionService
 
 
@@ -21,13 +20,6 @@ class CargasService:
         self._pedidos_crud = pedidos_crud
         self._users_crud = users_crud
         self._notificacion_service = notificacion_service
-        self._carta_porte_service = CartaPorteService(crud=self._crud)
-
-    def get_carta_porte_template_data(self, carga_id: str, company_id: str) -> dict:
-        return self._carta_porte_service.get_carta_porte_template_data(carga_id, company_id)
-
-    def generar_carta_porte_pdf(self, carga_id: str, company_id: str) -> str:
-        return self._carta_porte_service.generar_carta_porte_pdf(carga_id, company_id)
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.combine(fecha_inicio, time.min) if fecha_inicio else None
@@ -148,6 +140,20 @@ class CargasService:
             batch.update(ref, carga.model_dump(exclude={'id'}))
 
         batch.commit()
+
+        for carga in cargas:
+            if carga.transportistaId:
+                self._notificacion_service.notificar(
+                    user_id=carga.transportistaId,
+                    roles=["transportista"],
+                    titulo="Carga replanificada",
+                    cuerpo=f"Tu carga {carga.id} de {carga.origen.direccion.ciudad} a {carga.destino.direccion.ciudad} ha sido replanificada, accede a la app para ver los cambios.",
+                    data={
+                        "evento": "carga_replanificada",
+                        "cargaId": carga.id,
+                    },
+                )
+
         return cargas
 
     def update_buffer_hours(self, carga_id: str, buffer_hours: int, company_id: str):

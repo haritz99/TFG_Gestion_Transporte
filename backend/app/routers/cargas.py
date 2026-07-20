@@ -5,9 +5,10 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
 from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor, \
     get_current_encargado_cargador
+from ..dependencies.services import get_carta_porte_service
+from ..interfaces.i_carta_porte_service import ICartaPorteService
 from ..schemas import IncidenciaSchema
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
-from ..services.carta_porte_service import CartaPorteService
 from ..services.cargas_service import CargasService
 from ..services.incidencias_service import IncidenciaService
 
@@ -62,7 +63,7 @@ def get_cargas_subcontratado(
 def get_carta_porte_pdf(
     carga_id: str,
     current_user: dict[str, Any] = Depends(get_current_encargado),
-    service: CartaPorteService = Depends(CartaPorteService),
+    service: ICartaPorteService = Depends(get_carta_porte_service),
 ) -> dict:
     url_pdf = service.generar_carta_porte_pdf(carga_id, current_user.get("companyId"))
     return {"url": url_pdf}

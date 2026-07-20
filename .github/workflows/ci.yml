@@ -69,7 +69,7 @@ jobs:
         working-directory: ./backend
         env:
           PYTHONPATH: .
-          FIREBASE_CREDENTIALS: gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
+          FIREBASE_CREDENTIALS_PATH: gestion-transporte-dev-firebase-adminsdk-fbsvc-390f3bdf34.json
 
       - name: Upload Python coverage
         uses: actions/upload-artifact@v4

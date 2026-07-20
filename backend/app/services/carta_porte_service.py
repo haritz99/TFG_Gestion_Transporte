@@ -17,6 +17,7 @@ from datetime import timedelta
 from app.crud.company_crud import CompanyCRUD
 from app.schemas.direccion import DireccionSchema
 from app.services.notification_service import NotificacionService
+from app.interfaces.i_carta_porte_service import ICartaPorteService
 
 try:
 	from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -31,7 +32,7 @@ except Exception:
 	HTML = None
 
 
-class CartaPorteService:
+class CartaPorteService(ICartaPorteService):
 	_TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "templates"
 
 	def __init__(self, notificacion_service: NotificacionService = Depends(NotificacionService), crud: CargasCRUD = Depends(CargasCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD), vehiculos_crud: VehiculoCRUD = Depends(VehiculoCRUD)):
@@ -162,8 +163,33 @@ class CartaPorteService:
 	def generar_url_firmada(blob_path: str) -> str:
 		bucket = storage.bucket()
 		blob = bucket.blob(blob_path)
-		url = blob.generate_signed_url(expiration=timedelta(days=365))
-		return url
+		try:
+			# local
+			return blob.generate_signed_url(expiration=timedelta(days=365))
+		except (AttributeError, ValueError):
+			# produccion
+			import google.auth
+			from google.auth.transport import requests
+			from google.auth import iam
+			from google.oauth2 import service_account
+
+			credentials, _ = google.auth.default()
+			auth_request = requests.Request()
+			signer = iam.Signer(
+				request=auth_request,
+				credentials=credentials,
+				service_account_email=credentials.service_account_email,
+			)
+			signing_credentials = service_account.Credentials(
+				None,
+				signer=signer,
+				service_account_email=credentials.service_account_email,
+			)
+			return blob.generate_signed_url(
+				expiration=timedelta(days=365),
+				credentials=signing_credentials,
+				version="v4",
+			)
 
 	@staticmethod
 	def _generar_qr_base64(url: str) -> str | None:

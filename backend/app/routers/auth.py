@@ -9,7 +9,7 @@ from ..schemas.users import RegisterRequest
 from ..services.notification_service import NotificacionService
 from ..services.register_service import RegisterService
 
-router = APIRouter(prefix="/auth", tags=["custom-claims"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.get("/company")
 async def get_company_info(

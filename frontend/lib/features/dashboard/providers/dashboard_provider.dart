@@ -49,16 +49,7 @@ class DashboardProvider extends ChangeNotifier {
 
     try {
       final token = await _tokenProvider.getRequiredToken();
-      final now = DateTime.now();
-      final start = DateTime(now.year, now.month, 1);
-      final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-
-      final results = await Future.wait([
-        _service.fetchDashboardSummary(token: token),
-        _cargaProvider.fetchCargasDelMes(start, end),
-      ]);
-
-      final summary = results[0] as DashboardSummary;
+      final summary = await _service.fetchDashboardSummary(token: token);
 
       _cargasAsignadas = summary.cargasAsignadas;
       _cargasSinAsignar = summary.cargasSinAsignar;
@@ -73,19 +64,24 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
+  Timer? _debounceTimer;
+
   Future<void> refresh() async {
-    if (_isRefreshing) return;
-    _isRefreshing = true;
-    try {
-      final token = await _tokenProvider.getRequiredToken();
-      final summary = await _service.fetchDashboardSummary(token: token);
-      _cargasAsignadas = summary.cargasAsignadas;
-      _cargasSinAsignar = summary.cargasSinAsignar;
-      _entregadasHoy = summary.entregadasHoy;
-      _totalEntregasHoy = summary.totalEntregasHoy;
-      notifyListeners();
-    } finally {
-      _isRefreshing = false;
-    }
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      if (_isRefreshing) return;
+      _isRefreshing = true;
+      try {
+        final token = await _tokenProvider.getRequiredToken();
+        final summary = await _service.fetchDashboardSummary(token: token);
+        _cargasAsignadas = summary.cargasAsignadas;
+        _cargasSinAsignar = summary.cargasSinAsignar;
+        _entregadasHoy = summary.entregadasHoy;
+        _totalEntregasHoy = summary.totalEntregasHoy;
+        notifyListeners();
+      } finally {
+        _isRefreshing = false;
+      }
+    });
   }
 }
