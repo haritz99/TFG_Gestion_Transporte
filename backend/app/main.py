@@ -64,7 +64,7 @@ app.add_middleware(StripTrailingSlashMiddleware)
 
 app.add_middleware(
     RateLimitMiddleware,
-    limit=20,
+    limit=100,
     window_seconds=60,
     path_prefixes=["/auth", "/trans", "/vehi", "/ext", "/pedidos", "/cargas", "/dashboard"],
 )

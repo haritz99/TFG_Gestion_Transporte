@@ -71,6 +71,8 @@ class DashboardProvider extends ChangeNotifier {
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       if (_isRefreshing) return;
       _isRefreshing = true;
+      _errorMessage = null;
+      notifyListeners();
       try {
         final token = await _tokenProvider.getRequiredToken();
         final summary = await _service.fetchDashboardSummary(token: token);

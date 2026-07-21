@@ -81,7 +81,7 @@ class ListaCargasPanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (cargasSemanaAnterior.isNotEmpty) ...[
-                    Text("Aun hay ${cargasSemanaAnterior.length} cargas de la semana pasada sin planificar", style: AppTextStyles.bodyMd),
+                    Text("Tienes ${cargasSemanaAnterior.length} cargas de la semana pasada sin planificar", style: AppTextStyles.bodyMd),
                     const SizedBox(height: 8),
                     _botonCargasTraerHoy(cargaProvider),
                   ],

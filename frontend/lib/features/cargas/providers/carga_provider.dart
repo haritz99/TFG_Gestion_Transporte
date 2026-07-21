@@ -20,7 +20,7 @@ class CargaProvider extends ChangeNotifier {
     final inicioSemanaSinHora = DateTime(inicioSemana.year, inicioSemana.month, inicioSemana.day);
 
     return _cargas.where((c) =>
-      c.estado == EstadoCarga.pendiente &&
+      (c.estado == EstadoCarga.pendiente || c.estado == EstadoCarga.planificado) &&
       c.fechaDescarga.isBefore(inicioSemanaSinHora)
     ).toList();
   }
@@ -214,7 +214,11 @@ class CargaProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    if (!forceRefresh && _cargas.isNotEmpty) return;
+    if (!forceRefresh && _cargas.isNotEmpty) {
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
     try {
       _cargas = await _service.getCargasDelMes(start, end);
       _cargasModificadas.clear();
