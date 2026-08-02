@@ -74,7 +74,7 @@ def test_pedidos_service_fetch_pedidos_filtros(service, mock_pedidos_crud, valid
     mock_doc.exists = True
     mock_doc.id = "p1"
     mock_doc.to_dict.return_value = valid_pedido_dict
-    mock_pedidos_crud.get_todos_los_pedidos.return_value = [mock_doc]
+    mock_pedidos_crud.get_all.return_value = [mock_doc]
     fecha = datetime.date(2024, 1, 1)
 
     # Act
@@ -83,7 +83,7 @@ def test_pedidos_service_fetch_pedidos_filtros(service, mock_pedidos_crud, valid
     # Assert
     assert len(res) == 1
     assert res[0].id == "p1"
-    mock_pedidos_crud.get_todos_los_pedidos.assert_called_once()
+    mock_pedidos_crud.get_all.assert_called_once()
 
 def test_pedidos_service_get_pedido_by_id_existe(service, mock_pedidos_crud, valid_pedido_dict):
     # Arrange
@@ -91,19 +91,19 @@ def test_pedidos_service_get_pedido_by_id_existe(service, mock_pedidos_crud, val
     mock_doc.exists = True
     mock_doc.id = "p1"
     mock_doc.to_dict.return_value = valid_pedido_dict
-    mock_pedidos_crud.get_pedido_doc.return_value = mock_doc
+    mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act
     res = service.get_pedido_by_id("p1", "comp1")
 
     # Assert
     assert res.id == "p1"
-    mock_pedidos_crud.get_pedido_doc.assert_called_once_with("p1")
+    mock_pedidos_crud.get_by_id.assert_called_once_with("comp1", "p1")
 
 def test_pedidos_service_get_pedido_by_id_no_existe(service, mock_pedidos_crud):
     # Arrange
     mock_doc = MagicMock(exists=False)
-    mock_pedidos_crud.get_pedido_doc.return_value = mock_doc
+    mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
@@ -115,7 +115,7 @@ def test_pedidos_service_create_pedido(service, mock_pedidos_crud, mock_cargas_c
     valid_pedido_dict["cargas"] = [AsignacionCargaSchema(tipoCargaId="t1")]
     pedido = CreatePedidoSchema(**valid_pedido_dict)
 
-    mock_pedidos_crud.create_pedido_con_cargas.return_value = {"pedidoId": "new_p_id", "cargasIds": ["new_c_id"]}
+    mock_pedidos_crud.create.return_value = {"pedidoId": "new_p_id", "cargasIds": ["new_c_id"]}
 
     # Act
     res = service.create_pedido(pedido, "comp1")
@@ -123,7 +123,7 @@ def test_pedidos_service_create_pedido(service, mock_pedidos_crud, mock_cargas_c
     # Assert
     assert res["pedidoId"] == "new_p_id"
     assert pedido.id == "new_p_id"
-    mock_pedidos_crud.create_pedido_con_cargas.assert_called_once()
+    mock_pedidos_crud.create.assert_called_once()
     mock_users_crud.get_cliente_by_id.assert_called_once_with("cli1")
     mock_cargas_crud.get_tipo_carga_by_id.assert_called_once_with("t1")
     mock_notificacion_service.notificar.assert_not_called()
@@ -135,7 +135,7 @@ def test_pedidos_service_create_pedido_notifica_carga_asignada(service, mock_ped
     valid_pedido_dict["cargas"] = [AsignacionCargaSchema(tipoCargaId="t1", transportistaId="u123", conductorNombre="Juan Perez", vehiculoId="1234ABC")]
     pedido = CreatePedidoSchema(**valid_pedido_dict)
 
-    mock_pedidos_crud.create_pedido_con_cargas.return_value = {
+    mock_pedidos_crud.create.return_value = {
         "pedidoId": "new_p_id",
         "cargas": [{"id": "new_c_id", "transportistaId": "u123"}],
     }
@@ -160,14 +160,14 @@ def test_pedidos_companyid_se_toma_de_claims_no_del_body(service, mock_pedidos_c
     valid_pedido_dict["cargas"] = [AsignacionCargaSchema(tipoCargaId="t1")]
     pedido = CreatePedidoSchema(**valid_pedido_dict)
 
-    mock_pedidos_crud.create_pedido_con_cargas.return_value = {"pedidoId": "new_p_id", "cargas": []}
+    mock_pedidos_crud.create.return_value = {"pedidoId": "new_p_id", "cargas": []}
 
     # Act
     service.create_pedido(pedido, "comp1")
 
     # Assert
-    call_args = mock_pedidos_crud.create_pedido_con_cargas.call_args.args
-    pedido_payload = call_args[0]
+    call_args = mock_pedidos_crud.create.call_args.args
+    pedido_payload = call_args[1]
     assert pedido.companyId == "comp1"
     assert pedido_payload["companyId"] == "comp1"
     assert pedido_payload["companyId"] != "otra_company"
@@ -189,7 +189,7 @@ def test_pedidos_service_create_pedido_rechaza_fuera_de_ventana(service, mock_pe
 
     assert exc.value.status_code == 400
     assert "fecha de carga" in str(exc.value.detail).lower()
-    mock_pedidos_crud.create_pedido_con_cargas.assert_not_called()
+    mock_pedidos_crud.create.assert_not_called()
 
 def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_crud, mock_cargas_crud, mock_users_crud, valid_pedido_dict, mock_cliente_document, mock_tipo_carga_document):
     # Arrange
@@ -200,12 +200,12 @@ def test_pedidos_service_create_pedido_datos_completos(service, mock_pedidos_cru
 
     cargas_guardadas = []
 
-    def mock_create_pedido_con_cargas(pedido_payload, cargas_payloads):
+    def mock_create(company_id, pedido_payload, cargas_payloads):
         nonlocal cargas_guardadas
         cargas_guardadas = cargas_payloads
         return {"pedidoId": "new_p_id", "cargasIds": ["new_c_id"]}
 
-    mock_pedidos_crud.create_pedido_con_cargas.side_effect = mock_create_pedido_con_cargas
+    mock_pedidos_crud.create.side_effect = mock_create
 
     # Act
     service.create_pedido(pedido, "comp1")
@@ -238,12 +238,12 @@ def test_carta_porte_snapshot_inmutable_tras_cambios_origen(service, mock_pedido
 
     cargas_guardadas = []
 
-    def mock_create_pedido_con_cargas(pedido_payload, cargas_payloads):
+    def mock_create(company_id, pedido_payload, cargas_payloads):
         nonlocal cargas_guardadas
         cargas_guardadas = cargas_payloads
         return {"pedidoId": "new_p_id", "cargas": [{"id": "new_c_id"}]}
 
-    mock_pedidos_crud.create_pedido_con_cargas.side_effect = mock_create_pedido_con_cargas
+    mock_pedidos_crud.create.side_effect = mock_create
 
     cliente_data = cliente_doc_dict
     mock_users_crud.get_cliente_by_id.return_value = mock_cliente_document
@@ -260,30 +260,26 @@ def test_carta_porte_snapshot_inmutable_tras_cambios_origen(service, mock_pedido
     assert snapshot_before["clienteDireccion"].startswith("Calle Falsa 123")
     assert cargas_guardadas[0]["cartaPorteSnapshot"]["clienteNombre"] == "Mi Cliente"
 
-def test_pedidos_service_delete_pedido_ok(service, mock_pedidos_crud, mock_cargas_service, valid_pedido_dict):
+def test_pedidos_service_delete_pedido_ok(service, mock_pedidos_crud, valid_pedido_dict):
     # Arrange
     mock_doc = MagicMock(exists=True)
     # Cambiamos estado a completado para que deje borrar
     valid_pedido_dict["estado"] = "completado"
     mock_doc.to_dict.return_value = valid_pedido_dict
-    mock_pedidos_crud.get_pedido_doc.return_value = mock_doc
-
-    mock_carga = MagicMock()
-    mock_carga.id = "c1"
-    mock_cargas_service.fetch_cargas.return_value = [mock_carga]
+    mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act
     service.delete_pedido("p1", "comp1")
 
     # Assert
-    mock_pedidos_crud.delete_pedido_y_cargas.assert_called_once()
+    mock_pedidos_crud.delete.assert_called_once_with("comp1", "p1")
 
 def test_pedidos_service_delete_pedido_no_auth(service, mock_pedidos_crud, valid_pedido_dict):
     # Arrange
     mock_doc = MagicMock(exists=True)
     valid_pedido_dict["companyId"] = "otra"
     mock_doc.to_dict.return_value = valid_pedido_dict
-    mock_pedidos_crud.get_pedido_doc.return_value = mock_doc
+    mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
@@ -295,7 +291,7 @@ def test_pedidos_service_delete_pedido_estado_invalido(service, mock_pedidos_cru
     mock_doc = MagicMock(exists=True)
     valid_pedido_dict["estado"] = "planificado"
     mock_doc.to_dict.return_value = valid_pedido_dict
-    mock_pedidos_crud.get_pedido_doc.return_value = mock_doc
+    mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:

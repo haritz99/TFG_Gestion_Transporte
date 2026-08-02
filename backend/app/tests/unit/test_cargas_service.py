@@ -64,7 +64,7 @@ def test_cargas_service_fetch_cargas_filtros(service, mock_cargas_crud, valid_ca
     mock_doc.exists = True
     mock_doc.id = "c1"
     mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_todas_las_cargas.return_value = [mock_doc]
+    mock_cargas_crud.get_all.return_value = [mock_doc]
 
     # Act
     res = service.fetch_cargas("comp1", estado=EstadoCarga.PENDIENTE)
@@ -91,7 +91,7 @@ def test_cargas_service_get_carga_by_id_existe(service, mock_cargas_crud, valid_
     # Arrange
     mock_doc = MagicMock(exists=True, id="c1")
     mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
+    mock_cargas_crud.get_by_id.return_value = mock_doc
 
     # Act
     res = service.get_carga_by_id("c1", "comp1")
@@ -104,13 +104,13 @@ def test_cargas_service_delete_carga_ok(service, mock_cargas_crud, valid_carga_d
     # Arrange
     mock_doc = MagicMock(exists=True)
     mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc
+    mock_cargas_crud.get_by_id.return_value = mock_doc
 
     # Act
     service.delete_carga("c1", "comp1")
 
     # Assert
-    mock_cargas_crud.delete_carga_doc.assert_called_once_with("c1")
+    mock_cargas_crud.delete.assert_called_once_with("comp1", "c1")
 
 
 def test_cargas_service_bulk_update_ok_persiste_cargas_en_lote(service, mock_cargas_crud, mock_pedidos_crud, pedido_doc_dict, carga_doc_dict):
@@ -119,7 +119,7 @@ def test_cargas_service_bulk_update_ok_persiste_cargas_en_lote(service, mock_car
     mock_pedido_doc = _valid_pedido_doc(pedido_doc_dict)
     mock_pedido_doc.id = "p1"
     mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p1")
-    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+    mock_pedidos_crud.get_pedidos_by_refs.return_value = [mock_pedido_doc]
 
     carga_1 = _build_valid_carga(carga_doc_dict, id="c1", pedidoId="p1")
     carga_2 = _build_valid_carga(carga_doc_dict, id="c2", pedidoId="p1", fechaCarga=carga_1.fechaCarga + datetime.timedelta(hours=1), fechaDescarga=carga_1.fechaDescarga + datetime.timedelta(hours=1))
@@ -162,7 +162,7 @@ def test_cargas_service_bulk_update_rechaza_pedido_inexistente(service, mock_car
     mock_pedido_doc = MagicMock(exists=False)
     mock_pedido_doc.id = "p_inexistente"
     mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p_inexistente")
-    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+    mock_pedidos_crud.get_pedidos_by_refs.return_value = [mock_pedido_doc]
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
@@ -178,7 +178,7 @@ def test_cargas_service_bulk_update_rechaza_ref_invalida(service, mock_cargas_cr
     mock_pedido_doc = _valid_pedido_doc(pedido_doc_dict)
     mock_pedido_doc.id = "p1"
     mock_pedidos_crud.get_pedido_ref.return_value = MagicMock(name="pedido_ref_p1")
-    mock_pedidos_crud.get_all.return_value = [mock_pedido_doc]
+    mock_pedidos_crud.get_pedidos_by_refs.return_value = [mock_pedido_doc]
     mock_cargas_crud.get_batch.return_value = MagicMock()
     mock_cargas_crud.get_carga_ref.return_value = None
 
@@ -202,7 +202,7 @@ def test_cargas_service_ceder_carga_subcontratado_notifica(service, mock_cargas_
         },
         "precio": 100.0,
     }
-    mock_cargas_crud.get_carga_doc.return_value = mock_doc_carga
+    mock_cargas_crud.get_by_id.return_value = mock_doc_carga
 
     mock_sub_doc = MagicMock(exists=True)
     mock_sub_doc.id = "sub1"
@@ -223,7 +223,7 @@ def test_cargas_service_ceder_carga_subcontratado_notifica(service, mock_cargas_
             "subcontratadoNombre": "Sub S.L.",
         },
     }
-    mock_cargas_crud.get_carga_doc.side_effect = [mock_doc_carga, mock_updated_doc]
+    mock_cargas_crud.get_by_id.side_effect = [mock_doc_carga, mock_updated_doc]
 
     batch = mock_cargas_crud.get_batch.return_value
 

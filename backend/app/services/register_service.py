@@ -6,15 +6,16 @@ import string
 from datetime import datetime, timezone
 
 from .email_service import EmailService
-from ..crud.user_crud import UserCRUD
-from ..crud.company_crud import CompanyCRUD
+from ..dependencies.repositories import get_company_repository, get_user_repository
+from ..interfaces.i_company_repository import ICompanyRepository
+from ..interfaces.i_user_repository import IUserRepository
 from ..schemas.users import UserSchema, UserCreateResponseSchema, RegisterRequest
 from ..schemas.external_user import ExternalUserSchema
 from firebase_admin import auth as firebase_auth
 
 
 class RegisterService:
-    def __init__(self, email_service: EmailService = Depends(EmailService), crud: UserCRUD = Depends(UserCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD)):
+    def __init__(self, email_service: EmailService = Depends(EmailService), crud: IUserRepository = Depends(get_user_repository), company_crud: ICompanyRepository = Depends(get_company_repository)):
         self._email_service = email_service
         self._crud = crud
         self._company_crud = company_crud
@@ -84,7 +85,7 @@ class RegisterService:
                 'createdAt': now,
                 'updatedAt': now,
             }
-            self._crud.create(uid, user_dict)
+            self._crud.create(company_id, uid, user_dict)
 
             firebase_auth.set_custom_user_claims(uid, {
                 'companyId': company_id,
@@ -133,7 +134,7 @@ class RegisterService:
             user_dict["createdAt"] = now
             user_dict["updatedAt"] = now
 
-            self._crud.create(uid, user_dict)
+            self._crud.create(company_id, uid, user_dict)
 
             created_user = UserSchema(**user_dict)
 

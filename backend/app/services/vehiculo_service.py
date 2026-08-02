@@ -1,11 +1,12 @@
 from fastapi import HTTPException, Depends
 
 from ..schemas import VehiculoSchema, VehiculoPaginatedSchema
-from ..crud.vehiculos_crud import VehiculoCRUD
+from ..dependencies.repositories import get_vehiculos_repository
+from ..interfaces.i_repository import IRepository
 
 
 class VehiculoService:
-    def __init__(self, crud: VehiculoCRUD = Depends(VehiculoCRUD)):
+    def __init__(self, crud: IRepository = Depends(get_vehiculos_repository)):
         self.crud = crud
 
     def get_all(self, company_id: str, limit: int = 8, last_doc_id: str | None = None) -> VehiculoPaginatedSchema:
@@ -27,7 +28,7 @@ class VehiculoService:
 
     def get_by_id(self, matr: str, company_id: str) -> VehiculoSchema:
         try:
-            doc = self.crud.get_by_id(matr)
+            doc = self.crud.get_by_id(company_id, matr)
             return VehiculoSchema.from_firestore(doc, company_id)
         except HTTPException:
             raise
@@ -37,12 +38,12 @@ class VehiculoService:
     def create(self, vehiculo_data: VehiculoSchema, company_id: str) -> VehiculoSchema:
         try:
             vehiculo_data.companyId = company_id
-            doc = self.crud.get_by_id(vehiculo_data.matricula)
+            doc = self.crud.get_by_id(company_id, vehiculo_data.matricula)
 
             if doc.exists:
                 raise HTTPException(status_code=409, detail="Ya existe un vehículo con esa matrícula")
 
-            self.crud.set_vehiculo(vehiculo_data.matricula, vehiculo_data.model_dump())
+            self.crud.create(company_id, vehiculo_data.matricula, vehiculo_data.model_dump())
             return vehiculo_data
         except HTTPException:
             raise
@@ -51,12 +52,12 @@ class VehiculoService:
 
     def update(self, matr: str, vehiculo_data: VehiculoSchema, company_id: str) -> VehiculoSchema:
         try:
-            doc = self.crud.get_by_id(matr)
+            doc = self.crud.get_by_id(company_id, matr)
             if not doc.exists:
                 raise HTTPException(status_code=404, detail="Vehículo no encontrado")
 
             vehiculo_data.companyId = company_id
-            self.crud.update_vehiculo(matr, vehiculo_data.model_dump())
+            self.crud.update(company_id, matr, vehiculo_data.model_dump())
             return vehiculo_data
         except HTTPException:
             raise
@@ -64,13 +65,13 @@ class VehiculoService:
             print(f"Error al actualizar el vehículo: {e}")
             raise HTTPException(status_code=500, detail="Error al actualizar el vehículo")
 
-    def delete(self, matr: str) -> None:
+    def delete(self, matr: str, company_id: str) -> None:
         try:
-            doc = self.crud.get_by_id(matr)
+            doc = self.crud.get_by_id(company_id, matr)
             if not doc.exists:
                 raise HTTPException(status_code=404, detail="Vehículo no encontrado")
 
-            self.crud.delete_vehiculo(matr)
+            self.crud.delete(company_id, matr)
         except HTTPException:
             raise
         except Exception:

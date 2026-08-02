@@ -1,8 +1,9 @@
 from app.firebase_config import get_db
 from google.cloud import firestore
+from app.interfaces.i_pedidos_repository import IPedidosRepository
 
-class PedidosCRUD:
-    def get_todos_los_pedidos(self, company_id: str, cliente_id=None, estado=None, dt_inicio=None, dt_fin=None):
+class PedidosCRUD(IPedidosRepository):
+    def get_all(self, company_id: str, cliente_id=None, estado=None, dt_inicio=None, dt_fin=None):
         query = get_db().collection("pedidos").where("companyId", "==", company_id)
         if cliente_id:
             query = query.where("clienteId", "==", cliente_id)
@@ -14,16 +15,19 @@ class PedidosCRUD:
             query = query.where("fechaCarga", "<=", dt_fin)
         return query.stream()
 
-    def get_all(self, refs):
+    def get_pedidos_by_refs(self, company_id: str, refs):
         if not refs:
             return []
         return list(get_db().get_all(refs))
 
-    def get_pedido_doc(self, pedido_id: str):
-        return get_db().collection("pedidos").document(pedido_id).get()
+    def get_pedido_ref(self, pedido_id: str):
+        return get_db().collection("pedidos").document(pedido_id)
 
+    def get_carga_ref(self, carga_id: str):
+        return get_db().collection("cargas").document(carga_id)
 
-    def create_pedido_con_cargas(self, pedido_payload: dict, cargas_payloads: list[dict]) -> dict:
+    def create(self, company_id: str, pedido_payload: dict, cargas_payloads: list[dict]) -> dict:
+        pedido_payload["companyId"] = company_id
         counter_pedido_ref = get_db().collection("counters").document("pedidos")
         counter_cargas_ref = get_db().collection("counters").document("cargas")
 
@@ -62,15 +66,20 @@ class PedidosCRUD:
 
         return create_in_transaction(get_db().transaction())
 
-    def delete_pedido_y_cargas(self, pedido_ref, cargas_refs):
+    def get_by_id(self, company_id: str, pedido_id: str):
+        return get_db().collection("pedidos").document(pedido_id).get()
+
+    def update(self, company_id: str, pedido_id: str, update_data: dict) -> None:
+        get_db().collection("pedidos").document(pedido_id).update(update_data)
+
+    def delete(self, company_id: str, pedido_id: str) -> None:
+        pedido_ref = self.get_pedido_ref(pedido_id)
+        cargas_refs = [
+            c.reference
+            for c in get_db().collection("pedidos").document(pedido_id).collection("cargas").stream()
+        ]
         batch = get_db().batch()
         for c_ref in cargas_refs:
             batch.delete(c_ref)
         batch.delete(pedido_ref)
         batch.commit()
-
-    def get_pedido_ref(self, pedido_id: str):
-        return get_db().collection("pedidos").document(pedido_id)
-
-    def get_carga_ref(self, carga_id: str):
-        return get_db().collection("cargas").document(carga_id)

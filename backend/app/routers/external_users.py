@@ -74,11 +74,3 @@ def delete_external_user(
     Realiza un soft delete de un cliente o subcontratado.
     """
     return service.soft_delete_external_user(uid, current_user.get("companyId"))
-
-@router.delete("/cli/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_cliente(
-    cliente_id: str, 
-    current_user: dict[str, Any] = Depends(get_current_encargado),
-    service = Depends(ExternalUserService)
-):
-    return service.delete_cliente_cascada(cliente_id, current_user.get("companyId"))

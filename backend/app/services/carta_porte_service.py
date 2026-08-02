@@ -10,11 +10,11 @@ import re
 from pathlib import Path
 from typing import Any
 from fastapi import Depends, HTTPException
-from app.crud.cargas_crud import CargasCRUD
-from app.crud.vehiculos_crud import VehiculoCRUD
 from datetime import timedelta
-
-from app.crud.company_crud import CompanyCRUD
+from app.dependencies.repositories import get_cargas_repository, get_company_repository, get_vehiculos_repository
+from app.interfaces.i_cargas_repository import ICargasRepository
+from app.interfaces.i_company_repository import ICompanyRepository
+from app.interfaces.i_repository import IRepository
 from app.schemas.direccion import DireccionSchema
 from app.services.notification_service import NotificacionService
 from app.interfaces.i_carta_porte_service import ICartaPorteService
@@ -35,7 +35,7 @@ except Exception:
 class CartaPorteService(ICartaPorteService):
 	_TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "templates"
 
-	def __init__(self, notificacion_service: NotificacionService = Depends(NotificacionService), crud: CargasCRUD = Depends(CargasCRUD), company_crud: CompanyCRUD = Depends(CompanyCRUD), vehiculos_crud: VehiculoCRUD = Depends(VehiculoCRUD)):
+	def __init__(self, notificacion_service: NotificacionService = Depends(NotificacionService), crud: ICargasRepository = Depends(get_cargas_repository), company_crud: ICompanyRepository = Depends(get_company_repository), vehiculos_crud: IRepository = Depends(get_vehiculos_repository)):
 		self._notificacion_service = notificacion_service
 		self._vehiculos_crud = vehiculos_crud
 		self._crud = crud
@@ -66,7 +66,7 @@ class CartaPorteService(ICartaPorteService):
 		return value
 
 	def get_carta_porte_template_data(self, carga_id: str, company_id: str) -> dict[str, Any]:
-		doc = self._crud.get_carga_doc(carga_id)
+		doc = self._crud.get_by_id(company_id, carga_id)
 		if not doc.exists:
 			raise HTTPException(status_code=404, detail="Carga no encontrada")
 
@@ -90,7 +90,7 @@ class CartaPorteService(ICartaPorteService):
 
 		vehiculo_id = carga_data.get("vehiculo_id")
 		if vehiculo_id:
-			vehiculo_doc = self._vehiculos_crud.get_by_id(vehiculo_id)
+			vehiculo_doc = self._vehiculos_crud.get_by_id(company_id, vehiculo_id)
 			if vehiculo_doc.exists:
 				vehiculo_data = vehiculo_doc.to_dict() or {}
 				carga_data["vehiculo_matricula"] = vehiculo_data.get("matricula")
@@ -133,7 +133,7 @@ class CartaPorteService(ICartaPorteService):
 
 		self.subir_pdf(pdf_bytes, carga_id, company_id)
 		try:
-			self._crud.update_carga_doc(carga_id, {"carta_porte_url": url_firmada})
+			self._crud.update(company_id, carga_id, {"carta_porte_url": url_firmada})
 		except Exception as e:
 			print(f"Error al actualizar la carga con la URL de la carta de porte: {e}")
 
@@ -141,6 +141,7 @@ class CartaPorteService(ICartaPorteService):
 			titulo="Carta de porte generada!",
 			cuerpo=f"La carta de porte de la carga {carga_id} ha sido generada.",
 			data={"cargaId": carga_id},
+			company_id=company_id,
 		)
 
 		subcontratado_id = carga.get("subcontratado_id")
@@ -149,6 +150,7 @@ class CartaPorteService(ICartaPorteService):
 				titulo="Carta de porte generada!",
 				cuerpo=f"Se ha generado la carta de porte de tu carga cedida: {carga_id}.",
 				data={"cargaId": carga_id},
+				company_id=company_id,
 		)
 		return url_firmada
 

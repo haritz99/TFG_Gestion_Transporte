@@ -46,6 +46,7 @@ async def guardar_fcm_token(
         service: NotificacionService = Depends(NotificacionService),
 ):
     service.guardar_fcm_token(
+        company_id=current_user.get("companyId"),
         uid=current_user["uid"],
         roles=current_user.get("rol"),
         token=body.token,
