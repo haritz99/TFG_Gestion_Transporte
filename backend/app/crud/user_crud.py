@@ -15,7 +15,7 @@ class UserCRUD(IUserRepository):
         doc_ref = get_db().collection("subcontratados").document(uid)
         return doc_ref.get()
 
-    def create(company_id: str, uid: str, user_dict: dict) -> None:
+    def create(self, company_id: str, uid: str, user_dict: dict) -> None:
         doc_ref = get_db().collection("users").document(uid)
         doc_ref.set(user_dict)
 
