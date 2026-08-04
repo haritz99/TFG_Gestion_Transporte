@@ -14,9 +14,9 @@ class NotificacionService:
         if "encargado" in roles or "transportista" in roles:
             doc = self._user_crud.get_by_id(company_id, user_id)
         elif "cliente" in roles:  # cargador
-            doc = self._user_crud.get_cliente_by_id(user_id)
+            doc = self._user_crud.get_cliente_by_id(company_id, user_id)
         elif "subcontratado" in roles:
-            doc = self._user_crud.get_subcontratado_by_id(user_id)
+            doc = self._user_crud.get_subcontratado_by_id(company_id, user_id)
         else:
             return None
 
@@ -29,9 +29,9 @@ class NotificacionService:
         if "encargado" in roles or "transportista" in roles:
             self._user_crud.update(company_id, uid, update)
         elif "cliente" in roles: # cargador
-            self._user_crud.update_cliente(uid, update)
+            self._user_crud.update_cliente(company_id, uid, update)
         elif "subcontratado" in roles:
-            self._user_crud.update_subcontratado(uid, update)
+            self._user_crud.update_subcontratado(company_id, uid, update)
         else:
             raise HTTPException(
                 status_code=400,

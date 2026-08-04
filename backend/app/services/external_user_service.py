@@ -30,14 +30,11 @@ class ExternalUserService:
         """
         Realiza un soft delete de un usuario externo (cliente o subcontratado).
         """
-        cliente_doc = self._user_crud.get_cliente_by_id(uid)
-        sub_doc = self._user_crud.get_subcontratado_by_id(uid)
+        cliente_doc = self._user_crud.get_cliente_by_id(company_id, uid)
+        sub_doc = self._user_crud.get_subcontratado_by_id(company_id, uid)
 
         if cliente_doc.exists:
-            data = cliente_doc.to_dict()
-            if data.get("companyId") != company_id:
-                raise HTTPException(status_code=403, detail="No autorizado")
-            self._user_crud.update_cliente(uid, {"activo": False, "updatedAt": datetime.now()})
+            self._user_crud.update_cliente(company_id, uid, {"activo": False, "updatedAt": datetime.now()})
             try:
                 firebase_auth.update_user(uid, disabled=True)
             except Exception:
@@ -45,10 +42,7 @@ class ExternalUserService:
             return
 
         if sub_doc.exists:
-            data = sub_doc.to_dict()
-            if data.get("companyId") != company_id:
-                raise HTTPException(status_code=403, detail="No autorizado")
-            self._user_crud.update_subcontratado(uid, {"activo": False, "updatedAt": datetime.now()})
+            self._user_crud.update_subcontratado(company_id, uid, {"activo": False, "updatedAt": datetime.now()})
             try:
                 firebase_auth.update_user(uid, disabled=True)
             except Exception:

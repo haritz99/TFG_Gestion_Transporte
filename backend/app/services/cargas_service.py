@@ -121,7 +121,7 @@ class CargasService:
             pedidos_por_id[doc.id] = PedidoSchema.from_firestore(doc, company_id)
 
         for carga in cargas:
-            pedido_schema = pedidos_por_id[carga.pedidoId]
+            pedido_schema = pedidos_por_id.get(carga.pedidoId)
 
             try:
                 carga.validar_contra_pedido(pedido_schema)
@@ -131,7 +131,7 @@ class CargasService:
             carga.companyId = company_id
             carga.clienteId = pedido_schema.clienteId
 
-            ref = self._crud.get_carga_ref(carga.id)
+            ref = self._crud.get_carga_ref(company_id, carga.id)
             if ref is None:
                 raise HTTPException(status_code=500, detail=f"No se pudo obtener la referencia de la carga {carga.id}")
             batch.update(ref, carga.model_dump(exclude={'id'}))
@@ -167,13 +167,11 @@ class CargasService:
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
         carga = CargaSchema.from_firestore(doc, company_id)
-        sub_doc = self._users_crud.get_subcontratado_by_id(subcontratado_id)
+        sub_doc = self._users_crud.get_subcontratado_by_id(company_id, subcontratado_id)
         if not sub_doc.exists:
             raise HTTPException(status_code=404, detail="Subcontratado no encontrado")
 
         sub_data = sub_doc.to_dict() or {}
-        if sub_data.get("companyId") != company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para ceder esta carga al subcontratado")
 
         subcontratado = SubcontratadoSchema(**{**sub_data, "uid": sub_doc.id})
 
@@ -259,14 +257,13 @@ class CargasService:
 
         self._crud.delete(company_id, carga_id)
 
-    def fetch_cargas_cedidas(self, subcontratado_id: str) -> list[CargaSchema]:
-        user_doc = self._users_crud.get_subcontratado_by_id(subcontratado_id)
+    def fetch_cargas_cedidas(self, subcontratado_id: str, company_id: str) -> list[CargaSchema]:
+        user_doc = self._users_crud.get_subcontratado_by_id(company_id, subcontratado_id)
         if not user_doc.exists:
             return []
         user_data = user_doc.to_dict()
-        company_id = user_data.get("companyId")
         cargas_cedidas_ids = user_data.get("cargasCedidas", [])
         if not cargas_cedidas_ids:
             return []
         docs = self._crud.get_cargas_by_ids(company_id, cargas_cedidas_ids)
-        return [CargaSchema.from_firestore(doc, doc.to_dict().get("companyId")) for doc in docs]
+        return [CargaSchema.from_firestore(doc, company_id) for doc in docs]

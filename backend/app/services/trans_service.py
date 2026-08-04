@@ -38,9 +38,6 @@ class TransService:
             raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         user_data = doc.to_dict() or {}
-        if user_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Conductor no encontrado")
-
         rol = user_data.get("rol", [])
         if isinstance(rol, str):
             rol = [rol]
@@ -57,8 +54,6 @@ class TransService:
             raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         doc_data = doc.to_dict() or {}
-        if doc_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         rol = doc_data.get("rol", [])
         if isinstance(rol, str):
@@ -101,8 +96,6 @@ class TransService:
                 raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             doc_data = doc.to_dict() or {}
-            if doc_data.get("companyId") != company_id:
-                raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             rol = doc_data.get("rol", [])
             if isinstance(rol, str):

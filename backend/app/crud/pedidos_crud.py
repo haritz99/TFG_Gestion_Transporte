@@ -18,13 +18,11 @@ class PedidosCRUD(IPedidosRepository):
     def get_pedidos_by_refs(self, company_id: str, refs):
         if not refs:
             return []
-        return list(get_db().get_all(refs))
+        docs = list(get_db().get_all(refs))
+        return [doc for doc in docs if not doc.exists or (doc.to_dict() or {}).get("companyId") == company_id]
 
     def get_pedido_ref(self, pedido_id: str):
         return get_db().collection("pedidos").document(pedido_id)
-
-    def get_carga_ref(self, carga_id: str):
-        return get_db().collection("cargas").document(carga_id)
 
     def create(self, company_id: str, pedido_payload: dict, cargas_payloads: list[dict]) -> dict:
         pedido_payload["companyId"] = company_id
@@ -67,13 +65,23 @@ class PedidosCRUD(IPedidosRepository):
         return create_in_transaction(get_db().transaction())
 
     def get_by_id(self, company_id: str, pedido_id: str):
-        return get_db().collection("pedidos").document(pedido_id).get()
+        doc = get_db().collection("pedidos").document(pedido_id).get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            return doc
+        return get_db().collection("pedidos").document("not_found").get()  # empty doc
 
     def update(self, company_id: str, pedido_id: str, update_data: dict) -> None:
-        get_db().collection("pedidos").document(pedido_id).update(update_data)
+        pedido_ref = get_db().collection("pedidos").document(pedido_id)
+        pedido_doc = pedido_ref.get()
+        if pedido_doc.exists and (pedido_doc.to_dict() or {}).get("companyId") == company_id:
+            pedido_ref.update(update_data)
 
     def delete(self, company_id: str, pedido_id: str) -> None:
         pedido_ref = self.get_pedido_ref(pedido_id)
+        pedido_doc = pedido_ref.get()
+        if not (pedido_doc.exists and (pedido_doc.to_dict() or {}).get("companyId") == company_id):
+            return
+
         cargas_refs = [
             c.reference
             for c in get_db().collection("pedidos").document(pedido_id).collection("cargas").stream()

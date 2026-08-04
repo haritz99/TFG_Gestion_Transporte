@@ -19,7 +19,7 @@ class ICargasRepository(IRepository):
         pass
 
     @abstractmethod
-    def get_tipo_carga_by_id(self, tipo_id: str):
+    def get_tipo_carga_by_id(self, company_id: str, tipo_id: str):
         pass
 
     @abstractmethod
@@ -31,7 +31,7 @@ class ICargasRepository(IRepository):
         pass
 
     @abstractmethod
-    def get_carga_ref(self, carga_id: str):
+    def get_carga_ref(self, company_id: str, carga_id: str):
         pass
 
     @abstractmethod

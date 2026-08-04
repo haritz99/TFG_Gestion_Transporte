@@ -238,13 +238,13 @@ class RegisterService:
             data['companyId'] = company_id
 
             if rol == "cliente":
-                doc = self._crud.get_cliente_by_id(uid)
+                doc = self._crud.get_cliente_by_id(company_id, uid)
                 doc_data = doc.to_dict() or {}
-                self._crud.update_cliente(uid, data)
+                self._crud.update_cliente(company_id, uid, data)
             elif rol == "subcontratado":
-                doc = self._crud.get_subcontratado_by_id(uid)
+                doc = self._crud.get_subcontratado_by_id(company_id, uid)
                 doc_data = doc.to_dict() or {}
-                self._crud.update_subcontratado(uid, data)
+                self._crud.update_subcontratado(company_id, uid, data)
 
             full_data = {**doc_data, **data}
             return ExternalUserSchema(**full_data)

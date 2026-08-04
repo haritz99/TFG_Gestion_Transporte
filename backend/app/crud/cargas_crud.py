@@ -33,8 +33,11 @@ class CargasCRUD(ICargasRepository):
         doc_ref.set(tipo_carga_data)
         return tipo_carga_data
 
-    def get_tipo_carga_by_id(self, tipo_id: str) -> list:
-        return get_db().collection("tipos_carga").document(tipo_id).get()
+    def get_tipo_carga_by_id(self, company_id: str, tipo_id: str) -> list:
+        doc = get_db().collection("tipos_carga").document(tipo_id).get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            return doc
+        return get_db().collection("tipos_carga").document("not_found").get()  # empty doc
 
     def get_cargas_count(self, company_id: str, estado: str, inicio=None, fin=None):
         query = get_db().collection_group('cargas').where('companyId', '==', company_id).where('estado', '==', estado)
@@ -50,8 +53,8 @@ class CargasCRUD(ICargasRepository):
             query = query.where('estado', '==', estado)
         return query.count().get()
 
-    def get_carga_ref(self, carga_id: str):
-        docs = get_db().collection_group("cargas").where("id", "==", carga_id).limit(1).get()
+    def get_carga_ref(self, company_id: str, carga_id: str):
+        docs = get_db().collection_group("cargas").where("companyId", "==", company_id).where("id", "==", carga_id).limit(1).get()
         if docs:
             return docs[0].reference
         return None
@@ -101,11 +104,11 @@ class CargasCRUD(ICargasRepository):
         return get_db().collection("cargas").document("not_found").get()  # empty doc
 
     def update(self, company_id: str, carga_id: str, update_data: dict) -> None:
-        docs = get_db().collection_group("cargas").where("id", "==", carga_id).get()
+        docs = get_db().collection_group("cargas").where("companyId", "==", company_id).where("id", "==", carga_id).get()
         if docs:
             docs[0].reference.update(update_data)
 
     def delete(self, company_id: str, carga_id: str) -> None:
-        docs = get_db().collection_group("cargas").where("id", "==", carga_id).get()
+        docs = get_db().collection_group("cargas").where("companyId", "==", company_id).where("id", "==", carga_id).get()
         if docs:
             docs[0].reference.delete()

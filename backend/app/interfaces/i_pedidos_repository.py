@@ -16,7 +16,3 @@ class IPedidosRepository(IRepository):
     @abstractmethod
     def get_pedido_ref(self, pedido_id: str):
         pass
-
-    @abstractmethod
-    def get_carga_ref(self, carga_id: str):
-        pass

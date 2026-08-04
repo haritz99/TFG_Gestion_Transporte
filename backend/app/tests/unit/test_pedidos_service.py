@@ -124,8 +124,8 @@ def test_pedidos_service_create_pedido(service, mock_pedidos_crud, mock_cargas_c
     assert res["pedidoId"] == "new_p_id"
     assert pedido.id == "new_p_id"
     mock_pedidos_crud.create.assert_called_once()
-    mock_users_crud.get_cliente_by_id.assert_called_once_with("cli1")
-    mock_cargas_crud.get_tipo_carga_by_id.assert_called_once_with("t1")
+    mock_users_crud.get_cliente_by_id.assert_called_once_with("comp1", "cli1")
+    mock_cargas_crud.get_tipo_carga_by_id.assert_called_once_with("comp1", "t1")
     mock_notificacion_service.notificar.assert_not_called()
 
 
@@ -275,16 +275,14 @@ def test_pedidos_service_delete_pedido_ok(service, mock_pedidos_crud, valid_pedi
     mock_pedidos_crud.delete.assert_called_once_with("comp1", "p1")
 
 def test_pedidos_service_delete_pedido_no_auth(service, mock_pedidos_crud, valid_pedido_dict):
-    # Arrange
-    mock_doc = MagicMock(exists=True)
-    valid_pedido_dict["companyId"] = "otra"
-    mock_doc.to_dict.return_value = valid_pedido_dict
+    # Arrange: el CRUD filtra por tenant, así que un pedido de otra empresa devuelve documento vacío
+    mock_doc = MagicMock(exists=False)
     mock_pedidos_crud.get_by_id.return_value = mock_doc
 
     # Act & Assert
     with pytest.raises(HTTPException) as exc:
         service.delete_pedido("p1", "comp1")
-    assert exc.value.status_code == 403
+    assert exc.value.status_code == 404
 
 def test_pedidos_service_delete_pedido_estado_invalido(service, mock_pedidos_crud, valid_pedido_dict):
     # Arrange

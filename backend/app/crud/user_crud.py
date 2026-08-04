@@ -3,29 +3,39 @@ from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from app.interfaces.i_user_repository import IUserRepository
 
 class UserCRUD(IUserRepository):
+    @staticmethod
+    def _scoped_doc(collection: str, company_id: str, uid: str) -> DocumentSnapshot:
+        doc_ref = get_db().collection(collection).document(uid)
+        doc = doc_ref.get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            return doc
+        return get_db().collection(collection).document("not_found").get()  # empty doc
+
+    @staticmethod
+    def _belongs_to(collection: str, company_id: str, uid: str) -> bool:
+        doc = get_db().collection(collection).document(uid).get()
+        return doc.exists and (doc.to_dict() or {}).get("companyId") == company_id
+
     def get_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("users").document(uid)
-        return doc_ref.get()
+        return self._scoped_doc("users", company_id, uid)
 
-    def get_cliente_by_id(self, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("clientes").document(uid)
-        return doc_ref.get()
+    def get_cliente_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
+        return self._scoped_doc("clientes", company_id, uid)
 
-    def get_subcontratado_by_id(self, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("subcontratados").document(uid)
-        return doc_ref.get()
+    def get_subcontratado_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
+        return self._scoped_doc("subcontratados", company_id, uid)
 
     def create(self, company_id: str, uid: str, user_dict: dict) -> None:
         doc_ref = get_db().collection("users").document(uid)
         doc_ref.set(user_dict)
 
     def update(self, company_id: str, uid: str, update_dict: dict) -> None:
-        doc_ref = get_db().collection("users").document(uid)
-        doc_ref.update(update_dict)
+        if self._belongs_to("users", company_id, uid):
+            get_db().collection("users").document(uid).update(update_dict)
 
     def delete(self, company_id: str, uid: str) -> None:
-        doc_ref = get_db().collection("users").document(uid)
-        doc_ref.delete()
+        if self._belongs_to("users", company_id, uid):
+            get_db().collection("users").document(uid).delete()
 
     def create_cliente(self, uid: str, cliente_dict: dict) -> None:
         get_db().collection("clientes").document(uid).set(cliente_dict)
@@ -33,11 +43,13 @@ class UserCRUD(IUserRepository):
     def create_subcontratado(self, uid: str, subcontratado_dict: dict) -> None:
         get_db().collection("subcontratados").document(uid).set(subcontratado_dict)
 
-    def update_cliente(self, uid: str, cliente_dict: dict) -> None:
-        get_db().collection("clientes").document(uid).update(cliente_dict)
+    def update_cliente(self, company_id: str, uid: str, cliente_dict: dict) -> None:
+        if self._belongs_to("clientes", company_id, uid):
+            get_db().collection("clientes").document(uid).update(cliente_dict)
 
-    def update_subcontratado(self, uid: str, cliente_dict: dict) -> None:
-        get_db().collection("subcontratados").document(uid).update(cliente_dict)
+    def update_subcontratado(self, company_id: str, uid: str, cliente_dict: dict) -> None:
+        if self._belongs_to("subcontratados", company_id, uid):
+            get_db().collection("subcontratados").document(uid).update(cliente_dict)
 
     def get_all_external_users(self, company_id: str) -> list[DocumentSnapshot]:
         """

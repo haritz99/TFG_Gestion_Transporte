@@ -28,8 +28,7 @@ def test_delete_transportista_not_found_returns_404(service, mock_user_crud):
 
 
 def test_delete_transportista_foreign_company_returns_404(service, mock_user_crud):
-    mock_doc = MagicMock(exists=True)
-    mock_doc.to_dict.return_value = {"companyId": "other-company", "rol": ["transportista"]}
+    mock_doc = MagicMock(exists=False)
     mock_user_crud.get_by_id.return_value = mock_doc
 
     with pytest.raises(HTTPException) as exc:

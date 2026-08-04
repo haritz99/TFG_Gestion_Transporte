@@ -17,7 +17,10 @@ class VehiculoCRUD(IRepository):
         return query.limit(limit).stream()
 
     def get_by_id(self, company_id: str, matricula: str):
-        return get_db().collection("vehiculos").document(matricula.upper()).get()
+        doc = get_db().collection("vehiculos").document(matricula.upper()).get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            return doc
+        return get_db().collection("vehiculos").document("not_found").get()  # empty doc
 
     def create(self, company_id: str, matricula: str, data: dict[str, Any]) -> VehiculoSchema:
         data["companyId"] = company_id
@@ -27,9 +30,13 @@ class VehiculoCRUD(IRepository):
 
     def update(self, company_id: str, matricula: str, update_data: dict[str, Any]) -> VehiculoSchema:
         doc_ref = get_db().collection("vehiculos").document(matricula.upper())
-        doc_ref.update(update_data)
+        doc = doc_ref.get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            doc_ref.update(update_data)
         return update_data
 
     def delete(self, company_id: str, matricula: str) -> None:
         doc_ref = get_db().collection("vehiculos").document(matricula.upper())
-        doc_ref.delete()
+        doc = doc_ref.get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            doc_ref.delete()

@@ -143,7 +143,6 @@ class TestAislamientoEmpresas:
 
         # Act: company-b intenta leer el pedido de company-a
         resp_lectura = client.get(f"/pedidos/{pedido_id}", headers=auth_headers_company_b)
-
         assert resp_lectura.status_code == 404
 
     def test_it_no_permite_modificar_carga_de_otra_company(self,client,firestore_client,auth_headers_company_a,auth_headers_company_b,fake_pedido, cliente_cli1, tipo_carga_t1, empresa_company_a):

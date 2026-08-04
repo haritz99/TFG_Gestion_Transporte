@@ -6,11 +6,11 @@ from app.interfaces.i_repository import IRepository
 class IUserRepository(IRepository):
 
     @abstractmethod
-    def get_cliente_by_id(self, uid: str):
+    def get_cliente_by_id(self, company_id: str, uid: str):
         pass
 
     @abstractmethod
-    def get_subcontratado_by_id(self, uid: str):
+    def get_subcontratado_by_id(self, company_id: str, uid: str):
         pass
 
     @abstractmethod
@@ -22,11 +22,11 @@ class IUserRepository(IRepository):
         pass
 
     @abstractmethod
-    def update_cliente(self, uid: str, cliente_dict: dict) -> None:
+    def update_cliente(self, company_id: str, uid: str, cliente_dict: dict) -> None:
         pass
 
     @abstractmethod
-    def update_subcontratado(self, uid: str, cliente_dict: dict) -> None:
+    def update_subcontratado(self, company_id: str, uid: str, cliente_dict: dict) -> None:
         pass
 
     @abstractmethod

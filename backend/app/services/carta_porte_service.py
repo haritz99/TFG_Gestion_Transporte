@@ -71,9 +71,6 @@ class CartaPorteService(ICartaPorteService):
 			raise HTTPException(status_code=404, detail="Carga no encontrada")
 
 		carga_data = doc.to_dict() or {}
-		if carga_data.get("companyId") != company_id:
-			raise HTTPException(status_code=403, detail="No autorizado para generar la carta de porte de esta carga")
-
 		carga_data["id"] = doc.id
 		carga_data = self._normalize_for_template(carga_data)
 

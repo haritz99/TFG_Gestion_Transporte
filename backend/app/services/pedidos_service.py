@@ -47,7 +47,7 @@ class PedidosService:
         snapshot = self._preparar_snapshot(pedido, company_id)
 
         for asig in pedido.cargas:
-            tipo_doc = self._cargas_crud.get_tipo_carga_by_id(asig.tipoCargaId)
+            tipo_doc = self._cargas_crud.get_tipo_carga_by_id(company_id, asig.tipoCargaId)
             tipo = TipoCargaSchema.from_firestore(tipo_doc, company_id)
 
             if asig.transportistaId and asig.vehiculoId:
@@ -108,7 +108,7 @@ class PedidosService:
 
     def _preparar_snapshot(self, pedido: CreatePedidoSchema, company_id: str) -> CartaDePorteSnapshotSchema:
         cliente_id = pedido.clienteId
-        cliente_doc = self._users_crud.get_cliente_by_id(cliente_id)
+        cliente_doc = self._users_crud.get_cliente_by_id(company_id, cliente_id)
         cliente = ClienteSchema.from_firestore(cliente_doc, company_id)
 
         direccion_cargador_format = DireccionSchema.format_direccion(cliente.direccionFiscal.model_dump() if cliente.direccionFiscal else None)
@@ -130,9 +130,6 @@ class PedidosService:
             raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
         pedido_data = doc.to_dict()
-        if pedido_data.get("companyId") != company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para eliminar este pedido")
-
         estado_actual = pedido_data.get("estado")
         if estado_actual in ["planificado", "en_progreso"]:
             raise HTTPException(
