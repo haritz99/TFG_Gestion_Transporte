@@ -53,7 +53,7 @@ class VehiculoService:
     def update(self, matr: str, vehiculo_data: VehiculoSchema, company_id: str) -> VehiculoSchema:
         try:
             doc = self.crud.get_by_id(company_id, matr)
-            if not doc.exists:
+            if not doc.exists or (doc.to_dict() or {}).get("companyId") != company_id:
                 raise HTTPException(status_code=404, detail="Vehículo no encontrado")
 
             vehiculo_data.companyId = company_id
