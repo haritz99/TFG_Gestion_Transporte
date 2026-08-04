@@ -14,7 +14,6 @@ from app.schemas.external_user import SubcontratadoSchema
 from google.cloud.firestore import ArrayUnion
 from .notification_service import NotificacionService
 
-
 class CargasService:
     def __init__(self, crud: ICargasRepository = Depends(get_cargas_repository), pedidos_crud: IPedidosRepository = Depends(get_pedidos_repository), users_crud: IUserRepository = Depends(get_user_repository), notificacion_service: NotificacionService = Depends(NotificacionService)):
         self._crud = crud
@@ -25,7 +24,7 @@ class CargasService:
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.combine(fecha_inicio, time.min) if fecha_inicio else None
         dt_fin = datetime.combine(fecha_fin, time.max) if fecha_fin else None
-        
+
         docs = self._crud.get_all(company_id, cliente_id, pedido_id, transportista_id, estado.value if estado else None, dt_inicio, dt_fin)
         return [CargaSchema.from_firestore(doc, company_id) for doc in docs]
 
@@ -87,9 +86,6 @@ class CargasService:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
 
         carga_data = doc.to_dict() or {}
-
-        if carga_data.get("companyId") != sub_company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
 
         update_data = carga.model_dump(exclude_none=True)
         if not update_data:
@@ -162,10 +158,6 @@ class CargasService:
         doc = self._crud.get_by_id(company_id, carga_id)
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
-
-        carga_data = doc.to_dict()
-        if carga_data.get("companyId") != company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para modificar esta carga")
 
         self._crud.update(company_id, carga_id, {"bufferHours": buffer_hours, "updatedAt": datetime.now(timezone.utc)})
 
@@ -260,8 +252,6 @@ class CargasService:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
 
         carga_data = doc.to_dict()
-        if carga_data.get("companyId") != company_id:
-            raise HTTPException(status_code=403, detail="No autorizado para eliminar esta carga")
 
         estado_actual = carga_data.get("estado")
         if estado_actual in [EstadoCarga.EN_TRANSITO.value, EstadoCarga.ENTREGADO.value]:
