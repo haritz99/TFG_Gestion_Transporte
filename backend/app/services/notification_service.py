@@ -1,21 +1,22 @@
 from firebase_admin import messaging
 from fastapi import Depends, HTTPException
-from app.crud.user_crud import UserCRUD
+from app.dependencies.repositories import get_user_repository
+from app.interfaces.i_user_repository import IUserRepository
 
 
 
 class NotificacionService:
 
-    def __init__(self, user_crud: UserCRUD = Depends(UserCRUD)):
+    def __init__(self, user_crud: IUserRepository = Depends(get_user_repository)):
         self._user_crud = user_crud
 
-    def _get_token(self, user_id: str, roles: list[str]) -> str | None:
+    def _get_token(self, user_id: str, roles: list[str], company_id: str | None = None) -> str | None:
         if "encargado" in roles or "transportista" in roles:
-            doc = self._user_crud.get_by_id(user_id)
+            doc = self._user_crud.get_by_id(company_id, user_id)
         elif "cliente" in roles:  # cargador
-            doc = self._user_crud.get_cliente_by_id(user_id)
+            doc = self._user_crud.get_cliente_by_id(company_id, user_id)
         elif "subcontratado" in roles:
-            doc = self._user_crud.get_subcontratado_by_id(user_id)
+            doc = self._user_crud.get_subcontratado_by_id(company_id, user_id)
         else:
             return None
 
@@ -23,14 +24,14 @@ class NotificacionService:
             return None
         return doc.to_dict().get("fcmToken")
 
-    def guardar_fcm_token(self, uid: str, roles: list[str], token: str) -> None:
+    def guardar_fcm_token(self, company_id: str, uid: str, roles: list[str], token: str) -> None:
         update = {"fcmToken": token}
         if "encargado" in roles or "transportista" in roles:
-            self._user_crud.update(uid, update)
+            self._user_crud.update(company_id, uid, update)
         elif "cliente" in roles: # cargador
-            self._user_crud.update_cliente(uid, update)
+            self._user_crud.update_cliente(company_id, uid, update)
         elif "subcontratado" in roles:
-            self._user_crud.update_subcontratado(uid, update)
+            self._user_crud.update_subcontratado(company_id, uid, update)
         else:
             raise HTTPException(
                 status_code=400,
@@ -51,9 +52,9 @@ class NotificacionService:
             print(f"Error enviando notificación: {e}")
 
 
-    def notificar(self, user_id: str, roles: list[str], titulo: str, cuerpo: str, data: dict = None):
+    def notificar(self, user_id: str, roles: list[str], titulo: str, cuerpo: str, data: dict = None, company_id: str | None = None):
         print("entra en notificar")
-        token = self._get_token(user_id, roles)
+        token = self._get_token(user_id, roles, company_id)
         if token:
             print(f"Enviando notificación al token: {token}")
             self.enviar(token, titulo, cuerpo, data)

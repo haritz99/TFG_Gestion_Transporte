@@ -56,5 +56,6 @@ def delete_vehiculo(
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: VehiculoService = Depends(VehiculoService),
 ):
-    service.delete(matr.upper())
+    company_id = current_user.get("companyId")
+    service.delete(matr.upper(), company_id)
     return None

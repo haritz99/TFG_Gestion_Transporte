@@ -95,7 +95,7 @@ def client_with_overrides():
 
 def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, mock_cargas_crud, sample_carga_doc):
     # Arrange
-    mock_cargas_crud.get_carga_doc.return_value = sample_carga_doc
+    mock_cargas_crud.get_by_id.return_value = sample_carga_doc
 
     # Act
     carga = service.get_carta_porte_template_data("CRG-039", "empresa_test")
@@ -111,7 +111,7 @@ def test_get_carta_porte_template_data_normaliza_claves_y_fechas(service, mock_c
 
 def test_generar_carta_porte_pdf(service, mock_cargas_crud, sample_carga_doc, monkeypatch):
     # Arrange
-    mock_cargas_crud.get_carga_doc.return_value = sample_carga_doc
+    mock_cargas_crud.get_by_id.return_value = sample_carga_doc
 
     class FakeHTML:
         def __init__(self, string, base_url=None):

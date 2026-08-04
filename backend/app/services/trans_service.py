@@ -3,16 +3,15 @@ from fastapi import HTTPException, Depends
 from datetime import datetime, timezone
 from firebase_admin import auth as firebase_auth
 from ..schemas.users import UserSchema, UserPaginatedSchema
-from ..crud.trans_crud import TransCRUD
-from ..crud.user_crud import UserCRUD
+from ..dependencies.repositories import get_user_repository
+from ..interfaces.i_user_repository import IUserRepository
 
 class TransService:
-    def __init__(self, crud: TransCRUD = Depends(TransCRUD), user_crud: UserCRUD = Depends(UserCRUD)):
-        self._crud = crud
+    def __init__(self, user_crud: IUserRepository = Depends(get_user_repository)):
         self._user_crud = user_crud
 
     def get_all_trans(self, company_id: str, solodis: bool, limit: int, last_doc_id: str | None = None) -> UserPaginatedSchema:
-        query = self._crud.get_all(company_id, solodis, limit=limit+1, last_doc_id=last_doc_id, user_crud=self._user_crud)
+        query = self._user_crud.get_all(company_id, solodis, limit=limit+1, last_doc_id=last_doc_id)
         docs = list(query)
         has_more = len(docs) > limit
         if has_more:
@@ -33,15 +32,12 @@ class TransService:
         )
 
     def get_trans(self, uid: str, company_id: str) -> Dict[str, Any]:
-        doc = self._user_crud.get_by_id(uid)
+        doc = self._user_crud.get_by_id(company_id, uid)
 
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         user_data = doc.to_dict() or {}
-        if user_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Conductor no encontrado")
-
         rol = user_data.get("rol", [])
         if isinstance(rol, str):
             rol = [rol]
@@ -52,14 +48,12 @@ class TransService:
         return user_data
 
     def update_trans(self, uid: str, user_data: UserSchema, company_id: str) -> UserSchema:
-        doc = self._user_crud.get_by_id(uid)
+        doc = self._user_crud.get_by_id(company_id, uid)
 
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         doc_data = doc.to_dict() or {}
-        if doc_data.get("companyId") != company_id:
-            raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
         rol = doc_data.get("rol", [])
         if isinstance(rol, str):
@@ -90,20 +84,18 @@ class TransService:
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
-        self._user_crud.update(uid, update_data)
+        self._user_crud.update(company_id, uid, update_data)
         full_data = {**doc_data, **update_data, "uid": uid}
         updated_user = UserSchema(**full_data)
         return updated_user
 
     def delete_trans(self, uid: str, company_id: str) -> Dict[str, str]:
         try:
-            doc = self._user_crud.get_by_id(uid)
+            doc = self._user_crud.get_by_id(company_id, uid)
             if not doc.exists:
                 raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             doc_data = doc.to_dict() or {}
-            if doc_data.get("companyId") != company_id:
-                raise HTTPException(status_code=404, detail="Conductor no encontrado")
 
             rol = doc_data.get("rol", [])
             if isinstance(rol, str):
@@ -116,7 +108,7 @@ class TransService:
             except firebase_auth.UserNotFoundError:
                 pass
 
-            self._user_crud.delete(uid)
+            self._user_crud.delete(company_id, uid)
 
             return {"message": "Conductor eliminado con éxito"}
         except HTTPException:

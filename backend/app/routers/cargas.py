@@ -56,7 +56,7 @@ def get_cargas_subcontratado(
     current_user: dict[str, Any] = Depends(get_current_sub),
     service: CargasService = Depends(CargasService)
 ):
-    return service.fetch_cargas_cedidas(current_user.get("uid"))
+    return service.fetch_cargas_cedidas(current_user.get("uid"), current_user.get("companyId"))
 
 
 @router.get("/{carga_id}/carta-porte")

@@ -1,31 +1,41 @@
 from app.firebase_config import get_db
 from google.cloud.firestore_v1.base_document import DocumentSnapshot
+from app.interfaces.i_user_repository import IUserRepository
 
-class UserCRUD:
-    def get_by_id(self, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("users").document(uid)
-        return doc_ref.get()
-
-    def get_cliente_by_id(self, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("clientes").document(uid)
-        return doc_ref.get()
-
-    def get_subcontratado_by_id(self, uid: str) -> DocumentSnapshot:
-        doc_ref = get_db().collection("subcontratados").document(uid)
-        return doc_ref.get()
+class UserCRUD(IUserRepository):
+    @staticmethod
+    def _scoped_doc(collection: str, company_id: str, uid: str) -> DocumentSnapshot:
+        doc_ref = get_db().collection(collection).document(uid)
+        doc = doc_ref.get()
+        if doc.exists and (doc.to_dict() or {}).get("companyId") == company_id:
+            return doc
+        return get_db().collection(collection).document("not_found").get()  # empty doc
 
     @staticmethod
-    def create(uid: str, user_dict: dict) -> None:
+    def _belongs_to(collection: str, company_id: str, uid: str) -> bool:
+        doc = get_db().collection(collection).document(uid).get()
+        return doc.exists and (doc.to_dict() or {}).get("companyId") == company_id
+
+    def get_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
+        return self._scoped_doc("users", company_id, uid)
+
+    def get_cliente_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
+        return self._scoped_doc("clientes", company_id, uid)
+
+    def get_subcontratado_by_id(self, company_id: str, uid: str) -> DocumentSnapshot:
+        return self._scoped_doc("subcontratados", company_id, uid)
+
+    def create(self, company_id: str, uid: str, user_dict: dict) -> None:
         doc_ref = get_db().collection("users").document(uid)
         doc_ref.set(user_dict)
 
-    def update(self, uid: str, update_dict: dict) -> None:
-        doc_ref = get_db().collection("users").document(uid)
-        doc_ref.update(update_dict)
+    def update(self, company_id: str, uid: str, update_dict: dict) -> None:
+        if self._belongs_to("users", company_id, uid):
+            get_db().collection("users").document(uid).update(update_dict)
 
-    def delete(self, uid: str) -> None:
-        doc_ref = get_db().collection("users").document(uid)
-        doc_ref.delete()
+    def delete(self, company_id: str, uid: str) -> None:
+        if self._belongs_to("users", company_id, uid):
+            get_db().collection("users").document(uid).delete()
 
     def create_cliente(self, uid: str, cliente_dict: dict) -> None:
         get_db().collection("clientes").document(uid).set(cliente_dict)
@@ -33,21 +43,40 @@ class UserCRUD:
     def create_subcontratado(self, uid: str, subcontratado_dict: dict) -> None:
         get_db().collection("subcontratados").document(uid).set(subcontratado_dict)
 
-    def update_cliente(self, uid: str, cliente_dict: dict) -> None:
-        get_db().collection("clientes").document(uid).update(cliente_dict)
+    def update_cliente(self, company_id: str, uid: str, cliente_dict: dict) -> None:
+        if self._belongs_to("clientes", company_id, uid):
+            get_db().collection("clientes").document(uid).update(cliente_dict)
 
-    def update_subcontratado(self, uid: str, cliente_dict: dict) -> None:
-        get_db().collection("subcontratados").document(uid).update(cliente_dict)
+    def update_subcontratado(self, company_id: str, uid: str, cliente_dict: dict) -> None:
+        if self._belongs_to("subcontratados", company_id, uid):
+            get_db().collection("subcontratados").document(uid).update(cliente_dict)
 
-    @staticmethod
-    def get_all_external_users(company_id: str) -> list[DocumentSnapshot]:
+    def get_all_external_users(self, company_id: str) -> list[DocumentSnapshot]:
         """
         Obtiene todos los clientes y subcontratados activos de una compañía.
         """
         clientes = get_db().collection("clientes").where("companyId", "==", company_id).where("activo", "==", True).stream()
-            
+
         subcontratados = get_db().collection("subcontratados").where("companyId", "==", company_id).where("activo", "==", True).stream()
 
         # Combinamos ambos streams en una lista
         all_users = list(clientes) + list(subcontratados)
         return all_users
+
+    def get_all(self, company_id: str, solodis: bool, limit: int = 8, last_doc_id: str | None = None):
+        query = (
+            get_db().collection("users")
+            .where("companyId", "==", company_id)
+            .where("rol", "array_contains", "transportista")
+            .order_by("__name__")
+        )
+
+        if solodis:
+            query = query.where("vehiculoId", "==", None)
+
+        if last_doc_id:
+            last_doc = self.get_by_id(company_id, uid=last_doc_id)
+            if last_doc.exists:
+                query = query.start_after(last_doc)
+
+        return query.limit(limit).stream()

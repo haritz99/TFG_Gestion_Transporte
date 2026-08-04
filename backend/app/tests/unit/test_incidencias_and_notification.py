@@ -174,7 +174,7 @@ def test_fcm_evento_carta_porte_generada_payload_y_destinatario(monkeypatch):
     carga_doc = MagicMock(exists=True, id="CRG-001")
     carga_doc.to_dict.return_value = {"companyId": "empresa_test", "clienteId": "cli1", "subcontratadoId": "sub1", "clienteNombre": "Cliente Test", "clienteNif": "B12345678", "clienteDireccion": "Calle Cliente 1", "fechaCarga": datetime.datetime.now(datetime.timezone.utc), "fechaDescarga": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)}
     carga_doc.reference = MagicMock()
-    mock_cargas_crud.get_carga_doc.return_value = carga_doc
+    mock_cargas_crud.get_by_id.return_value = carga_doc
     monkeypatch.setattr(service, "generar_url_firmada", MagicMock(return_value="https://fake/carta.pdf"))
     monkeypatch.setattr(service, "subir_pdf", MagicMock(return_value="cartas_porte/empresa_test/carta_CRG-001.pdf"))
     monkeypatch.setattr(service, "_generar_qr_base64", MagicMock(return_value="qrdata"))
