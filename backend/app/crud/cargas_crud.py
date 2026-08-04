@@ -95,7 +95,7 @@ class CargasCRUD(ICargasRepository):
         return create_in_transaction(get_db().transaction())
 
     def get_by_id(self, company_id: str, carga_id: str):
-        docs = get_db().collection_group("cargas").where("id", "==", carga_id).get()
+        docs = get_db().collection_group("cargas").where("companyId", "==", company_id).where("id", "==", carga_id).limit(1).get()
         if docs:
             return docs[0]
         return get_db().collection("cargas").document("not_found").get()  # empty doc
