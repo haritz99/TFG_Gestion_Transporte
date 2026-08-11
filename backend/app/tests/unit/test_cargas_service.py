@@ -24,12 +24,19 @@ def mock_notificacion_service():
 def mock_pedidos_crud():
     return MagicMock(name="PedidosCRUD")
 
+
 @pytest.fixture
-def service(mock_cargas_crud, mock_users_crud, mock_notificacion_service, mock_pedidos_crud):
+def mock_vehiculos_crud():
+    return MagicMock(name="VehiculoCRUD")
+
+
+@pytest.fixture
+def service(mock_cargas_crud, mock_users_crud, mock_notificacion_service, mock_pedidos_crud, mock_vehiculos_crud):
     return CargasService(
         crud=mock_cargas_crud,
         pedidos_crud=mock_pedidos_crud,
         users_crud=mock_users_crud,
+        vehiculos_crud=mock_vehiculos_crud,
         notificacion_service=mock_notificacion_service,
     )
 

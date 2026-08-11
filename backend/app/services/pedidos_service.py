@@ -56,12 +56,15 @@ class PedidosService:
                 estado = EstadoCarga.PENDIENTE
 
             carga = CargaSchema(
+                tipoCarga=tipo.tipoCarga,
                 origen=tipo.origen,
                 destino=tipo.destino,
                 mercancia=tipo.mercancia,
+                tipoEmbalaje=tipo.tipoEmbalaje,
                 numBultos=tipo.numBultos,
                 peso=tipo.peso,
                 precio=tipo.precio,
+                apilable=tipo.apilable,
                 largo=tipo.largo,
                 ancho=tipo.ancho,
                 alto=tipo.alto,
@@ -82,6 +85,8 @@ class PedidosService:
                 carga.validar_contra_pedido(pedido)
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail=str(exc))
+            if asig.vehiculoId:
+                self._cargas_service.validar_asignacion_vehiculo(carga, company_id)
             cargas_payloads.append(carga.model_dump(exclude={'id'}))
 
         result = self._crud.create(company_id, pedido_payload, cargas_payloads)

@@ -300,12 +300,13 @@
         <div class="rows">
             <div class="row">
                 {{ field('Naturaleza de los Bienes', carga.mercancia, 'half') }}
-                {{ field('Tipo de Embalaje', none, 'half') }}
+                {{ field('Tipo de la Carga', carga.tipo_carga, 'half') }}
+                {{ field('Tipo de Embalaje', carga.tipo_embalaje, 'half') }}
             </div>
             <div class="row">
                 {{ field('Número de Bultos', carga.num_bultos, 'quarter') }}
                 {{ field('Peso Bruto (KG)', carga.peso, 'quarter') }}
-                {{ field('Volumen / Dimensiones Estimadas', (carga.largo|string + "x" + carga.ancho|string + "x" + carga.alto|string + " m") if carga.largo else none, 'half') }}
+                {{ field('Volumen (m³)', carga.volumen, 'quarter') }}
             </div>
         </div>
     </div>

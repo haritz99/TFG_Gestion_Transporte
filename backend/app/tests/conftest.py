@@ -78,12 +78,14 @@ def ubicacion_barcelona():
 def tipo_carga_doc_dict(ubicacion_madrid, ubicacion_barcelona):
     return {
         "nombre": "Tipo 1",
+        "tipoCarga": "bultos",
         "origen": ubicacion_madrid,
         "destino": ubicacion_barcelona,
         "mercancia": "Palets",
         "numBultos": 10,
         "peso": 500.0,
         "precio": 100.0,
+        "apilable": False,
         "largo": 1.2,
         "ancho": 0.8,
         "alto": 1.0,

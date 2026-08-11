@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import enum
+import math
 import re
 from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException
@@ -9,6 +10,7 @@ from pydantic import Field, field_validator, model_validator
 
 from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
 from .direccion import UbicacionSchema
+from .vehiculos import VehiculoSchema
 
 if TYPE_CHECKING:
     from .pedido import PedidoSchema, CreatePedidoSchema
@@ -25,9 +27,10 @@ class EstadoCarga(str, enum.Enum):
     ENTREGADO = 'entregado'
     CEDIDO = 'cedido'
 
-
-
-
+class TipoCarga(str, enum.Enum):
+    BULTOS = 'bultos'
+    GRANEL = 'granel'
+    LIQUIDO = 'liquido'
 
 class CartaDePorteSnapshotSchema(BaseModel):
     # Datos del Cargador
@@ -56,15 +59,33 @@ class CartaDePorteSnapshotSchema(BaseModel):
     congeladoAt: Optional[datetime.datetime] = None
 
 class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
+    tipoCarga: TipoCarga = TipoCarga.BULTOS
     origen: UbicacionSchema
     destino: UbicacionSchema
     mercancia: str = Field(..., min_length=1)
-    numBultos: int = Field(..., gt=0)
-    peso: float = Field(..., gt=0)
+    tipoEmbalaje: Optional[str] = None
+    numBultos: Optional[int] = Field(default=None, gt=0)
+    peso: Optional[float] = Field(default=None, gt=0)
     precio: float = Field(..., gt=0)
+    apilable: bool = False
+    volumen: Optional[float] = Field(default=None, gt=0)
+    longitudLineal: Optional[float] = Field(default=None, gt=0)
     largo: Optional[float] = Field(default=None, gt=0)
     ancho: Optional[float] = Field(default=None, gt=0)
     alto: Optional[float] = Field(default=None, gt=0)
+
+    @model_validator(mode='after')
+    def calcular_volumen_y_longitud_lineal(self) -> 'CargaBaseSchema':
+        if (self.tipoCarga == TipoCarga.BULTOS
+            and self.numBultos and self.largo and self.ancho and self.alto):
+            self.volumen = math.ceil(self.largo * self.ancho * self.alto * self.numBultos)
+
+        # Longitud lineal: metros de suelo ocupados
+        if self.numBultos and self.largo and self.ancho:
+            unidades_suelo = (self.numBultos / 2) if self.apilable else self.numBultos
+            self.longitudLineal = round((self.largo * self.ancho / 2.4) * unidades_suelo, 2)
+
+        return self
 
 class CargaSchema(CargaBaseSchema):
     id: Optional[str] = None
@@ -102,6 +123,16 @@ class CargaSchema(CargaBaseSchema):
         if fecha_carga_self < fecha_carga_pedido:
             raise ValueError(f"La fecha de carga ({self.fechaCarga}) no puede ser anterior a la del pedido ({pedido.fechaCarga}).")
 
+    def validar_contra_vehiculo(self, vehiculo: VehiculoSchema):
+        if self.peso is not None and self.peso > vehiculo.capacidad:
+            raise ValueError(
+                f"El peso de la carga ({self.peso} kg) excede la capacidad del vehículo {vehiculo.matricula} ({vehiculo.capacidad} kg)."
+            )
+        if self.longitudLineal is not None and self.longitudLineal > vehiculo.largo:
+            raise ValueError(
+                f"La longitud lineal de la carga ({self.longitudLineal} m) excede la longitud del vehículo {vehiculo.matricula} ({vehiculo.largo} m)."
+            )
+
     
     @model_validator(mode='after')
     def validar_fechas(self) -> 'CargaSchema':
@@ -138,7 +169,7 @@ class TipoCargaSchema(CargaBaseSchema):
     id: Optional[str] = None
     nombre: str = Field(..., min_length=1)
     descripcion: Optional[str] = None
-    pesoMax: float = Field(..., gt=0)
+    pesoMax: Optional[float] = Field(default=None, gt=0)
     companyId: str = Field(..., min_length=1)
     clienteId: str = Field(..., min_length=1) # Con qué cargador se prefija (no todos tienen las mismas)
     createdAt: Optional[datetime.datetime] = None

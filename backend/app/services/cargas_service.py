@@ -4,9 +4,11 @@ from typing import Optional, List
 import pytz
 from fastapi import HTTPException, Depends
 from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
-from app.dependencies.repositories import get_cargas_repository, get_pedidos_repository, get_user_repository
+from ..schemas.vehiculos import VehiculoSchema
+from app.dependencies.repositories import get_cargas_repository, get_pedidos_repository, get_user_repository, get_vehiculos_repository
 from app.interfaces.i_cargas_repository import ICargasRepository
 from app.interfaces.i_pedidos_repository import IPedidosRepository
+from app.interfaces.i_repository import IRepository
 from app.interfaces.i_user_repository import IUserRepository
 from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
@@ -15,10 +17,11 @@ from google.cloud.firestore import ArrayUnion
 from .notification_service import NotificacionService
 
 class CargasService:
-    def __init__(self, crud: ICargasRepository = Depends(get_cargas_repository), pedidos_crud: IPedidosRepository = Depends(get_pedidos_repository), users_crud: IUserRepository = Depends(get_user_repository), notificacion_service: NotificacionService = Depends(NotificacionService)):
+    def __init__(self, crud: ICargasRepository = Depends(get_cargas_repository), pedidos_crud: IPedidosRepository = Depends(get_pedidos_repository), users_crud: IUserRepository = Depends(get_user_repository), vehiculos_crud: IRepository = Depends(get_vehiculos_repository), notificacion_service: NotificacionService = Depends(NotificacionService)):
         self._crud = crud
         self._pedidos_crud = pedidos_crud
         self._users_crud = users_crud
+        self._vehiculos_crud = vehiculos_crud
         self._notificacion_service = notificacion_service
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
@@ -128,6 +131,9 @@ class CargasService:
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail=str(exc))
 
+            if carga.vehiculoId:
+                self.validar_asignacion_vehiculo(carga, company_id)
+
             carga.companyId = company_id
             carga.clienteId = pedido_schema.clienteId
 
@@ -153,6 +159,14 @@ class CargasService:
                 )
 
         return cargas
+
+    def validar_asignacion_vehiculo(self, carga: CargaSchema, company_id: str):
+        vehiculo_doc = self._vehiculos_crud.get_by_id(company_id, carga.vehiculoId)
+        vehiculo = VehiculoSchema.from_firestore(vehiculo_doc, company_id)
+        try:
+            carga.validar_contra_vehiculo(vehiculo)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
 
     def update_buffer_hours(self, carga_id: str, buffer_hours: int, company_id: str):
         doc = self._crud.get_by_id(company_id, carga_id)

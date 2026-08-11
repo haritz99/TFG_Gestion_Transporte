@@ -126,11 +126,11 @@ class _SubListadoCargasState extends State<SubListadoCargas> {
       ),
       CoreTableColumn<CargaModel>(
         label: 'Bultos',
-        cellBuilder: (carga) => Text(carga.numBultos.toString(), style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.numBultos?.toString() ?? '—', style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Peso (kg)',
-        cellBuilder: (carga) => Text(carga.peso.toStringAsFixed(2), style: AppTextStyles.bodyMd),
+        cellBuilder: (carga) => Text(carga.peso != null ? carga.peso!.toStringAsFixed(2) : '—', style: AppTextStyles.bodyMd),
       ),
       CoreTableColumn<CargaModel>(
         label: 'Precio (€)',

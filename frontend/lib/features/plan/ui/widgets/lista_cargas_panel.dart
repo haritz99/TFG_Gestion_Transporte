@@ -160,12 +160,21 @@ class ListaCargasPanel extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${carga.peso}kg - ${carga.numBultos} bultos',
+            _detallesCarga(carga),
             style: AppTextStyles.bodySm.copyWith(color: AppColors.mutedText),
           ),
         ],
       ),
     );
+  }
+
+  String _detallesCarga(CargaModel carga) {
+    final partes = <String>[];
+    if (carga.peso != null) partes.add('${carga.peso}kg');
+    if (carga.numBultos != null) partes.add('${carga.numBultos} bultos');
+    if (carga.volumen != null) partes.add('${carga.volumen} m³');
+    if (partes.isEmpty) return carga.tipoCarga.value.toUpperCase();
+    return partes.join(' · ');
   }
 
   Widget _botonCargasTraerHoy(CargaProvider cargaProvider) {

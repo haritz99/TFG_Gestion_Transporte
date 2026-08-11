@@ -4,13 +4,33 @@ import 'carta_porte.dart';
 import 'direccion_model.dart';
 import 'model_utils.dart';
 
+enum TipoCarga {
+  bultos('bultos'),
+  granel('granel'),
+  liquido('liquido');
+
+  final String value;
+  const TipoCarga(this.value);
+
+  static TipoCarga fromString(String value) {
+    return TipoCarga.values.firstWhere((e) => e.value == value,
+      orElse: () => throw ArgumentError('TipoCarga desconocido: $value'),
+    );
+  }
+}
+
 abstract class CargaBaseModel {
+  final TipoCarga tipoCarga;
   final UbicacionModel origen;
   final UbicacionModel destino;
   final String mercancia;
-  final int numBultos;
-  final double peso;
+  final String? tipoEmbalaje;
+  final int? numBultos;
+  final double? peso;
   final double precio;
+  final bool apilable;
+  final double? volumen;
+  final double? longitudLineal;
   final double? largo;
   final double? ancho;
   final double? alto;
@@ -19,9 +39,14 @@ abstract class CargaBaseModel {
     required this.origen,
     required this.destino,
     required this.mercancia,
-    required this.numBultos,
-    required this.peso,
+    this.tipoEmbalaje,
+    this.tipoCarga = TipoCarga.bultos,
+    this.numBultos,
+    this.peso,
     required this.precio,
+    this.apilable = false,
+    this.volumen,
+    this.longitudLineal,
     this.largo,
     this.ancho,
     this.alto,
@@ -54,7 +79,7 @@ class TipoCargaModel extends CargaBaseModel {
   final String id;
   final String nombre;
   final String? descripcion;
-  final double pesoMax;
+  final double? pesoMax;
   final String companyId;
   final String clienteId;
 
@@ -62,15 +87,20 @@ class TipoCargaModel extends CargaBaseModel {
     required this.id,
     required this.nombre,
     this.descripcion,
-    required this.pesoMax,
+    this.pesoMax,
     required this.companyId,
     required this.clienteId,
     required super.origen,
     required super.destino,
     required super.mercancia,
-    required super.numBultos,
-    required super.peso,
+    super.tipoEmbalaje,
+    super.tipoCarga,
+    super.numBultos,
+    super.peso,
     required super.precio,
+    super.apilable,
+    super.volumen,
+    super.longitudLineal,
     super.largo,
     super.ancho,
     super.alto,
@@ -81,15 +111,22 @@ class TipoCargaModel extends CargaBaseModel {
       id: id,
       nombre: map['nombre'] as String,
       descripcion: map['descripcion'] as String?,
-      pesoMax: (map['pesoMax'] as num).toDouble(),
+      pesoMax: (map['pesoMax'] as num?)?.toDouble(),
       companyId: map['companyId'] as String,
       clienteId: map['clienteId'] as String,
+      tipoCarga: map['tipoCarga'] != null
+          ? TipoCarga.fromString(map['tipoCarga'] as String)
+          : TipoCarga.bultos,
       origen: UbicacionModel.fromMap(map['origen'] as Map<String, dynamic>),
       destino: UbicacionModel.fromMap(map['destino'] as Map<String, dynamic>),
       mercancia: map['mercancia'] as String,
-      numBultos: map['numBultos'] as int,
-      peso: (map['peso'] as num).toDouble(),
+      tipoEmbalaje: map['tipoEmbalaje'] as String?,
+      numBultos: map['numBultos'] as int?,
+      peso: (map['peso'] as num?)?.toDouble(),
       precio: (map['precio'] as num).toDouble(),
+      apilable: map['apilable'] as bool? ?? false,
+      volumen: (map['volumen'] as num?)?.toDouble(),
+      longitudLineal: (map['longitudLineal'] as num?)?.toDouble(),
       largo: (map['largo'] as num?)?.toDouble(),
       ancho: (map['ancho'] as num?)?.toDouble(),
       alto: (map['alto'] as num?)?.toDouble(),
@@ -100,15 +137,20 @@ class TipoCargaModel extends CargaBaseModel {
     return {
       'nombre': nombre,
       if (descripcion != null) 'descripcion': descripcion,
-      'pesoMax': pesoMax,
+      if (pesoMax != null) 'pesoMax': pesoMax,
       'companyId': companyId,
       'clienteId': clienteId,
+      'tipoCarga': tipoCarga.value,
       'origen': origen.toMap(),
       'destino': destino.toMap(),
       'mercancia': mercancia,
-      'numBultos': numBultos,
-      'peso': peso,
+      if (tipoEmbalaje != null) 'tipoEmbalaje': tipoEmbalaje,
+      if (numBultos != null) 'numBultos': numBultos,
+      if (peso != null) 'peso': peso,
       'precio': precio,
+      'apilable': apilable,
+      if (volumen != null) 'volumen': volumen,
+      if (longitudLineal != null) 'longitudLineal': longitudLineal,
       if (largo != null) 'largo': largo,
       if (ancho != null) 'ancho': ancho,
       if (alto != null) 'alto': alto,
@@ -150,9 +192,14 @@ class CargaModel extends CargaBaseModel {
     required super.origen,
     required super.destino,
     required super.mercancia,
-    required super.numBultos,
-    required super.peso,
+    super.tipoEmbalaje,
+    super.tipoCarga,
+    super.numBultos,
+    super.peso,
     required super.precio,
+    super.apilable,
+    super.volumen,
+    super.longitudLineal,
     super.largo,
     super.ancho,
     super.alto,
@@ -171,12 +218,17 @@ class CargaModel extends CargaBaseModel {
         String? pedidoId,
       }) {
     return CargaModel(
+      tipoCarga: tipo.tipoCarga,
       origen: tipo.origen,
       destino: tipo.destino,
       mercancia: tipo.mercancia,
+      tipoEmbalaje: tipo.tipoEmbalaje,
       numBultos: tipo.numBultos,
       peso: tipo.peso,
       precio: tipo.precio,
+      apilable: tipo.apilable,
+      volumen: tipo.volumen,
+      longitudLineal: tipo.longitudLineal,
       largo: tipo.largo,
       ancho: tipo.ancho,
       alto: tipo.alto,
@@ -198,12 +250,19 @@ class CargaModel extends CargaBaseModel {
   factory CargaModel.fromMap(Map<String, dynamic> map, String id) {
     return CargaModel(
       id: id,
+      tipoCarga: map['tipoCarga'] != null
+          ? TipoCarga.fromString(map['tipoCarga'] as String)
+          : TipoCarga.bultos,
       origen: UbicacionModel.fromMap(map['origen'] as Map<String, dynamic>),
       destino: UbicacionModel.fromMap(map['destino'] as Map<String, dynamic>),
       mercancia: map['mercancia'] as String,
-      numBultos: map['numBultos'] as int,
-      peso: (map['peso'] as num).toDouble(),
+      tipoEmbalaje: map['tipoEmbalaje'] as String?,
+      numBultos: map['numBultos'] as int?,
+      peso: (map['peso'] as num?)?.toDouble(),
       precio: (map['precio'] as num).toDouble(),
+      apilable: map['apilable'] as bool? ?? false,
+      volumen: (map['volumen'] as num?)?.toDouble(),
+      longitudLineal: (map['longitudLineal'] as num?)?.toDouble(),
       largo: (map['largo'] as num?)?.toDouble(),
       ancho: (map['ancho'] as num?)?.toDouble(),
       alto: (map['alto'] as num?)?.toDouble(),
@@ -227,12 +286,17 @@ class CargaModel extends CargaBaseModel {
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,
+      'tipoCarga': tipoCarga.value,
       'origen': origen.toMap(),
       'destino': destino.toMap(),
       'mercancia': mercancia,
-      'numBultos': numBultos,
-      'peso': peso,
+      if (tipoEmbalaje != null) 'tipoEmbalaje': tipoEmbalaje,
+      if (numBultos != null) 'numBultos': numBultos,
+      if (peso != null) 'peso': peso,
       'precio': precio,
+      'apilable': apilable,
+      if (volumen != null) 'volumen': volumen,
+      if (longitudLineal != null) 'longitudLineal': longitudLineal,
       if (largo != null) 'largo': largo,
       if (ancho != null) 'ancho': ancho,
       if (alto != null) 'alto': alto,
@@ -271,12 +335,17 @@ class CargaModel extends CargaBaseModel {
     double? comisionCesion,
     String? companyId,
     String? clienteId,
+    TipoCarga? tipoCarga,
     UbicacionModel? origen,
     UbicacionModel? destino,
     String? mercancia,
+    String? tipoEmbalaje,
     int? numBultos,
     double? peso,
     double? precio,
+    bool? apilable,
+    double? volumen,
+    double? longitudLineal,
     double? largo,
     double? ancho,
     double? alto,
@@ -296,12 +365,17 @@ class CargaModel extends CargaBaseModel {
       comisionCesion: comisionCesion ?? this.comisionCesion,
       companyId: companyId ?? this.companyId,
       clienteId: clienteId ?? this.clienteId,
+      tipoCarga: tipoCarga ?? this.tipoCarga,
       origen: origen ?? this.origen,
       destino: destino ?? this.destino,
       mercancia: mercancia ?? this.mercancia,
+      tipoEmbalaje: tipoEmbalaje ?? this.tipoEmbalaje,
       numBultos: numBultos ?? this.numBultos,
       peso: peso ?? this.peso,
       precio: precio ?? this.precio,
+      apilable: apilable ?? this.apilable,
+      volumen: volumen ?? this.volumen,
+      longitudLineal: longitudLineal ?? this.longitudLineal,
       largo: largo ?? this.largo,
       ancho: ancho ?? this.ancho,
       alto: alto ?? this.alto,

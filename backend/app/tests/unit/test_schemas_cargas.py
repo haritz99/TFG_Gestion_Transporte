@@ -1,4 +1,5 @@
 import pytest
+import math
 from pydantic import ValidationError
 
 from app.schemas.carga import CargaSchema
@@ -24,6 +25,33 @@ def test_carga_schema_validar_fechas_descarga_debe_ser_posterior(valid_carga_dic
 
     assert "descarga" in str(exc.value).lower()
     assert "posterior" in str(exc.value).lower()
+
+
+def test_carga_schema_calcula_volumen_y_longitud_lineal(valid_carga_dict):
+    carga = CargaSchema(**{**valid_carga_dict, "largo": 1.2, "ancho": 0.8, "alto": 1.0})
+    assert carga.volumen == pytest.approx(math.ceil(1.2 * 0.8 * 1.0 * 10))
+    assert carga.longitudLineal == pytest.approx((1.2 * 0.8 / 2.4) * 10)
+
+
+def test_carga_schema_apilable_divide_longitud_lineal(valid_carga_dict):
+    carga = CargaSchema(**{**valid_carga_dict, "largo": 1.2, "ancho": 0.8, "alto": 1.0, "apilable": True})
+    assert carga.volumen == pytest.approx(math.ceil(1.2 * 0.8 * 1.0 * 10))
+    assert carga.longitudLineal == pytest.approx((1.2 * 0.8 / 2.4) * (10 / 2))
+
+
+def test_carga_schema_granel_sin_bultos(valid_carga_dict):
+    carga = CargaSchema(**{
+        **valid_carga_dict,
+        "tipoCarga": "granel",
+        "numBultos": None,
+        "largo": None,
+        "ancho": None,
+        "alto": None,
+        "volumen": 30.0,
+    })
+    assert carga.numBultos is None
+    assert carga.volumen == pytest.approx(30.0)
+    assert carga.longitudLineal is None
 
 
 
