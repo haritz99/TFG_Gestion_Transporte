@@ -281,6 +281,7 @@ class CargaModel extends CargaBaseModel {
     double? ancho,
     double? alto,
     CartaPorteSnapshotModel? cartaPorteSnapshot,
+    String? cartaPorteUrl,
   }) {
     return CargaModel(
       id: id ?? this.id,
@@ -305,6 +306,7 @@ class CargaModel extends CargaBaseModel {
       ancho: ancho ?? this.ancho,
       alto: alto ?? this.alto,
       cartaPorteSnapshot: cartaPorteSnapshot ?? this.cartaPorteSnapshot,
+      cartaPorteUrl: cartaPorteUrl ?? this.cartaPorteUrl,
     );
   }
 

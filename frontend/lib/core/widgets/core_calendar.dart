@@ -267,34 +267,47 @@ class _CoreCalendarState extends State<CoreCalendar> {
                 ],
               ),
             ),
-            if (!isConductor)
-              if (isMobile)
-                Container(
-                  width: 10,
-                  height: 10,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: eventColor,
-                    shape: BoxShape.circle,
-                  ),
-                )
-              else
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: eventColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  carga.estado.value.toUpperCase(),
-                  style: TextStyle(
-                    color: eventColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isConductor)
+                  if (isMobile)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: eventColor,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: eventColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        carga.estado.value.toUpperCase(),
+                        style: TextStyle(
+                          color: eventColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  if (carga.cartaPorteUrl?.isNotEmpty == true)
+                    IconButton(
+                      icon: const Icon(Icons.description_outlined, size: 18, color: AppColors.primary),
+                      color: AppColors.primary,
+                      onPressed: () => PdfHandler.instance.open(carga.cartaPorteUrl!, 'carta_porte_${carga.id}.pdf'),
+                      tooltip: 'Ver carta de porte',
+                  )
+              ],
+            )
           ],
         ),
       ),

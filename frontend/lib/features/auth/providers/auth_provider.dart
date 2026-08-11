@@ -55,27 +55,27 @@ class AuthProvider extends ChangeNotifier {
             return null;
           });
         } else {
-          debugPrint('Auth B');
+          //debugPrint('Auth B');
           await cargarConfiguracionEmpresa(_user!.companyId);
         }
-        debugPrint('Auth C');
+        //debugPrint('Auth C');
         await _authService.guardarFcmToken();
-        debugPrint('Auth D');
+        //debugPrint('Auth D');
       } else {
         _user = null;
         _externalUser = null;
         _idToken = null;
       }
       _tryCompleteHydration();
-      debugPrint('Auth E');
+      //debugPrint('Auth E');
     } catch (e) {
-      debugPrint('Auth error');
-      debugPrint(e.toString());
+      //debugPrint('Auth error');
+      //debugPrint(e.toString());
       _user = null;
       _externalUser = null;
       _idToken = null;
     } finally {
-      debugPrint('Auth finally');
+      //debugPrint('Auth finally');
       _isLoading = false;
       notifyListeners();
     }
@@ -87,8 +87,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
   bool _isHydrated() {
-    debugPrint(
-        '_isHydrated user:${_user != null} ext:${_externalUser != null}');
+    //debugPrint('_isHydrated user:${_user != null} ext:${_externalUser != null}');
     return (_user != null || _externalUser != null);
   }
 
@@ -97,11 +96,11 @@ class AuthProvider extends ChangeNotifier {
     _hydrationCompleter = Completer<void>();
     notifyListeners();
     try {
-      debugPrint('1');
+      //debugPrint('1');
       await _authService.signIn(email, password);
-      debugPrint('2');
+      //debugPrint('2');
       await _waitForSessionHydration();
-      debugPrint('3');
+      //debugPrint('3');
     } catch (e) {
       rethrow;
     }
@@ -117,9 +116,9 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
     try {
-      debugPrint('A');
+      //debugPrint('A');
       await _hydrationCompleter!.future.timeout(_timeout);
-      debugPrint('B');
+      //debugPrint('B');
     } on TimeoutException {
       throw TimeoutException(
         'No se pudo hidratar la sesión en el tiempo esperado.',

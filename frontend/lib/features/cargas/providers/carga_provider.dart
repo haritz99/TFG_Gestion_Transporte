@@ -297,7 +297,7 @@ class CargaProvider extends ChangeNotifier {
       _tiposCarga = await _service.fetchTiposCarga(cargadorId);
     } catch (e) {
       _errorMessage = e.toString();
-      print("Error al obtener tipos de carga: $_errorMessage");
+      //print("Error al obtener tipos de carga: $_errorMessage");
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -484,6 +484,9 @@ class CargaProvider extends ChangeNotifier {
 
     try {
       String urlStorage = await _service.generarCartaDePorte(cargaId);
+      final idx = _cargas.indexWhere((c) => c.id == cargaId);
+      if (idx != -1) _cargas[idx] = _cargas[idx].copyWith(cartaPorteUrl: urlStorage);
+      notifyListeners();
       await PdfHandler.instance.open(
           urlStorage,
           'Carta_Porte_$cargaId.pdf'
