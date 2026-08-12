@@ -30,8 +30,8 @@ class PedidoService {
       'destinatarioDireccion': destinatarioDireccion,
       'descripcion': descripcion,
       'clienteId': clienteId,
-      'fechaCarga': fechaCarga.toIso8601String(),
-      'fechaDescarga': fechaDescarga.toIso8601String(),
+      'fechaCarga': fechaCarga.toUtc().toIso8601String(),
+      'fechaDescarga': fechaDescarga.toUtc().toIso8601String(),
       'cargas': cargas,
     };
 

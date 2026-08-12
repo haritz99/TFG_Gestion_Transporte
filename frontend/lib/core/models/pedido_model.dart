@@ -41,8 +41,8 @@ class PedidoModel {
   Map<String, dynamic> toMap() {
     return {
       'descripcion': descripcion,
-      'fechaCarga': fechaCarga.toIso8601String(),
-      'fechaDescarga': fechaDescarga.toIso8601String(),
+      'fechaCarga': fechaCarga.toUtc().toIso8601String(),
+      'fechaDescarga': fechaDescarga.toUtc().toIso8601String(),
       'origenes': origenes,
       'destinos': destinos,
       'estado': estado.name,

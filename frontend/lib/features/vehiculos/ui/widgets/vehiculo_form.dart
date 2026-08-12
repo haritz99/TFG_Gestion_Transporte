@@ -119,7 +119,7 @@ class _VehiculoFormState extends State<VehiculoForm> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextFormField(controller: _capacidadController, decoration: const InputDecoration(labelText: 'Capacidad (t)', border: OutlineInputBorder()), keyboardType: TextInputType.number, validator: _validatePositiveDouble)),
+              Expanded(child: TextFormField(controller: _capacidadController, decoration: const InputDecoration(labelText: 'Capacidad (kg)', border: OutlineInputBorder()), keyboardType: TextInputType.number, validator: _validatePositiveDouble)),
               const SizedBox(width: 12),
               Expanded(child: TextFormField(controller: _largoController, decoration: const InputDecoration(labelText: 'Largo (m)', border: OutlineInputBorder()), keyboardType: TextInputType.number, validator: _validatePositiveDouble)),
               const SizedBox(width: 12),

@@ -2,20 +2,17 @@ from __future__ import annotations
 
 from typing import Dict, TypeVar
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 import datetime
 DocT = TypeVar("DocT", bound=BaseModel)
 
 
-class DatetimeUTCMixin:
-    @field_validator("*", mode="before")
-    @classmethod
-    def ensure_utc(cls, v):
-        if isinstance(v, datetime.datetime):
-            if v.tzinfo is None:
-                return v.replace(tzinfo=datetime.timezone.utc)
-            return v.astimezone(datetime.timezone.utc)
-        return v
+def to_utc(dt: datetime.datetime | None) -> datetime.datetime | None:
+    if dt is None:
+        return dt
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=datetime.timezone.utc)
+    return dt.astimezone(datetime.timezone.utc)
 
 
 class FirestoreSchema(BaseModel):

@@ -195,6 +195,7 @@ class _NuevoTipoCargaState extends State<NuevoTipoCarga> {
                     decoration: const InputDecoration(labelText: 'Mercancía', border: OutlineInputBorder()),
                     validator: _validatorRequerido,
                   ),
+                  const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     initialValue: _tipoDeCarga.value,
                     items: const [
@@ -217,8 +218,9 @@ class _NuevoTipoCargaState extends State<NuevoTipoCarga> {
                   ),
                   const SizedBox(height: 16),
                   _seccionUbicacion(titulo: 'Origen', controllers: _origenUbicacion),
+                  const SizedBox(height: 4),
                   _seccionUbicacion(titulo: 'Destino', controllers: _destinoUbicacion),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(child: _campoNumero(_pesoController, 'Peso (kg)', _validatorOpcionalPositivo)),
@@ -240,7 +242,7 @@ class _NuevoTipoCargaState extends State<NuevoTipoCarga> {
                   const SizedBox(height: 8),
                   if (_tipoDeCarga == TipoCarga.bultos) bultosForm(),
                   const SizedBox(height: 8),
-                  _campoNumero(_precioController, 'Precio', _validatorOpcionalPositivo),
+                  _campoNumero(_precioController, 'Precio del transporte (€)', _validatorOpcionalPositivo),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

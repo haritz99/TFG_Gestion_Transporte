@@ -4,7 +4,7 @@ import datetime
 
 from pydantic import Field, model_validator, BaseModel
 
-from .base import FirestoreSchema, DatetimeUTCMixin
+from .base import FirestoreSchema, to_utc
 import enum
 from typing import TYPE_CHECKING
 
@@ -17,7 +17,7 @@ class EstadoPedido(str, enum.Enum):
     COMPLETADO = 'completado'
     CANCELADO = 'cancelado'
 
-class PedidoSchema(FirestoreSchema, DatetimeUTCMixin):
+class PedidoSchema(FirestoreSchema):
     id: Optional[str] = None
     descripcion: Optional[str] = None
     fechaCarga: datetime.datetime = Field(...)  # Fecha de carga
@@ -33,6 +33,8 @@ class PedidoSchema(FirestoreSchema, DatetimeUTCMixin):
 
     @model_validator(mode='after')
     def validar_fechas_pedido(self) -> 'PedidoSchema':
+        self.fechaCarga = to_utc(self.fechaCarga)
+        self.fechaDescarga = to_utc(self.fechaDescarga)
         if self.fechaDescarga <= self.fechaCarga:
             raise ValueError('La fecha límite de descarga del pedido debe ser posterior a la fecha de carga.')
         return self

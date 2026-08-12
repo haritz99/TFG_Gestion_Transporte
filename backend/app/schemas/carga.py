@@ -8,7 +8,7 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import HTTPException
 from pydantic import Field, field_validator, model_validator
 
-from .base import FirestoreSchema, BaseModel, DatetimeUTCMixin
+from .base import FirestoreSchema, BaseModel, to_utc
 from .direccion import UbicacionSchema
 from .vehiculos import VehiculoSchema
 
@@ -58,7 +58,7 @@ class CartaDePorteSnapshotSchema(BaseModel):
     # Snapshot de marcas de tiempo
     congeladoAt: Optional[datetime.datetime] = None
 
-class CargaBaseSchema(FirestoreSchema, DatetimeUTCMixin):
+class CargaBaseSchema(FirestoreSchema):
     tipoCarga: TipoCarga = TipoCarga.BULTOS
     origen: UbicacionSchema
     destino: UbicacionSchema
@@ -111,15 +111,8 @@ class CargaSchema(CargaBaseSchema):
         Valida que la carga cumpla con las restricciones de su pedido padre.
         Se debe llamar a este método desde el servicio/router tras obtener el pedido de la base de datos y validarlo con Pydantic.
         """
-        def _normalizar_a_utc(dt: datetime.datetime) -> datetime.datetime | None:
-            if dt is None:
-                return dt
-            if dt.tzinfo is None:
-                return dt.replace(tzinfo=datetime.timezone.utc)
-            return dt.astimezone(datetime.timezone.utc)
-
-        fecha_carga_self = _normalizar_a_utc(self.fechaCarga)
-        fecha_carga_pedido = _normalizar_a_utc(pedido.fechaCarga)
+        fecha_carga_self = to_utc(self.fechaCarga)
+        fecha_carga_pedido = to_utc(pedido.fechaCarga)
         if fecha_carga_self < fecha_carga_pedido:
             raise ValueError(f"La fecha de carga ({self.fechaCarga}) no puede ser anterior a la del pedido ({pedido.fechaCarga}).")
 
@@ -136,6 +129,8 @@ class CargaSchema(CargaBaseSchema):
     
     @model_validator(mode='after')
     def validar_fechas(self) -> 'CargaSchema':
+        self.fechaCarga = to_utc(self.fechaCarga)
+        self.fechaDescarga = to_utc(self.fechaDescarga)
         if self.fechaDescarga <= self.fechaCarga:
             raise ValueError('La fecha de descarga debe ser posterior a la fecha de carga.')
         return self
