@@ -110,26 +110,6 @@ class VehiculoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> asignaVehiculo(String matricula, String transportistaId) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final token = await _tokenProvider.getRequiredToken();
-      await _service.asignaVehiculo(
-        token: token,
-        matricula: matricula,
-        transportistaId: transportistaId,
-      );
-    } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<VehiculoModel?> insertaVehiculo(VehiculoModel vehiculoData) async {
     _isLoading = true;
     _errorMessage = null;

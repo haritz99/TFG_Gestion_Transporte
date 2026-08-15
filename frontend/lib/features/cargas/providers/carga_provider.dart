@@ -456,6 +456,25 @@ class CargaProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> descenderCarga(String cargaId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await _service.updateEstado(cargaId, EstadoCarga.planificado);
+      final idx = _cargas.indexWhere((c) => c.id == cargaId);
+      if (idx != -1) _cargas[idx] = updated;
+      _cargasCedidas.removeWhere((c) => c.id == cargaId);
+    } catch (e) {
+      _errorMessage = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> cederCargaASubcontratado({required String cargaId, required String subcontratadoId}) async {
     _isLoading = true;
     _errorMessage = null;

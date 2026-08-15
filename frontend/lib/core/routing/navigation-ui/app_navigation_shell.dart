@@ -19,7 +19,7 @@ class AppNavigationShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final isMobile = ResponsiveBreakpoints.of(context).smallerOrEqualTo(TABLET);
-    final nombreEmpresa = context.read<AuthProvider>().company!.nombre;
+    final nombreEmpresa = context.read<AuthProvider>().company?.nombre ?? '';
 
     final List<SidebarItem> navItems = rol == RolNavegacion.conductor ? getConductorNavItems(location) : getEncargadoNavItems(location);
     if (isMobile) {

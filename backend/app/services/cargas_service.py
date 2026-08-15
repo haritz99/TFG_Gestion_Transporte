@@ -13,16 +13,19 @@ from app.interfaces.i_user_repository import IUserRepository
 from app.schemas.pedido import PedidoSchema
 from ..schemas.carga import CartaDePorteSnapshotSchema
 from app.schemas.external_user import SubcontratadoSchema
-from google.cloud.firestore import ArrayUnion
+from google.cloud.firestore import ArrayUnion, ArrayRemove
 from .notification_service import NotificacionService
+from app.dependencies.services import get_carta_porte_service
+from app.interfaces.i_carta_porte_service import ICartaPorteService
 
 class CargasService:
-    def __init__(self, crud: ICargasRepository = Depends(get_cargas_repository), pedidos_crud: IPedidosRepository = Depends(get_pedidos_repository), users_crud: IUserRepository = Depends(get_user_repository), vehiculos_crud: IRepository = Depends(get_vehiculos_repository), notificacion_service: NotificacionService = Depends(NotificacionService)):
+    def __init__(self, crud: ICargasRepository = Depends(get_cargas_repository), pedidos_crud: IPedidosRepository = Depends(get_pedidos_repository), users_crud: IUserRepository = Depends(get_user_repository), vehiculos_crud: IRepository = Depends(get_vehiculos_repository), notificacion_service: NotificacionService = Depends(NotificacionService), carta_porte_service: ICartaPorteService = Depends(get_carta_porte_service)):
         self._crud = crud
         self._pedidos_crud = pedidos_crud
         self._users_crud = users_crud
         self._vehiculos_crud = vehiculos_crud
         self._notificacion_service = notificacion_service
+        self._carta_porte_service = carta_porte_service
 
     def fetch_cargas(self, company_id: str, cliente_id: Optional[str] = None, pedido_id: Optional[str] = None, transportista_id: Optional[str] = None, estado: Optional[EstadoCarga] = None, fecha_inicio: Optional[datetime.date] = None, fecha_fin: Optional[datetime.date] = None) -> List[CargaSchema]:
         dt_inicio = datetime.combine(fecha_inicio, time.min) if fecha_inicio else None
@@ -249,27 +252,50 @@ class CargasService:
         if not doc.exists:
             raise HTTPException(status_code=404, detail="Carga no encontrada")
 
-        self._crud.update(company_id, carga_id, {
-            "estado": nuevo_estado,
-            "updatedAt": datetime.now(timezone.utc)
-        })
+        carga_data = doc.to_dict() or {}
+        if nuevo_estado == EstadoCarga.PLANIFICADO.value and carga_data.get("estado") == EstadoCarga.CEDIDO.value:
+            self._descender_carga(doc, carga_data, company_id)
+        else:
+            self._crud.update(company_id, carga_id, {
+                "estado": nuevo_estado,
+                "updatedAt": datetime.now(timezone.utc)
+            })
 
         updated_doc = self._crud.get_by_id(company_id, carga_id)
         return CargaSchema.from_firestore(updated_doc, company_id)
 
+    def _descender_carga(self, doc, carga_data: dict, company_id: str) -> None:
+        subcontratado_id = carga_data.get("subcontratadoId")
+        update_payload = {
+            "estado": EstadoCarga.PLANIFICADO.value,
+            "transportistaId": None,
+            "conductorNombre": None,
+            "vehiculoId": None,
+            "subcontratadoId": None,
+            "subVehiculoMatricula": None,
+            "subRemolqueMatricula": None,
+            "comisionCesion": None,
+            "cartaPorteSnapshot": None,
+            "carta_porte_url": None,
+            "updatedAt": datetime.now(timezone.utc),
+        }
 
-    def delete_carga(self, carga_id: str, company_id: str):
-        doc = self._crud.get_by_id(company_id, carga_id)
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Carga no encontrada")
+        batch = self._crud.get_batch()
+        batch.update(doc.reference, update_payload)
 
-        carga_data = doc.to_dict()
+        if subcontratado_id:
+            sub_doc = self._users_crud.get_subcontratado_by_id(company_id, subcontratado_id)
+            if sub_doc.exists:
+                batch.update(sub_doc.reference, {
+                    "cargasCedidas": ArrayRemove([doc.id])
+                })
 
-        estado_actual = carga_data.get("estado")
-        if estado_actual in [EstadoCarga.EN_TRANSITO.value, EstadoCarga.ENTREGADO.value]:
-            raise HTTPException(status_code=400, detail=f"No se puede eliminar una carga en estado {estado_actual}.")
+        batch.commit()
 
-        self._crud.delete(company_id, carga_id)
+        try:
+            self._carta_porte_service.eliminar_carta_porte_pdf(company_id, doc.id)
+        except Exception as e:
+            print(f"Error al eliminar el PDF de la carta de porte de {doc.id}: {e}")
 
     def fetch_cargas_cedidas(self, subcontratado_id: str, company_id: str) -> list[CargaSchema]:
         user_doc = self._users_crud.get_subcontratado_by_id(company_id, subcontratado_id)

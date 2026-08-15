@@ -595,5 +595,41 @@ void main() {
       expect(provider.hayCambiosSinGuardar, isFalse);
       expect(provider.isLoading, isFalse);
     });
+
+    test('descenderCarga llama a updateEstado con planificado y actualiza estado local', () async {
+      final cargaCedida = _crearCarga(id: 'c1', estado: EstadoCarga.cedido);
+
+      when(mockCargaService.getCargasDelMes(any, any))
+          .thenAnswer((_) async => [cargaCedida]);
+
+      await provider.fetchCargasDelMes(DateTime.now(), DateTime.now().add(const Duration(days: 1)), forceRefresh: true);
+
+      final cargaPlanificada = _crearCarga(id: 'c1', estado: EstadoCarga.planificado);
+      when(mockCargaService.updateEstado('c1', EstadoCarga.planificado))
+          .thenAnswer((_) async => cargaPlanificada);
+
+      await provider.descenderCarga('c1');
+
+      expect(provider.cargas.first.estado, equals(EstadoCarga.planificado));
+      verify(mockCargaService.updateEstado('c1', EstadoCarga.planificado)).called(1);
+      expect(provider.isLoading, isFalse);
+    });
+
+    test('descenderCarga elimina la carga de cargasCedidas', () async {
+      final cargaCedida = _crearCarga(id: 'c1', estado: EstadoCarga.cedido);
+
+      when(mockCargaService.getCargasCedidas())
+          .thenAnswer((_) async => [cargaCedida]);
+      when(mockCargaService.updateEstado('c1', EstadoCarga.planificado))
+          .thenAnswer((_) async => _crearCarga(id: 'c1', estado: EstadoCarga.planificado));
+
+      await provider.fetchCargasCedidas();
+      expect(provider.cargasCedidas.length, equals(1));
+
+      await provider.descenderCarga('c1');
+
+      expect(provider.cargasCedidas, isEmpty);
+      expect(provider.isLoading, isFalse);
+    });
   });
 }

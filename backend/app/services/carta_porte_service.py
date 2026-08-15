@@ -158,6 +158,11 @@ class CartaPorteService(ICartaPorteService):
 		blob.upload_from_string(pdf_bytes, content_type="application/pdf")
 		return blob.name
 
+	def eliminar_carta_porte_pdf(self, company_id: str, carga_id: str) -> None:
+		bucket = storage.bucket()
+		blob = bucket.blob(f"cartas_porte/{company_id}/carta_{carga_id}.pdf")
+		blob.delete()
+
 	@staticmethod
 	def generar_url_firmada(blob_path: str) -> str:
 		bucket = storage.bucket()

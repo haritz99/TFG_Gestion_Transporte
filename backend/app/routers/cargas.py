@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor, \
-    get_current_encargado_cargador
+    get_current_encargado_cargador, get_current_encargado_conductor
 from ..dependencies.services import get_carta_porte_service
 from ..interfaces.i_carta_porte_service import ICartaPorteService
 from ..schemas import IncidenciaSchema
@@ -130,22 +130,14 @@ def ceder_carga(
 ):
     return service.ceder_carga_subcontratado(carga_id, payload.get('subcontratadoId'), current_user.get("companyId"), comision)
 
-@router.delete("/{carga_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_carga(carga_id: str,
-                 current_user: dict[str, Any] = Depends(get_current_encargado),
-                 service: CargasService = Depends(CargasService)):
-    service.delete_carga(carga_id, current_user.get("companyId"))
-    return None
-
-
 @router.patch("/{carga_id}/estado", response_model=CargaSchema)
 def update_carga_estado(
     carga_id: str,
-    payload: dict,
-    current_user: dict[str, Any] = Depends(get_current_conductor),
+    estado: EstadoCarga = Body(embed=True),
+    current_user: dict[str, Any] = Depends(get_current_encargado_conductor),
     service: CargasService = Depends(CargasService)
 ):
-    return service.update_estado_carga(carga_id, payload.get("estado"), current_user.get("companyId"))
+    return service.update_estado_carga(carga_id, estado.value, current_user.get("companyId"))
 
 @router.post("/{carga_id}/incidencia", response_model=dict[str, str])
 def create_incidencia(

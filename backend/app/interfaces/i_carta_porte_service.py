@@ -19,3 +19,11 @@ class ICartaPorteService(ABC):
         company_id: str
     ) -> str:
         pass
+
+    @abstractmethod
+    def eliminar_carta_porte_pdf(
+        self,
+        company_id: str,
+        carga_id: str
+    ) -> None:
+        pass

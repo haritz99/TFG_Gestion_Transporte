@@ -2,6 +2,7 @@ import pytest
 import datetime
 from unittest.mock import MagicMock, ANY
 from fastapi import HTTPException
+from google.cloud.firestore import ArrayRemove
 from app.services.cargas_service import CargasService
 from app.schemas.carga import CargaSchema, EstadoCarga
 
@@ -31,13 +32,19 @@ def mock_vehiculos_crud():
 
 
 @pytest.fixture
-def service(mock_cargas_crud, mock_users_crud, mock_notificacion_service, mock_pedidos_crud, mock_vehiculos_crud):
+def mock_carta_porte_service():
+    return MagicMock(name="CartaPorteService")
+
+
+@pytest.fixture
+def service(mock_cargas_crud, mock_users_crud, mock_notificacion_service, mock_pedidos_crud, mock_vehiculos_crud, mock_carta_porte_service):
     return CargasService(
         crud=mock_cargas_crud,
         pedidos_crud=mock_pedidos_crud,
         users_crud=mock_users_crud,
         vehiculos_crud=mock_vehiculos_crud,
         notificacion_service=mock_notificacion_service,
+        carta_porte_service=mock_carta_porte_service,
     )
 
 @pytest.fixture
@@ -105,19 +112,6 @@ def test_cargas_service_get_carga_by_id_existe(service, mock_cargas_crud, valid_
 
     # Assert
     assert res.id == "c1"
-
-
-def test_cargas_service_delete_carga_ok(service, mock_cargas_crud, valid_carga_dict):
-    # Arrange
-    mock_doc = MagicMock(exists=True)
-    mock_doc.to_dict.return_value = valid_carga_dict
-    mock_cargas_crud.get_by_id.return_value = mock_doc
-
-    # Act
-    service.delete_carga("c1", "comp1")
-
-    # Assert
-    mock_cargas_crud.delete.assert_called_once_with("comp1", "c1")
 
 
 def test_cargas_service_bulk_update_ok_persiste_cargas_en_lote(service, mock_cargas_crud, mock_pedidos_crud, pedido_doc_dict, carga_doc_dict):
@@ -272,4 +266,99 @@ def test_cargas_service_calculate_sin_asignar(service, mock_cargas_crud):
     # Assert
     assert res == 8
     mock_cargas_crud.get_cargas_count.assert_called_once_with("comp1", "planificado", ANY, ANY)
+
+
+def test_update_estado_descender_cedido_a_planificado_limpia_carga(service, mock_cargas_crud, mock_users_crud, mock_carta_porte_service, carga_doc_dict, subcontratado_doc_dict):
+    # Arrange
+    doc_inicial = MagicMock(exists=True)
+    doc_inicial.id = "c1"
+    doc_inicial.reference = MagicMock(name="carga_ref")
+    doc_inicial.to_dict.return_value = {
+        **carga_doc_dict,
+        "estado": EstadoCarga.CEDIDO,
+        "subcontratadoId": "sub1",
+        "comisionCesion": 3.0,
+        "transportistaId": "t1",
+        "conductorNombre": "Juan Pérez",
+        "vehiculoId": "V1",
+        "subVehiculoMatricula": "1234ABC",
+        "subRemolqueMatricula": "5678DEF",
+        "cartaPorteSnapshot": {"clienteNombre": "Mi Cliente"},
+        "carta_porte_url": "https://fake/signed/carta_CRG-039.pdf",
+    }
+
+    doc_final = MagicMock(exists=True)
+    doc_final.id = "c1"
+    doc_final.to_dict.return_value = {
+        **carga_doc_dict,
+        "estado": EstadoCarga.PLANIFICADO,
+        "cartaPorteSnapshot": None,
+        "carta_porte_url": None,
+    }
+    mock_cargas_crud.get_by_id.side_effect = [doc_inicial, doc_final]
+
+    mock_sub_doc = MagicMock(exists=True)
+    mock_sub_doc.id = "sub1"
+    mock_sub_doc.reference = MagicMock(name="sub_ref")
+    mock_sub_doc.to_dict.return_value = subcontratado_doc_dict
+    mock_users_crud.get_subcontratado_by_id.return_value = mock_sub_doc
+
+    batch = mock_cargas_crud.get_batch.return_value
+
+    # Act
+    result = service.update_estado_carga("c1", EstadoCarga.PLANIFICADO.value, "comp1")
+
+    # Assert
+    assert result.estado == EstadoCarga.PLANIFICADO
+
+    calls = batch.update.call_args_list
+    assert len(calls) == 2
+
+    carga_payload = calls[0][0][1]
+    assert carga_payload["estado"] == "planificado"
+    assert carga_payload["cartaPorteSnapshot"] is None
+    assert carga_payload["carta_porte_url"] is None
+    assert carga_payload["subcontratadoId"] is None
+    assert carga_payload["comisionCesion"] is None
+    assert carga_payload["transportistaId"] is None
+    assert carga_payload["conductorNombre"] is None
+    assert carga_payload["vehiculoId"] is None
+
+    sub_payload = calls[1][0][1]
+    assert isinstance(sub_payload["cargasCedidas"], type(ArrayRemove(["x"])))
+    assert calls[1][0][0] == mock_sub_doc.reference
+
+    batch.commit.assert_called_once()
+    mock_carta_porte_service.eliminar_carta_porte_pdf.assert_called_once_with("comp1", "c1")
+
+
+def test_update_estado_transicion_normal_no_limpia(service, mock_cargas_crud, mock_carta_porte_service, carga_doc_dict):
+    # Arrange
+    doc_inicial = MagicMock(exists=True)
+    doc_inicial.id = "c1"
+    doc_inicial.to_dict.return_value = {
+        **carga_doc_dict,
+        "estado": EstadoCarga.ASIGNADO,
+        "transportistaId": "t1",
+        "vehiculoId": "V1",
+    }
+
+    doc_final = MagicMock(exists=True)
+    doc_final.id = "c1"
+    doc_final.to_dict.return_value = {
+        **carga_doc_dict,
+        "estado": EstadoCarga.EN_TRANSITO,
+        "transportistaId": "t1",
+        "vehiculoId": "V1",
+    }
+    mock_cargas_crud.get_by_id.side_effect = [doc_inicial, doc_final]
+
+    # Act
+    result = service.update_estado_carga("c1", EstadoCarga.EN_TRANSITO.value, "comp1")
+
+    # Assert
+    assert result.estado == EstadoCarga.EN_TRANSITO
+    mock_cargas_crud.update.assert_called_once()
+    mock_cargas_crud.get_batch.assert_not_called()
+    mock_carta_porte_service.eliminar_carta_porte_pdf.assert_not_called()
 

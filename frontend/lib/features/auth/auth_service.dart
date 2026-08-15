@@ -158,8 +158,8 @@ class AuthService {
     return CompanyModel.fromMap(jsonDecode(response.body), companyId);
   }
 
-  Future<void> updateCompanyBuffer(String companyId, int buffer) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/auth/company/$companyId/buffer-hours');
+  Future<void> updateCompanyBuffer(int buffer) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/auth/company/buffer-hours');
     final token = await getIdToken();
     final response = await _client.put(
       uri,

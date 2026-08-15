@@ -58,15 +58,6 @@ class _DetallesAsignacionContent extends StatelessWidget {
         .where((guest) => guest.rol.any((r) => r.toLowerCase().contains('subcontratado')))
         .toList();
 
-    final Set<String> conductoresOcupados = {};
-    final Set<String> vehiculosOcupados = {};
-
-    for (final c in cargaProvider.cargas) {
-      if (c.id == carga.id) continue;
-      if (c.transportistaId != null) conductoresOcupados.add(c.transportistaId!);
-      if (c.vehiculoId != null) vehiculosOcupados.add(c.vehiculoId!);
-    }
-
     final conductoresDisponibles = cargaProvider.conductoresDisponibles(
       todosLosConductores: transportistaProvider.transportistas,
       fechaInicioTarget: carga.fechaCarga,
@@ -101,10 +92,10 @@ class _DetallesAsignacionContent extends StatelessWidget {
       }
     }
 
-    final puedeGenerarCarta = carga.estado == EstadoCarga.cedido || (carga.transportistaId != null && carga.vehiculoId != null);
+    final puedeGenerarCarta = carga.transportistaId != null && carga.vehiculoId != null;
 
     if (carga.estado == EstadoCarga.cedido) {
-      return _panelCedido(context, carga, cargaProvider);
+      return _panelCedido(context, cargaProvider);
     }
 
     return ListView(
@@ -273,15 +264,17 @@ class _DetallesAsignacionContent extends StatelessWidget {
     );
   }
 
-  Widget _panelCedido(BuildContext context,CargaModel cargaSeleccionada, cargaProvider) {
+Widget _panelCedido(BuildContext context, CargaProvider cargaProvider) {
+    final nombreSubcontratado = carga.cartaPorteSnapshot?.subcontratadoNombre;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text('Carga cedida', style: AppTextStyles.bodyMd.copyWith(color: AppColors.primary.withValues(alpha: 0.8))),
-        const SizedBox(height: 8),
-        const Text('Esta carga ha sido cedida a una empresa subcontratada.'),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        Text('Esta carga ha sido cedida a $nombreSubcontratado.', style: AppTextStyles.bodySm),
+        const SizedBox(height: 32),
         ElevatedButton.icon(
           onPressed: () => _generarCartaPorte(context, carga, cargaProvider),
           icon: const Icon(Icons.description_outlined),
@@ -293,8 +286,56 @@ class _DetallesAsignacionContent extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
-      ],
+        const SizedBox(height: 12),
+        ElevatedButton.icon(
+          onPressed: () => _confirmarRevertirCesion(context, cargaProvider),
+          icon: const Icon(Icons.replay),
+          label: const Text('Revertir cesión'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.warning,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        )
+      ]
     );
+  }
+
+  Future<void> _confirmarRevertirCesion(BuildContext context, CargaProvider cargaProvider) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Revertir cesión'),
+        content: Text(
+          '¿Seguro que quieres revertir la cesión de la carga ${carga.id}? '
+          'Volverá al estado planificado y se eliminará la carta de porte.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+            child: const Text('Revertir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !context.mounted) return;
+
+    try {
+      await cargaProvider.descenderCarga(carga.id!);
+      if (!context.mounted) return;
+      context.read<PlanificacionProvider>().limpiarSeleccion();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al revertir la cesión: $e')),
+      );
+    }
   }
 
   Future<void> _generarCartaPorte(BuildContext context, CargaModel carga, CargaProvider cargaProvider) async {

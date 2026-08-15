@@ -18,14 +18,16 @@ async def get_company_info(
 ):
     return service.get_company_info(current_user.get("companyId"))
 
-@router.put("/company/{company_id}/buffer-hours")
+class BufferHoursSchema(BaseModel):
+    bufferHours: int
+
+@router.put("/company/buffer-hours")
 async def update_buffer_hours(
-    company_id: str,
-    payload: dict,
+    payload: BufferHoursSchema,
     current_user: dict[str, Any] = Depends(get_current_encargado),
     service: RegisterService = Depends(RegisterService)
 ):
-    return service.update_buffer_hours(company_id, payload.get("bufferHours"))
+    return service.update_buffer_hours(current_user.get("companyId"), payload.bufferHours)
 
 @router.post("/register", status_code=201)
 def register(

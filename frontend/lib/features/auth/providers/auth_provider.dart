@@ -215,7 +215,7 @@ class AuthProvider extends ChangeNotifier {
     _company = _company!.copyWith(bufferHours: nuevasHoras);
     notifyListeners();
     try {
-      await _authService.updateCompanyBuffer(_company!.id, nuevasHoras);
+      await _authService.updateCompanyBuffer(nuevasHoras);
     } catch (e) {
       _company = estadoAnterior;
       notifyListeners();

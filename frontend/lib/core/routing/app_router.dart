@@ -190,11 +190,17 @@ class AppRouter {
           GoRoute(
             path: '/hoja_ruta',
             pageBuilder: (context, state) {
+              final user = authProvider.user;
+              if (user == null) {
+                return fadeTransitionPage(state,
+                  const Scaffold(body: Center(child: CircularProgressIndicator())),
+                );
+              }
               return fadeTransitionPage(state,
                 ChangeNotifierProvider(
                   create: (_) => ConductorProvider(
-                    conductorId: authProvider.user!.uid,
-                    companyId: authProvider.user!.companyId,
+                    conductorId: user.uid,
+                    companyId: user.companyId,
                   ),
                   child: const ConductorPage(),
                 ),

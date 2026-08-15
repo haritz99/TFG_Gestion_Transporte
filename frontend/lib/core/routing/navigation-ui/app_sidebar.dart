@@ -12,8 +12,9 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthProvider>().user;
-    final nombreEmpresa = context.read<AuthProvider>().company!.nombre;
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final nombreEmpresa = authProvider.company?.nombre ?? '';
     return Container(
       // Container principal
       width: 250,
