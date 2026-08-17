@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, ANY
 from fastapi import HTTPException
 from google.cloud.firestore import ArrayRemove
 from app.services.cargas_service import CargasService
-from app.schemas.carga import CargaSchema, EstadoCarga
+from app.schemas.carga import CargaSchema, EstadoCarga, CargaUpdateDetallesSchema
 
 @pytest.fixture
 def mock_cargas_crud():
@@ -361,4 +361,94 @@ def test_update_estado_transicion_normal_no_limpia(service, mock_cargas_crud, mo
     mock_cargas_crud.update.assert_called_once()
     mock_cargas_crud.get_batch.assert_not_called()
     mock_carta_porte_service.eliminar_carta_porte_pdf.assert_not_called()
+
+
+def test_update_carga_detalles_modifica_y_persiste(service, mock_cargas_crud, carga_doc_dict):
+    # Arrange
+    doc_inicial = MagicMock(exists=True)
+    doc_inicial.id = "c1"
+    doc_inicial.to_dict.return_value = {**carga_doc_dict, "id": "c1", "companyId": "comp1"}
+
+    doc_final = MagicMock(exists=True)
+    doc_final.id = "c1"
+    doc_final.to_dict.return_value = {
+        **carga_doc_dict,
+        "id": "c1",
+        "companyId": "comp1",
+        "peso": 800.0,
+        "numBultos": 15,
+    }
+    mock_cargas_crud.get_by_id.side_effect = [doc_inicial, doc_final]
+
+    cambios = CargaUpdateDetallesSchema(peso=800.0, numBultos=15)
+
+    # Act
+    result = service.update_carga_detalles("c1", cambios, "comp1")
+
+    # Assert
+    assert result.id == "c1"
+    assert result.peso == 800.0
+    assert result.numBultos == 15
+    assert mock_cargas_crud.update.call_count == 1
+    update_payload = mock_cargas_crud.update.call_args[0][2]
+    assert update_payload["peso"] == 800.0
+    assert update_payload["numBultos"] == 15
+    assert "updatedAt" in update_payload
+
+
+def test_update_carga_detalles_limpia_campos_con_null(service, mock_cargas_crud, carga_doc_dict):
+    # Arrange
+    doc_inicial = MagicMock(exists=True)
+    doc_inicial.id = "c1"
+    doc_inicial.to_dict.return_value = {**carga_doc_dict, "id": "c1", "companyId": "comp1"}
+
+    doc_final = MagicMock(exists=True)
+    doc_final.id = "c1"
+    doc_final.to_dict.return_value = {**carga_doc_dict, "id": "c1", "companyId": "comp1"}
+    mock_cargas_crud.get_by_id.side_effect = [doc_inicial, doc_final]
+
+    cambios = CargaUpdateDetallesSchema(tipoEmbalaje=None)
+
+    # Act
+    result = service.update_carga_detalles("c1", cambios, "comp1")
+
+    # Assert
+    assert result.id == "c1"
+    update_payload = mock_cargas_crud.update.call_args[0][2]
+    assert update_payload["tipoEmbalaje"] is None
+
+def test_update_carga_detalles_vacia_bultos_limpia_volumen_calculado(service, mock_cargas_crud, carga_doc_dict):
+    # Arrange
+    doc_inicial = MagicMock(exists=True)
+    doc_inicial.id = "c1"
+    doc_inicial.to_dict.return_value = {
+        **carga_doc_dict,
+        "id": "c1",
+        "companyId": "comp1",
+        "volumen": 100,
+        "longitudLineal": 4.0,
+    }
+
+    doc_final = MagicMock(exists=True)
+    doc_final.id = "c1"
+    doc_final.to_dict.return_value = {
+        **carga_doc_dict,
+        "id": "c1",
+        "companyId": "comp1",
+        "numBultos": None,
+        "volumen": None,
+        "longitudLineal": None,
+    }
+    mock_cargas_crud.get_by_id.side_effect = [doc_inicial, doc_final]
+
+    cambios = CargaUpdateDetallesSchema(numBultos=None)
+
+    # Act
+    result = service.update_carga_detalles("c1", cambios, "comp1")
+
+    # Assert
+    assert result.numBultos is None
+    update_payload = mock_cargas_crud.update.call_args[0][2]
+    assert update_payload["volumen"] is None
+    assert update_payload["longitudLineal"] is None
 

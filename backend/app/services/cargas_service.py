@@ -3,7 +3,7 @@ from typing import Optional, List
 
 import pytz
 from fastapi import HTTPException, Depends
-from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema, CargaUpdateDetallesSchema
 from ..schemas.vehiculos import VehiculoSchema
 from app.dependencies.repositories import get_cargas_repository, get_pedidos_repository, get_user_repository, get_vehiculos_repository
 from app.interfaces.i_cargas_repository import ICargasRepository
@@ -178,6 +178,24 @@ class CargasService:
 
         self._crud.update(company_id, carga_id, {"bufferHours": buffer_hours, "updatedAt": datetime.now(timezone.utc)})
 
+    def update_carga_detalles(self, carga_id: str, cambios: CargaUpdateDetallesSchema, company_id: str) -> CargaSchema:
+        doc = self._crud.get_by_id(company_id, carga_id)
+
+        actual = CargaSchema.from_firestore(doc, company_id)
+        cambios_dump = cambios.model_dump(exclude_unset=True)
+
+        datos = {**actual.model_dump(), **cambios_dump}
+        nueva = CargaSchema(**datos)
+
+        if nueva.vehiculoId and {'peso', 'largo', 'ancho', 'alto', 'numBultos', 'apilable'} & set(cambios_dump):
+            self.validar_asignacion_vehiculo(nueva, company_id)
+
+        update_data = nueva.model_dump(exclude={'id'})
+        update_data['updatedAt'] = datetime.now(timezone.utc)
+        self._crud.update(company_id, carga_id, update_data)
+
+        updated_doc = self._crud.get_by_id(company_id, carga_id)
+        return CargaSchema.from_firestore(updated_doc, company_id)
 
     def ceder_carga_subcontratado(self, carga_id: str, subcontratado_id: str, company_id: str, comision: float = 3.0) -> CargaSchema:
         doc = self._crud.get_by_id(company_id, carga_id)

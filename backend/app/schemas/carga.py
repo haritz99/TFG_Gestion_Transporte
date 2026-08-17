@@ -85,6 +85,10 @@ class CargaBaseSchema(FirestoreSchema):
             unidades_suelo = (self.numBultos / 2) if self.apilable else self.numBultos
             self.longitudLineal = round((self.largo * self.ancho / 2.4) * unidades_suelo, 2)
 
+        if self.tipoCarga == TipoCarga.BULTOS and self.numBultos is None:
+            self.volumen = None
+            self.longitudLineal = None
+
         return self
 
 class CargaSchema(CargaBaseSchema):
@@ -205,3 +209,18 @@ class CargaUpdateSubSchema(BaseModel):
         if not _MATRICULA_REGEX.fullmatch(normalizado):
             raise ValueError("La matrícula debe tener formato correcto")
         return normalizado
+
+
+class CargaUpdateDetallesSchema(BaseModel):
+    """Campos editables de una carga una vez creada"""
+    tipoEmbalaje: Optional[str] = None
+    numBultos: Optional[int] = Field(default=None, gt=0)
+    peso: Optional[float] = Field(default=None, gt=0)
+    volumen: Optional[float] = Field(default=None, gt=0)
+    largo: Optional[float] = Field(default=None, gt=0)
+    ancho: Optional[float] = Field(default=None, gt=0)
+    alto: Optional[float] = Field(default=None, gt=0)
+    apilable: Optional[bool] = None
+    precio: Optional[float] = Field(default=None, gt=0)
+    origen: Optional[UbicacionSchema] = None
+    destino: Optional[UbicacionSchema] = None

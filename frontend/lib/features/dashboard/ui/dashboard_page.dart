@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/models/carga_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../cargas/providers/carga_provider.dart';
@@ -17,6 +18,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  CargaModel? _cargaSeleccionada;
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +69,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     children: [
                       DashboardKpiGrid(isMobile: isMobile, provider: provider),
                       const SizedBox(height: 18),
-                      DashboardMainContent(cargas: provider.cargas, isMobile: isMobile),
+                      DashboardMainContent(
+                        cargas: provider.cargas,
+                        isMobile: isMobile,
+                        cargaSeleccionada: _cargaSeleccionada,
+                        onCargaTap: (carga) => setState(() => _cargaSeleccionada = carga),
+                        onCerrarEdicion: () => setState(() => _cargaSeleccionada = null),
+                      ),
                     ],
                   ),
                 ),

@@ -5,11 +5,13 @@ import '../../../../core/widgets/core_calendar.dart';
 class DashboardCalendar extends StatelessWidget {
   final List<CargaModel> cargas;
   final Function(DateTime)? onDateSelected;
+  final Function(CargaModel)? onCargaTap;
 
   const DashboardCalendar({
     super.key,
     required this.cargas,
     this.onDateSelected,
+    this.onCargaTap,
   });
 
   @override
@@ -19,6 +21,7 @@ class DashboardCalendar extends StatelessWidget {
       child: CoreCalendar(
         cargas: cargas,
         onDateSelected: onDateSelected,
+        onCargaTap: onCargaTap,
       ),
     );
   }

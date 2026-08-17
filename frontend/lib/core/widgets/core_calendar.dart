@@ -16,11 +16,13 @@ import '../theme/app_text_styles.dart';
 class CoreCalendar extends StatefulWidget {
   final List<CargaModel> cargas;
   final Function(DateTime)? onDateSelected;
+  final Function(CargaModel)? onCargaTap;
 
   const CoreCalendar({
     super.key,
     required this.cargas,
     this.onDateSelected,
+    this.onCargaTap,
   });
 
   @override
@@ -107,7 +109,7 @@ class _CoreCalendarState extends State<CoreCalendar> {
                       monthTextStyle: AppTextStyles.headingMd.copyWith(fontSize: 18, color: AppColors.bodyText),
                     ),
                   ),
-                  onTap: (CalendarTapDetails details) => _onConductorTap(context, details.appointments?.first as CargaCalendar?, esConductor),
+                  onTap: (CalendarTapDetails details) => _onTap(context, details.appointments?.first as CargaCalendar?, esConductor),
                   appointmentBuilder: _appointmentBuilder,
                   onSelectionChanged: (details) {
                     if (widget.onDateSelected != null && details.date != null) {
@@ -352,9 +354,13 @@ class _CoreCalendarState extends State<CoreCalendar> {
     );
   }
 
-  void _onConductorTap(BuildContext context, CargaCalendar? cargaCalendar, bool esConductor) {
+  void _onTap(BuildContext context, CargaCalendar? cargaCalendar, bool esConductor) {
     final carga = cargaCalendar?.carga;
-    if (!esConductor || carga == null) return;
+    if (carga == null) return;
+    if (!esConductor) {
+      widget.onCargaTap?.call(carga);
+      return;
+    }
     if (carga.cartaPorteUrl == null || carga.cartaPorteUrl == '') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

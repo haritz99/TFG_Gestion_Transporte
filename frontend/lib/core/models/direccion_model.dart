@@ -126,6 +126,16 @@ class UbicacionControllers {
     lng.text = sugerencia.lng.toString();
   }
 
+  void cargarUbicacion(UbicacionModel ubicacion) {
+    calle.text = ubicacion.direccion.calle;
+    ciudad.text = ubicacion.direccion.ciudad;
+    provincia.text = ubicacion.direccion.provincia;
+    codigoPostal.text = ubicacion.direccion.codigoPostal;
+    pais.text = ubicacion.direccion.pais;
+    lat.text = ubicacion.lat.toString();
+    lng.text = ubicacion.lng.toString();
+  }
+
   UbicacionModel toModel() {
     return UbicacionModel(
       direccion: DireccionModel(

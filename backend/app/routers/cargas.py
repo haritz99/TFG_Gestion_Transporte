@@ -3,12 +3,13 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Body, Depends, Query, status
+from pydantic import BaseModel, Field
 from ..dependencies.auth import get_current_encargado, get_current_sub, get_current_conductor, \
     get_current_encargado_cargador, get_current_encargado_conductor
 from ..dependencies.services import get_carta_porte_service
 from ..interfaces.i_carta_porte_service import ICartaPorteService
 from ..schemas import IncidenciaSchema
-from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema
+from ..schemas.carga import CargaSchema, EstadoCarga, TipoCargaSchema, CargaUpdateSubSchema, CargaUpdateDetallesSchema
 from ..services.cargas_service import CargasService
 from ..services.incidencias_service import IncidenciaService
 
@@ -95,23 +96,25 @@ def bulk_update_cargas(
 ):
     return service.bulk_update_cargas(cargas, current_user.get("companyId"))
 
-"""
 @router.put("/{carga_id}", response_model=CargaSchema)
-def update_carga(carga_id: str, 
-                 carga: CargaSchema, 
-                 pedido_schema: PedidoSchema = Depends(get_pedido_from_carga),
-                 current_user: dict[str, Any] = Depends(get_current_encargado),
-                 service: CargasService = Depends(CargasService)):
-    return service.update_carga(carga_id, carga, pedido_schema, current_user.get("companyId"))
-"""
+def update_carga_detalles(
+    carga_id: str,
+    carga: CargaUpdateDetallesSchema,
+    current_user: dict[str, Any] = Depends(get_current_encargado),
+    service: CargasService = Depends(CargasService),
+):
+    return service.update_carga_detalles(carga_id, carga, current_user.get("companyId"))
 
+
+class BufferHoursSchema(BaseModel):
+    bufferHours: int = Field(..., ge=0)
 
 @router.put("/{carga_id}/buffer-hours")
 def update_buffer_hours(carga_id: str,
-        buffer_hours: int = Query(..., ge=0, description="Horas de buffer para la carga"),
+        payload: BufferHoursSchema,
         current_user: dict[str, Any] = Depends(get_current_encargado),
         service: CargasService = Depends(CargasService)):
-    return service.update_buffer_hours(carga_id, buffer_hours, current_user.get("companyId"))
+    return service.update_buffer_hours(carga_id, payload.bufferHours, current_user.get("companyId"))
 
 @router.put("/sub/{carga_id}", response_model=CargaSchema)
 def update_carga_sub(carga_id: str,

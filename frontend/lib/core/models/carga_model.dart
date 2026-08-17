@@ -12,6 +12,12 @@ enum TipoCarga {
   final String value;
   const TipoCarga(this.value);
 
+  String get label => switch (this) {
+        TipoCarga.bultos => 'Bultos',
+        TipoCarga.granel => 'Granel',
+        TipoCarga.liquido => 'Líquido',
+      };
+
   static TipoCarga fromString(String value) {
     return TipoCarga.values.firstWhere((e) => e.value == value,
       orElse: () => throw ArgumentError('TipoCarga desconocido: $value'),

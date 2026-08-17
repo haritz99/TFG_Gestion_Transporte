@@ -68,7 +68,7 @@ class DashboardProvider extends ChangeNotifier {
 
   Future<void> refresh() async {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       if (_isRefreshing) return;
       _isRefreshing = true;
       _errorMessage = null;

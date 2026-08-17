@@ -4,7 +4,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'invite/invite_modal.dart';
-import 'nuevo_pedido/form_builder.dart';
+import 'package:gestion_transporte/features/cargas/ui/nuevo_pedido/form_builder.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});

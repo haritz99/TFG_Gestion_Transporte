@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_transporte/features/dashboard/ui/widgets/nuevo_pedido/form_builder.dart';
+import 'package:gestion_transporte/features/cargas/ui/nuevo_pedido/form_builder.dart';
 import 'package:gestion_transporte/core/theme/app_colors.dart';
 import 'package:gestion_transporte/core/widgets/external_home.dart';
 import 'package:go_router/go_router.dart';

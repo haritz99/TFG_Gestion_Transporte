@@ -194,6 +194,24 @@ class CargaProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> guardarDetallesCarga({required String cargaId, required Map<String, dynamic> cambios}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await _service.updateCargaDetalles(cargaId, cambios);
+      final index = _cargas.indexWhere((c) => c.id == cargaId);
+      if (index != -1) _cargas[index] = updated;
+    } catch (e) {
+      _errorMessage = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchCargasCedidas() async {
     _isLoading = true;
     notifyListeners();

@@ -6,7 +6,7 @@ import 'package:gestion_transporte/core/models/pedido_model.dart';
 import 'package:gestion_transporte/core/theme/app_text_styles.dart';
 import 'package:gestion_transporte/core/widgets/core_table/core_table.dart';
 import 'package:gestion_transporte/core/widgets/core_table/core_table_column.dart';
-import 'package:gestion_transporte/features/dashboard/ui/widgets/nuevo_pedido/form_builder.dart';
+import 'package:gestion_transporte/features/cargas/ui/nuevo_pedido/form_builder.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../cargas/providers/pedido_provider.dart';
